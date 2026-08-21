@@ -3,748 +3,328 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIEMCA · Suite de Gestión & Business Intelligence</title>
-<!-- Google Fonts: Plus Jakarta Sans & Inter -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- External Libraries -->
+<title>PIEMCA · Gestión de Ventas</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-  :root {
-    /* Modern Color Palette */
-    --brand-primary: #0F2C4A;
-    --brand-accent: #0066FF;
-    --brand-accent-hover: #0052CC;
-    --brand-soft: #EBF3FF;
+  :root{
+    /* Paleta renovada con mayor vibranza y contraste */
+    --navy:#0A2540;
+    --navy-deep:#031325;
+    --sky:#007BFF;
+    --sky-soft:#EBF3FE;
+    --gray:#4A5568;
+    --gray-line:#CBD5E1;
+    --bg:#F1F5F9;
+    --white:#FFFFFF;
+    --text:#0F172A;
+    --good:#10B981;
+    --warn:#F59E0B;
     
-    --bg-app: #F8FAFC;
-    --bg-card: #FFFFFF;
-    --bg-subtle: #F1F5F9;
-
-    --border-light: #E2E8F0;
-    --border-subtle: #F1F5F9;
-
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --text-muted: #94A3B8;
-
-    --emerald-500: #10B981;
-    --emerald-50: #ECFDF5;
-    --amber-500: #F59E0B;
-    --amber-50: #FFFBEB;
-    --rose-500: #EF4444;
-
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-    --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-    
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-
-    --transition-fast: 0.15s ease;
-  }
-
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--bg-app);
-    color: var(--text-primary);
-    -webkit-font-smoothing: antialiased;
-    font-size: 13.5px;
-    line-height: 1.5;
-  }
-
-  /* Header Navigation */
-  header {
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border-light);
-    padding: 0 28px;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .brand-zone {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .logo-badge {
-    background: var(--brand-primary);
-    color: white;
-    font-weight: 800;
-    font-size: 16px;
-    letter-spacing: 0.5px;
-    padding: 6px 14px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .brand-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.2px;
-  }
-
-  .brand-subtitle {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  /* Segmented View Switcher */
-  .view-switcher {
-    background: var(--bg-subtle);
-    padding: 4px;
-    border-radius: var(--radius-md);
-    display: flex;
-    gap: 2px;
-    border: 1px solid var(--border-light);
-  }
-
-  .tab-btn {
-    border: none;
-    background: transparent;
-    padding: 7px 18px;
-    border-radius: var(--radius-sm);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .tab-btn:hover {
-    color: var(--text-primary);
-  }
-
-  .tab-btn.active {
-    background: var(--bg-card);
-    color: var(--brand-accent);
-    box-shadow: var(--shadow-sm);
-  }
-
-  /* Control Bar */
-  .controls-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .search-box svg {
-    position: absolute;
-    left: 12px;
-    width: 15px;
-    height: 15px;
-    stroke: var(--text-muted);
-  }
-
-  .search-input {
-    background: var(--bg-subtle);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: 8px 12px 8px 34px;
-    font-size: 12.5px;
-    font-family: inherit;
-    color: var(--text-primary);
-    width: 220px;
-    transition: var(--transition-fast);
-  }
-
-  .search-input:focus {
-    outline: none;
-    border-color: var(--brand-accent);
-    background: var(--bg-card);
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
-    width: 260px;
-  }
-
-  .btn-filter {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    padding: 8px 14px;
-    border-radius: var(--radius-md);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: var(--transition-fast);
-  }
-
-  .btn-filter:hover {
-    background: var(--bg-subtle);
-    color: var(--text-primary);
-    border-color: #CBD5E1;
-  }
-
-  .btn-filter.active-filter {
-    border-color: var(--brand-accent);
-    background: var(--brand-soft);
-    color: var(--brand-accent);
-  }
-
-  /* Dropdown Panels */
-  .popover-panel {
-    position: absolute;
-    top: 76px;
-    right: 28px;
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-lg);
-    width: 300px;
-    padding: 16px;
-    z-index: 100;
-    display: none;
-    animation: fadeIn 0.15s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .popover-panel.open { display: block; }
-
-  .popover-header {
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .coverage-slider-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .coverage-display {
-    text-align: center;
-    padding: 12px;
-    background: var(--brand-soft);
-    border-radius: var(--radius-md);
-  }
-
-  .coverage-number {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--brand-accent);
-    line-height: 1;
-  }
-
-  .coverage-unit {
-    font-size: 11px;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: var(--brand-primary);
-    letter-spacing: 0.5px;
-    margin-top: 4px;
-  }
-
-  input[type=range] {
-    width: 100%;
-    accent-color: var(--brand-accent);
-  }
-
-  /* Main Container */
-  main {
-    padding: 24px 28px 48px;
-    max-width: 1600px;
-    margin: 0 auto;
-  }
-
-  /* KPI Summary Banner */
-  .kpi-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .kpi-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .kpi-card .kpi-title {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .kpi-card .kpi-val {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.5px;
-  }
-
-  .kpi-card .kpi-sub {
-    font-size: 11px;
-    color: var(--emerald-500);
-    font-weight: 600;
-  }
-
-  /* Status Header */
-  .status-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .status-meta {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  .status-meta strong {
-    color: var(--text-primary);
-  }
-
-  .btn-refresh {
-    background: transparent;
-    border: none;
-    color: var(--brand-accent);
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition-fast);
-  }
-
-  .btn-refresh:hover {
-    background: var(--brand-soft);
-  }
-
-  /* Main Table Redesign */
-  .table-card {
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
-  }
-
-  .table-scroll {
-    overflow-x: auto;
-    max-height: 68vh;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 12.5px;
-  }
-
-  thead th {
-    position: sticky;
-    top: 0;
-    background: #F8FAFC;
-    color: var(--text-secondary);
-    font-weight: 700;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 12px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-    z-index: 10;
-    white-space: nowrap;
-  }
-
-  thead th.th-calc {
-    background: #F1F5F9;
-    color: var(--brand-primary);
-  }
-
-  tbody tr {
-    transition: background var(--transition-fast);
-  }
-
-  tbody tr:nth-child(even) {
-    background-color: #FAFAFA;
-  }
-
-  tbody tr:hover {
-    background-color: var(--brand-soft) !important;
-  }
-
-  tbody td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border-subtle);
-    color: var(--text-primary);
-    white-space: nowrap;
-  }
-
-  td.num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-  }
-
-  td.calc-col {
-    background: rgba(241, 245, 249, 0.4);
-    font-weight: 600;
-  }
-
-  td.highlight-col {
-    background: var(--brand-soft);
-    color: var(--brand-accent);
-    font-weight: 700;
-  }
-
-  /* Badge styling */
-  .badge-code {
-    font-family: monospace;
-    background: var(--bg-subtle);
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: var(--text-secondary);
-    font-size: 11.5px;
-  }
-
-  /* Sticky Columns */
-  .sticky-1 { position: sticky; left: 0; z-index: 5; background: inherit; }
-  .sticky-2 { position: sticky; left: 45px; z-index: 5; background: inherit; }
-  .sticky-3 { position: sticky; left: 185px; z-index: 5; background: inherit; }
-  .sticky-4 { 
-    position: sticky; 
-    left: 285px; 
-    z-index: 5; 
-    background: inherit;
-    border-right: 2px solid var(--border-light);
-  }
-
-  thead th.sticky-1, thead th.sticky-2, thead th.sticky-3, thead th.sticky-4 {
-    background: #F8FAFC;
-    z-index: 15;
-  }
-
-  /* BI / Dashboard View Styles */
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 20px;
-  }
-
-  .filter-sidebar {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .form-group label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-  }
-
-  .form-control {
-    padding: 9px 12px;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-size: 12.5px;
-    background: var(--bg-app);
-    color: var(--text-primary);
-  }
-
-  .form-control:focus {
-    outline: none;
-    border-color: var(--brand-accent);
-    background: var(--bg-card);
-  }
-
-  .checklist-box {
-    max-height: 320px;
-    overflow-y: auto;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: 8px;
-    background: var(--bg-app);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .checklist-box label {
-    font-size: 12px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: var(--transition-fast);
-  }
-
-  .checklist-box label:hover {
-    background: var(--border-light);
-  }
-
-  .chart-container-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chart-header {
-    margin-bottom: 20px;
-  }
-
-  .chart-header h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .chart-header p {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-
-  .hidden { display: none !important; }
+    /* Variables agregadas para columnas calculadas y acentos */
+    --calc-bg:#E0F2FE;
+    --calc-text:#0369A1;
+    --accent-glow:rgba(0, 123, 255, 0.25);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header{
+    background:linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
+    color:var(--white);
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 4px 20px rgba(3,19,37,.35);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-right:auto;
+  }
+  .brand img{height:60px;display:block;}
+  .brand .divider{width:1px;height:28px;background:rgba(255,255,255,.3);}
+  .brand h1{font-size:16px;font-weight:700;margin:0;letter-spacing:.5px;opacity:.95;text-transform:uppercase;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .btn{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.4);
+    color:var(--white);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition:all .2s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{
+    background:var(--sky);
+    border-color:var(--sky);
+    box-shadow:0 4px 12px var(--accent-glow);
+  }
+  .btn.active{
+    background:var(--sky);
+    border-color:var(--sky);
+  }
+  .cov-badge{
+    background:rgba(255,255,255,.25);
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .tabs{display:flex;gap:6px;margin-left:8px;}
+  .tab{
+    padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;
+    color:rgba(255,255,255,.8);
+    transition:all .2s ease;
+  }
+  .tab:hover{
+    color:var(--white);
+    background:rgba(255,255,255,.1);
+  }
+  .tab.active{background:var(--white);color:var(--navy);box-shadow:0 2px 8px rgba(0,0,0,.15);}
+
+  .panel{
+    position:fixed;top:70px;right:24px;
+    background:var(--white);
+    border-radius:12px;
+    box-shadow:0 12px 32px rgba(3,19,37,.3);
+    padding:18px;
+    width:290px;
+    z-index:60;
+    border:1px solid var(--gray-line);
+    display:none;
+  }
+  .panel.open{display:block;}
+  .panel h3{margin:0 0 12px;font-size:13px;color:var(--navy);font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+  .panel input[type=text]{
+    width:100%;padding:9px 12px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
+    transition:border-color .2s;
+  }
+  .panel input[type=text]:focus{outline:none;border-color:var(--sky);}
+  .prov-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+  .prov-list label{font-size:13px;display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:500;}
+  .panel-actions{display:flex;justify-content:space-between;margin-top:12px;}
+  .link-btn{background:none;border:none;color:var(--sky);font-size:12px;cursor:pointer;font-weight:700;}
+  .link-btn:hover{text-decoration:underline;}
+  .coverage-row{display:flex;align-items:center;gap:10px;}
+  .coverage-row input[type=range]{flex:1;accent-color:var(--sky);}
+  .coverage-val{font-size:22px;font-weight:800;color:var(--navy);width:34px;text-align:center;}
+
+  main{padding:20px 24px 60px;}
+  .status-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;color:var(--gray);margin-bottom:14px;flex-wrap:wrap;gap:8px;font-weight:500;
+  }
+  .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:700;}
+  .status-bar .refresh:hover{text-decoration:underline;}
+  .table-wrap{
+    background:var(--white);
+    border-radius:12px;
+    overflow:auto;
+    box-shadow:0 4px 20px rgba(15,23,42,.08);
+    max-height:74vh;
+    border:1px solid var(--gray-line);
+  }
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;}
+  thead th{
+    position:sticky;top:0;background:var(--navy);color:var(--white);
+    padding:12px 10px;text-align:center;font-weight:700;white-space:nowrap;z-index:5;
+    border-right:1px solid rgba(255,255,255,.1);
+  }
+  thead th.group-calc{background:var(--calc-text);color:var(--white);}
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--gray-line);white-space:nowrap;color:var(--text);font-weight:500;}
+  tbody tr:hover{background:var(--sky-soft);}
+  tbody tr:nth-child(even){background:#F8FAFC;}
+  tbody tr:nth-child(even):hover{background:var(--sky-soft);}
+  td.num{text-align:center;font-variant-numeric:tabular-nums;}
+  td.calc{background:var(--calc-bg);color:var(--calc-text);font-weight:700;}
+  .sticky-col{position:sticky;background:inherit;}
+  th.sticky-col{background:var(--navy);}
+  .col-item{left:0;min-width:46px;}
+  .col-prov{left:46px;min-width:150px;}
+  .col-cod{left:196px;min-width:110px;}
+  .col-desc{left:306px;min-width:260px;box-shadow:3px 0 6px rgba(0,0,0,.08);}
+
+  .empty-state{padding:60px 20px;text-align:center;color:var(--gray);font-weight:600;}
+  .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* KPI view */
+  .kpi-controls{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:18px;margin-bottom:16px;
+    box-shadow:0 4px 16px rgba(15,23,42,.05);
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+  .field input,.field select{padding:8px 12px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:38px;box-sizing:border-box;font-weight:500;}
+  .segmented{display:flex;border:1px solid var(--gray-line);border-radius:7px;overflow:hidden;}
+  .segmented div{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--gray);font-weight:600;}
+  .segmented div.active{background:var(--navy);color:var(--white);font-weight:700;}
+  .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;font-weight:500;}
+  .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;border:1px solid var(--gray-line);border-radius:7px;padding:10px;background:#F8FAFC;}
+  .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:500;}
+  .kpi-checklist input[type=checkbox]{width:16px;height:16px;accent-color:var(--sky);}
+  .kpi-checklist label span.count{margin-left:auto;color:var(--gray);font-size:11.5px;font-weight:600;}
+  .checklist-actions{display:flex;justify-content:space-between;margin-top:8px;}
+  .chart-card{
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:24px;
+    box-shadow:0 4px 20px rgba(15,23,42,.08);
+  }
+  .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:16px;font-weight:800;}
+  .chart-card p{margin:0 0 16px;color:var(--gray);font-size:13px;font-weight:500;}
+  #barChart{max-height:520px;}
+  .hidden{display:none !important;}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand-zone">
-    <div class="logo-badge">PIEMCA</div>
-    <div>
-      <div class="brand-title">Gestión de Ventas</div>
-      <div class="brand-subtitle">Business Intelligence & Inventario</div>
-    </div>
+  <div class="brand">
+    <img src="logo-piemca.png" alt="PIEMCA">
+    <div class="divider"></div>
+    <h1>Gestión de Ventas</h1>
   </div>
 
-  <div class="view-switcher">
-    <button class="tab-btn active" data-view="tabla">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>
-      Tabla General
-    </button>
-    <button class="tab-btn" data-view="kpi">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      Analytics Dashboard
-    </button>
+  <div class="tabs">
+    <div class="tab active" data-view="TABLA">Tabla</div>
+    <div class="tab" data-view="kpi">DASHBOARD</div>
   </div>
 
-  <div class="controls-group">
-    <div class="search-box">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por código, ítem o nombre...">
-    </div>
-
-    <button class="btn-filter" id="btnProv">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-      Proveedores
-    </button>
-
-    <button class="btn-filter" id="btnCobertura">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="22" height="18" rx="2" ry="2"/><path d="M1 10h22"/></svg>
-      Cobertura: <strong id="covLabel" style="margin-left:3px; color:var(--brand-accent);">3 Meses</strong>
-    </button>
+  <div class="toolbar">
+    <button class="btn" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
+    <button class="btn" id="btnBuscar">🔍 BUSCAR</button>
+    <button class="btn" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
   </div>
 </header>
 
-<!-- Popover: Proveedores -->
-<div class="popover-panel" id="panelProv">
-  <div class="popover-header">
-    <span>Filtrar Proveedores</span>
-    <button id="provNone" style="background:none;border:none;color:var(--brand-accent);font-size:11px;font-weight:700;cursor:pointer;">Limpiar</button>
+<!-- Panel: proveedores -->
+<div class="panel" id="panelProv">
+  <h3>Filtrar por proveedor</h3>
+  <input type="text" id="provSearch" placeholder="Buscar Proveedor...">
+  <div class="prov-list" id="provList"></div>
+  <div class="panel-actions">
+    <button class="link-btn" id="provAll">Seleccionar todos</button>
+    <button class="link-btn" id="provNone">Limpiar</button>
   </div>
-  <input type="text" id="provSearch" class="form-control" placeholder="Filtrar lista..." style="margin-bottom:10px;">
-  <div class="checklist-box" id="provList"></div>
 </div>
 
-<!-- Popover: Cobertura -->
-<div class="popover-panel" id="panelCobertura">
-  <div class="popover-header">
-    <span>Cobertura de Compra</span>
-  </div>
-  <div class="coverage-slider-wrap">
-    <div class="coverage-display">
-      <div class="coverage-number" id="coverageVal">3</div>
-      <div class="coverage-unit">Meses de Stock Sugerido</div>
-    </div>
+<!-- Panel: buscar -->
+<div class="panel" id="panelBuscar">
+  <h3>Buscar producto</h3>
+  <input type="text" id="searchInput" placeholder="Descripción o código...">
+  <div class="kpi-hint">Filtra por Descripción o Código.</div>
+</div>
+
+<!-- Panel: cobertura -->
+<div class="panel" id="panelCobertura">
+  <h3>Cobertura de compra</h3>
+  <div class="coverage-row">
     <input type="range" id="coverageSlider" min="1" max="12" value="3">
+    <div class="coverage-val" id="coverageVal">3</div>
   </div>
+  <div class="kpi-hint"> Selecciona los meses de inventario que quieres cubrir.</div>
 </div>
 
 <main>
-  <!-- KPI SUMMARY CARDS -->
-  <div class="kpi-summary-grid">
-    <div class="kpi-card">
-      <span class="kpi-title">Productos Filtrados</span>
-      <span class="kpi-val" id="kpiCount">0</span>
-      <span class="kpi-sub" id="kpiSubCount">Cargando ítems...</span>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-title">Ventas Totales Históricas</span>
-      <span class="kpi-val" id="kpiTotalSales">0</span>
-      <span class="kpi-sub">Unidades acumuladas</span>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-title">Pronóstico Próximo Año</span>
-      <span class="kpi-val" id="kpiForecast">0</span>
-      <span class="kpi-sub">Proyección basada en tendencia</span>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-title">Stock Sugerido Global</span>
-      <span class="kpi-val" id="kpiStock">0</span>
-      <span class="kpi-sub" id="kpiStockSub">Para 3 meses de reposición</span>
-    </div>
-  </div>
-
   <!-- VISTA TABLA -->
   <div id="viewTabla">
-    <div class="status-row">
-      <div class="status-meta" id="statusText">Cargando datos del sistema...</div>
-      <button class="btn-refresh" id="refreshBtn">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        Sincronizar datos
-      </button>
+    <div class="status-bar">
+      <span id="statusText">Cargando Historial de Ventas...</span>
+      <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
     </div>
-
-    <div class="table-card">
-      <div class="table-scroll">
-        <table id="mainTable">
-          <thead><tr id="headRow"></tr></thead>
-          <tbody id="bodyRows"><tr><td style="text-align:center; padding:40px; color:var(--text-muted);" colspan="15">Cargando matriz de datos...</td></tr></tbody>
-        </table>
-      </div>
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="bodyRows"><tr><td class="empty-state">Cargando...</td></tr></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- VISTA ANALYTICS / DASHBOARD -->
+  <!-- VISTA KPI -->
   <div id="viewKpi" class="hidden">
-    <div class="dashboard-grid">
-      <div class="filter-sidebar">
-        <div class="form-group">
-          <label>Proveedor</label>
-          <select id="kpiProveedor" class="form-control"><option value="">Todos los proveedores</option></select>
-        </div>
-        <div class="form-group">
-          <label>Año de Análisis</label>
-          <select id="kpiYear" class="form-control"></select>
-        </div>
-        <div class="form-group">
-          <label>Buscar Línea / Modelo</label>
-          <input type="text" id="kpiSearchList" class="form-control" placeholder="Ej: Ancla, Suture...">
-        </div>
-        <div class="form-group">
-          <label>Selección de Familias</label>
-          <div class="checklist-box" id="kpiChecklist"></div>
+    <div class="kpi-controls">
+      <div class="field">
+        <label>Buscar</label>
+        <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
+      </div>
+      <div class="field">
+        <label>Proveedor</label>
+        <select id="kpiProveedor"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label>Año</label>
+        <select id="kpiYear"></select>
+      </div>
+      <div class="kpi-hint" id="kpiHint">Selecciona productos según sus medidas para comparar su rotación.</div>
+    </div>
+    <div class="kpi-controls" style="margin-top:-4px;">
+      <div class="field" style="flex:1;">
+        <div class="kpi-checklist" id="kpiChecklist"></div>
+        <div class="checklist-actions">
+          <button class="link-btn" id="kpiSelectVisible">Seleccionar visibles</button>
+          <button class="link-btn" id="kpiClearSelection">Limpiar selección</button>
         </div>
       </div>
-
-      <div class="chart-container-card">
-        <div class="chart-header">
-          <h3 id="chartTitle">Comparativa de Rotación de Productos</h3>
-          <p id="chartSubtitle">Selecciona ítems del panel izquierdo para analizar desempeño</p>
-        </div>
-        <div style="flex:1; position:relative; min-height:400px;">
-          <canvas id="barChart"></canvas>
-        </div>
-      </div>
+    </div>
+    <div class="chart-card">
+      <h3 id="chartTitle">GRÁFICA DE VENTAS</h3>
+      <p id="chartSubtitle">Selecciona al menos un Grupo o Producto en la lista de arriba</p>
+      <canvas id="barChart"></canvas>
     </div>
   </div>
 </main>
 
 <script>
+/* ============ CONFIG ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
 
-let rawData = [];
-let yearCols = [];
-let activeYearCols = [];
-let providers = [];
-let selectedProviders = new Set();
+let rawData = [];      // filas originales parseadas
+let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
+let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
+let providers = [];     // lista única de proveedores
+let selectedProviders = new Set(); // proveedores activos (vacio = todos)
 let searchText = "";
 let coverageMonths = 3;
 let chartInstance = null;
-let selectedFamilies = new Set();
+let selectedFamilies = new Set(); // familias/productos marcados manualmente para comparar en el gráfico
 
+/* ============ CARGA DE DATOS ============ */
 function loadData(){
-  document.getElementById('statusText').textContent = "Sincronizando con Google Sheets...";
+  document.getElementById('statusText').textContent = "Cargando Historial de Ventas...";
   Papa.parse(SHEET_CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
+    download:true,
+    header:true,
+    skipEmptyLines:true,
     complete: function(results){
       processData(results.data, results.meta.fields);
     },
     error: function(err){
-      document.getElementById('statusText').textContent = "Error de conexión con la fuente de datos.";
+      document.getElementById('statusText').textContent =
+        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web (Archivo > Compartir > Publicar en la web).";
+      console.error(err);
     }
   });
 }
 
 function processData(rows, fields){
+  // Detecta columnas de año: cualquier encabezado de 4 dígitos
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
@@ -761,26 +341,33 @@ function processData(rows, fields){
       item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
     });
     return item;
-  }).filter(r => r.descripcion);
+  }).filter(r => r.descripcion); // descarta filas vacías
 
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
+
+  // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
 
-  document.getElementById('statusText').innerHTML = `Base actualizada · <strong>${rawData.length}</strong> productos · <strong>${providers.length}</strong> proveedores · Años <strong>${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}</strong>`;
+  document.getElementById('statusText').textContent =
+    `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
 
   buildProviderPanel();
   buildKpiSelectors();
   renderTable();
 }
 
+/* ============ CALCULOS ============ */
 function computeMetrics(item){
   const dataYears = activeYearCols.filter(y => item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
+  // Pronóstico: promedio de los últimos 2 años activos con datos reales
   const last2 = dataYears.slice(-2);
   const pronostico = last2.length ? last2.reduce((s,y)=>s+item.years[y],0) / last2.length : 0;
+
+  // Stock sugerido: cuánto stock necesitas para cubrir los meses de cobertura elegidos
   const stockSugerido = (pronostico / 12) * coverageMonths;
 
   return {
@@ -788,10 +375,12 @@ function computeMetrics(item){
     promAnual: Math.round(promAnual),
     promMensual: Math.round(promMensual),
     pronostico: Math.round(pronostico),
-    stockSugerido: Math.round(stockSugerido)
+    stockSugerido: Math.round(stockSugerido),
+    dataYears
   };
 }
 
+// Extrae la "variante" de una descripción quitando el tamaño/medida final
 function getVariant(desc){
   let s = desc.trim();
   const sizeTail = /\s*[\(\/]?\s*[\d][\d.\/°+x×\s-]*\)?\s*(mm|cm|metric)?\.?\s*$/i;
@@ -805,76 +394,62 @@ function getVariant(desc){
   return s.replace(/[-,]\s*$/,"").trim() || desc.trim();
 }
 
+/* ============ FILTROS ============ */
 function getFilteredData(){
   return rawData.filter(r => {
     if(selectedProviders.size && !selectedProviders.has(r.proveedor)) return false;
     if(searchText){
       const t = searchText.toLowerCase();
-      if(!r.descripcion.toLowerCase().includes(t) && !r.codigo.toLowerCase().includes(t) && !r.item.toString().includes(t)) return false;
+      if(!r.descripcion.toLowerCase().includes(t) && !r.codigo.toLowerCase().includes(t)) return false;
     }
     return true;
   });
 }
 
+/* ============ TABLA ============ */
 function renderTable(){
   const nextYear = Number(activeYearCols[activeYearCols.length-1]) + 1;
   const head = document.getElementById('headRow');
   head.innerHTML = `
-    <th class="sticky-1">Ítem</th>
-    <th class="sticky-2">Proveedor</th>
-    <th class="sticky-3">Código</th>
-    <th class="sticky-4">Descripción</th>
-    <th style="text-align:right;">Precio</th>
-    ${activeYearCols.map(y=>`<th style="text-align:right;">${y}</th>`).join("")}
-    <th class="th-calc" style="text-align:right;">Total Ventas</th>
-    <th class="th-calc" style="text-align:right;">Prom. Anual</th>
-    <th class="th-calc" style="text-align:right;">Prom. Mensual</th>
-    <th class="th-calc" style="text-align:right;">Stock Sugerido</th>
-    <th class="th-calc" style="text-align:right;">Pronóstico ${nextYear}</th>
+    <th class="sticky-col col-item">Ítem</th>
+    <th class="sticky-col col-prov">Proveedor</th>
+    <th class="sticky-col col-cod">Código</th>
+    <th class="sticky-col col-desc">Descripción</th>
+    <th>Precio</th>
+    ${activeYearCols.map(y=>`<th>${y}</th>`).join("")}
+    <th class="group-calc">Total Ventas</th>
+    <th class="group-calc">Prom. Anual</th>
+    <th class="group-calc">Prom. Mensual</th>
+    <th class="group-calc">Stock Sugerido</th>
+    <th class="group-calc">Pronóstico ${nextYear}</th>
   `;
 
   const data = getFilteredData();
   const body = document.getElementById('bodyRows');
-
-  // Actualizar KPI Cards
-  let gTotal = 0, gForecast = 0, gStock = 0;
-  data.forEach(r => {
-    const m = computeMetrics(r);
-    gTotal += m.total;
-    gForecast += m.pronostico;
-    gStock += m.stockSugerido;
-  });
-
-  document.getElementById('kpiCount').textContent = data.length;
-  document.getElementById('kpiSubCount').textContent = `de ${rawData.length} ítem(s) totales`;
-  document.getElementById('kpiTotalSales').textContent = gTotal.toLocaleString();
-  document.getElementById('kpiForecast').textContent = gForecast.toLocaleString();
-  document.getElementById('kpiStock').textContent = gStock.toLocaleString();
-  document.getElementById('kpiStockSub').textContent = `Para ${coverageMonths} mes(es) reposición`;
-
   if(!data.length){
-    body.innerHTML = `<tr><td style="text-align:center; padding:40px; color:var(--text-muted);" colspan="${5+activeYearCols.length+5}">No se encontraron resultados para los filtros aplicados.</td></tr>`;
+    body.innerHTML = `<tr><td class="empty-state" colspan="${5+activeYearCols.length+5}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
 
   body.innerHTML = data.map(r => {
     const m = computeMetrics(r);
     return `<tr>
-      <td class="sticky-1" style="color:var(--text-muted); font-weight:600;">${r.item}</td>
-      <td class="sticky-2" style="font-weight:600;">${r.proveedor}</td>
-      <td class="sticky-3"><span class="badge-code">${r.codigo}</span></td>
-      <td class="sticky-4" style="font-weight:500;">${r.descripcion}</td>
-      <td class="num" style="color:var(--text-secondary);">$${r.precio ? Math.round(r.precio) : "-"}</td>
-      ${activeYearCols.map(y => `<td class="num">${r.years[y] === null ? '<span style="color:#CBD5E1">-</span>' : r.years[y]}</td>`).join("")}
-      <td class="num calc-col">${m.total}</td>
-      <td class="num calc-col">${m.promAnual}</td>
-      <td class="num calc-col">${m.promMensual}</td>
-      <td class="num highlight-col">${m.stockSugerido}</td>
-      <td class="num calc-col" style="color:var(--brand-primary); font-weight:700;">${m.pronostico}</td>
+      <td class="sticky-col col-item">${r.item}</td>
+      <td class="sticky-col col-prov">${r.proveedor}</td>
+      <td class="sticky-col col-cod">${r.codigo}</td>
+      <td class="sticky-col col-desc">${r.descripcion}</td>
+      <td class="num">${r.precio ? Math.round(r.precio) : "-"}</td>
+      ${activeYearCols.map(y => `<td class="num">${r.years[y] === null ? "" : r.years[y]}</td>`).join("")}
+      <td class="num calc">${m.total}</td>
+      <td class="num calc">${m.promAnual}</td>
+      <td class="num calc">${m.promMensual}</td>
+      <td class="num calc">${m.stockSugerido}</td>
+      <td class="num calc">${m.pronostico}</td>
     </tr>`;
   }).join("");
 }
 
+/* ============ PANEL PROVEEDORES ============ */
 function buildProviderPanel(){
   const list = document.getElementById('provList');
   list.innerHTML = providers.map(p => `
@@ -895,9 +470,10 @@ function buildProviderPanel(){
   });
 }
 
+/* ============ SELECTORES KPI ============ */
 function buildKpiSelectors(){
   const provSel = document.getElementById('kpiProveedor');
-  provSel.innerHTML = `<option value="">Todos los proveedores</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
+  provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
 
   const yearSel = document.getElementById('kpiYear');
   yearSel.innerHTML = activeYearCols.slice().reverse().map(y=>`<option value="${y}">${y}</option>`).join("");
@@ -910,11 +486,15 @@ function getKpiBaseRows(){
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
+function getKpiKey(row){
+  return getVariant(row.descripcion);
+}
+
 function buildKpiChecklist(){
   const rows = getKpiBaseRows();
   const totals = {};
   rows.forEach(r => {
-    const key = getVariant(r.descripcion);
+    const key = getKpiKey(r);
     const sumAll = activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
     totals[key] = (totals[key] || 0) + sumAll;
   });
@@ -924,7 +504,8 @@ function buildKpiChecklist(){
   list.innerHTML = keys.map(k => `
     <label data-key="${encodeURIComponent(k)}">
       <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
-      <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${k}</span>
+      ${k}
+      <span class="count">${totals[k]} uds. hist.</span>
     </label>
   `).join("");
 
@@ -938,13 +519,14 @@ function buildKpiChecklist(){
   });
 }
 
+/* ============ GRAFICO KPI ============ */
 function renderChart(){
   const year = document.getElementById('kpiYear').value;
   const subtitle = document.getElementById('chartSubtitle');
 
   if(!selectedFamilies.size){
-    subtitle.textContent = "Selecciona al menos una línea/modelo en el panel para generar la comparativa.";
-    document.getElementById('chartTitle').textContent = "Comparativa de Rotación de Productos";
+    subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
+    document.getElementById('chartTitle').textContent = "GRÁFICA DE VENTAS";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
   }
@@ -952,7 +534,7 @@ function renderChart(){
   const rows = getKpiBaseRows();
   const groups = {};
   rows.forEach(r => {
-    const key = getVariant(r.descripcion);
+    const key = getKpiKey(r);
     if(!selectedFamilies.has(key)) return;
     const val = r.years[year] || 0;
     groups[key] = (groups[key] || 0) + val;
@@ -961,10 +543,10 @@ function renderChart(){
   const entries = Object.entries(groups).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v]) => s + v, 0);
 
-  document.getElementById('chartTitle').textContent = `Desempeño de Ventas · Año ${year}`;
+  document.getElementById('chartTitle').textContent = `Ventas ${year} · comparación de ${selectedFamilies.size} productos`;
   subtitle.textContent = total
-    ? `Unidades totales vendidas: ${total.toLocaleString()} (${selectedFamilies.size} líneas seleccionadas)`
-    : `Sin registros de venta en ${year} para la selección actual`;
+    ? `${total} unidades vendidas en total entre lo seleccionado`
+    : `Sin ventas registradas en ${year} para lo seleccionado`;
 
   const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
@@ -973,37 +555,50 @@ function renderChart(){
     data: {
       labels: entries.map(([k]) => k),
       datasets: [{
-        label: `Ventas ${year}`,
+        label: `Unidades vendidas ${year}`,
         data: entries.map(([,v]) => v),
-        backgroundColor: '#0066FF',
+        backgroundColor: '#007BFF',
         borderRadius: 6,
       }]
     },
     options: {
       indexAxis: 'y',
       responsive: true,
-      maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+              return `${ctx.raw} unidades (${pct}%)`;
+            }
+          }
+        }
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: '#E2E8F0' } },
+        x: { beginAtZero: true, grid: { color: '#CBD5E1' } },
         y: { grid: { display: false } }
       }
     }
   });
 }
 
-// UI Controls & Popovers
+/* ============ EVENTOS UI ============ */
 function togglePanel(id){
-  ['panelProv','panelCobertura'].forEach(p => {
+  ['panelProv','panelBuscar','panelCobertura'].forEach(p => {
     document.getElementById(p).classList.toggle('open', p === id ? !document.getElementById(id).classList.contains('open') : false);
   });
 }
 
 document.getElementById('btnProv').onclick = () => togglePanel('panelProv');
+document.getElementById('btnBuscar').onclick = () => togglePanel('panelBuscar');
 document.getElementById('btnCobertura').onclick = () => togglePanel('panelCobertura');
 
+document.getElementById('provAll').onclick = () => {
+  selectedProviders = new Set(providers);
+  document.querySelectorAll('.prov-check').forEach(cb => cb.checked = true);
+  renderTable();
+};
 document.getElementById('provNone').onclick = () => {
   selectedProviders.clear();
   document.querySelectorAll('.prov-check').forEach(cb => cb.checked = false);
@@ -1018,15 +613,15 @@ document.getElementById('searchInput').addEventListener('input', e => {
 document.getElementById('coverageSlider').addEventListener('input', e => {
   coverageMonths = parseInt(e.target.value);
   document.getElementById('coverageVal').textContent = coverageMonths;
-  document.getElementById('covLabel').textContent = `${coverageMonths} Meses`;
+  document.getElementById('covLabel').textContent = coverageMonths;
   renderTable();
 });
 
 document.getElementById('refreshBtn').onclick = loadData;
 
-document.querySelectorAll('.tab-btn').forEach(tab => {
+document.querySelectorAll('.tab').forEach(tab => {
   tab.onclick = () => {
-    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     const view = tab.dataset.view.toLowerCase();
     document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
@@ -1049,14 +644,31 @@ document.getElementById('kpiSearchList').addEventListener('input', e => {
   });
 });
 
+document.getElementById('kpiSelectVisible').onclick = () => {
+  document.querySelectorAll('#kpiChecklist label').forEach(l => {
+    if(l.style.display !== "none"){
+      selectedFamilies.add(decodeURIComponent(l.dataset.key));
+    }
+  });
+  buildKpiChecklist();
+  renderChart();
+};
+
+document.getElementById('kpiClearSelection').onclick = () => {
+  selectedFamilies.clear();
+  buildKpiChecklist();
+  renderChart();
+};
+
 document.addEventListener('click', (e) => {
-  const isPanel = e.target.closest('.popover-panel');
-  const isBtn = e.target.closest('.btn-filter');
+  const isPanel = e.target.closest('.panel');
+  const isBtn = e.target.closest('.toolbar');
   if(!isPanel && !isBtn){
-    document.querySelectorAll('.popover-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
   }
 });
 
+/* ============ INICIO ============ */
 loadData();
 </script>
 </body>
