@@ -46,7 +46,7 @@
     gap:10px;
     margin-right:auto;
   }
-  .brand img{height:40px;display:block;}
+  .brand img{height:80px;display:block;}
   .brand .divider{width:1px;height:28px;background:rgba(255,255,255,.25);}
   .brand h1{font-size:15px;font-weight:600;margin:0;letter-spacing:.3px;opacity:.9;}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -123,7 +123,7 @@
   tbody tr:hover{background:var(--sky-soft);}
   tbody tr:nth-child(even){background:#FAFBFC;}
   tbody tr:nth-child(even):hover{background:var(--sky-soft);}
-  td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  td.num{text-align:center;font-variant-numeric:tabular-nums;}
   td.calc{background:#F1F8FC;font-weight:600;}
   .sticky-col{position:sticky;background:inherit;}
   th.sticky-col{background:var(--navy);}
@@ -176,7 +176,7 @@
   </div>
 
   <div class="toolbar">
-    <button class="btn" id="btnProv">🏷️ Lista de proveedores</button>
+    <button class="btn" id="btnProv">🏷️ Lista de Proveedores</button>
     <button class="btn" id="btnBuscar">🔍 Buscar</button>
     <button class="btn" id="btnCobertura">📦 Cobertura (<span id="covLabel">3</span> meses)</button>
   </div>
@@ -185,7 +185,7 @@
 <!-- Panel: proveedores -->
 <div class="panel" id="panelProv">
   <h3>Filtrar por proveedor</h3>
-  <input type="text" id="provSearch" placeholder="Buscar proveedor...">
+  <input type="text" id="provSearch" placeholder="Buscar Proveedor...">
   <div class="prov-list" id="provList"></div>
   <div class="panel-actions">
     <button class="link-btn" id="provAll">Seleccionar todos</button>
@@ -243,12 +243,12 @@
         <label>Año</label>
         <select id="kpiYear"></select>
       </div>
-      <div class="kpi-hint" id="kpiHint">Marca abajo las familias o productos que quieres comparar. Puedes buscar para filtrar la lista, pero tu selección se mantiene aunque cambies la búsqueda.</div>
+      <div class="kpi-hint" id="kpiHint">Selecciona los Grupos o Productos que quieres comparar.</div>
     </div>
     <div class="kpi-controls" style="margin-top:-4px;">
       <div class="field" style="flex:1;min-width:280px;">
         <label>Buscar en la lista</label>
-        <input type="text" id="kpiSearchList" placeholder="ej: Ancla, Copa Dualis, Glenosferas...">
+        <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
         <div class="kpi-checklist" id="kpiChecklist"></div>
         <div class="checklist-actions">
           <button class="link-btn" id="kpiSelectVisible">Seleccionar visibles</button>
@@ -258,7 +258,7 @@
     </div>
     <div class="chart-card">
       <h3 id="chartTitle">Participación de ventas</h3>
-      <p id="chartSubtitle">Selecciona al menos una familia o producto en la lista de arriba</p>
+      <p id="chartSubtitle">Selecciona al menos un Grupo o Producto en la lista de arriba</p>
       <canvas id="barChart"></canvas>
     </div>
   </div>
@@ -269,7 +269,8 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
 
 let rawData = [];      // filas originales parseadas
-let yearCols = [];      // columnas de año detectadas, ej [2019,2020,...]
+let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
+let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
 let providers = [];     // lista única de proveedores
 let selectedProviders = new Set(); // proveedores activos (vacio = todos)
 let searchText = "";
@@ -279,7 +280,7 @@ let selectedFamilies = new Set(); // familias/productos marcados manualmente par
 
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
-  document.getElementById('statusText').textContent = "Cargando historial de ventas...";
+  document.getElementById('statusText').textContent = "Cargando Historial de Ventas...";
   Papa.parse(SHEET_CSV_URL, {
     download:true,
     header:true,
@@ -317,8 +318,11 @@ function processData(rows, fields){
 
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
 
+  // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
+  activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
+
   document.getElementById('statusText').textContent =
-    `${rawData.length} productos cargados · ${providers.length} proveedores · años ${yearCols[0]}–${yearCols[yearCols.length-1]}`;
+    `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
 
   buildProviderPanel();
   buildKpiSelectors();
@@ -327,19 +331,26 @@ function processData(rows, fields){
 
 /* ============ CALCULOS ============ */
 function computeMetrics(item){
-  const dataYears = yearCols.filter(y => item.years[y] !== null);
+  const dataYears = activeYearCols.filter(y => item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: promedio móvil de los últimos 3 años con datos reales
+  // Pronóstico: promedio móvil de los últimos 3 años activos con datos reales
   const last3 = dataYears.slice(-3);
   const pronostico = last3.length ? last3.reduce((s,y)=>s+item.years[y],0) / last3.length : 0;
 
   // Compras sugeridas: pronóstico anual repartido según meses de cobertura elegidos
   const comprasSugeridas = (pronostico / 12) * coverageMonths;
 
-  return { total, promAnual, promMensual, pronostico, comprasSugeridas, dataYears };
+  return {
+    total: Math.round(total),
+    promAnual: Math.round(promAnual),
+    promMensual: Math.round(promMensual),
+    pronostico: Math.round(pronostico),
+    comprasSugeridas: Math.round(comprasSugeridas),
+    dataYears
+  };
 }
 
 // Extrae la "variante" de una descripción quitando el tamaño/medida final
@@ -370,6 +381,7 @@ function getFilteredData(){
 
 /* ============ TABLA ============ */
 function renderTable(){
+  const nextYear = Number(activeYearCols[activeYearCols.length-1]) + 1;
   const head = document.getElementById('headRow');
   head.innerHTML = `
     <th class="sticky-col col-item">Ítem</th>
@@ -377,18 +389,18 @@ function renderTable(){
     <th class="sticky-col col-cod">Código</th>
     <th class="sticky-col col-desc">Descripción</th>
     <th>Precio</th>
-    ${yearCols.map(y=>`<th>${y}</th>`).join("")}
+    ${activeYearCols.map(y=>`<th>${y}</th>`).join("")}
     <th class="group-calc">Total ventas</th>
     <th class="group-calc">Prom. anual</th>
     <th class="group-calc">Prom. mensual</th>
-    <th class="group-calc">Pronóstico ${Number(yearCols[yearCols.length-1])+1}</th>
+    <th class="group-calc">Pronóstico ${nextYear}</th>
     <th class="group-calc">Compras sugeridas</th>
   `;
 
   const data = getFilteredData();
   const body = document.getElementById('bodyRows');
   if(!data.length){
-    body.innerHTML = `<tr><td class="empty-state" colspan="${5+yearCols.length+5}">Sin resultados para este filtro.</td></tr>`;
+    body.innerHTML = `<tr><td class="empty-state" colspan="${5+activeYearCols.length+5}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
 
@@ -399,13 +411,13 @@ function renderTable(){
       <td class="sticky-col col-prov">${r.proveedor}</td>
       <td class="sticky-col col-cod">${r.codigo}</td>
       <td class="sticky-col col-desc">${r.descripcion}</td>
-      <td class="num">${r.precio ? r.precio.toFixed(2) : "-"}</td>
-      ${yearCols.map(y => `<td class="num">${r.years[y] === null ? "" : r.years[y]}</td>`).join("")}
+      <td class="num">${r.precio ? Math.round(r.precio) : "-"}</td>
+      ${activeYearCols.map(y => `<td class="num">${r.years[y] === null ? "" : r.years[y]}</td>`).join("")}
       <td class="num calc">${m.total}</td>
-      <td class="num calc">${m.promAnual.toFixed(1)}</td>
-      <td class="num calc">${m.promMensual.toFixed(1)}</td>
-      <td class="num calc">${Math.round(m.pronostico)}</td>
-      <td class="num calc">${Math.round(m.comprasSugeridas)}</td>
+      <td class="num calc">${m.promAnual}</td>
+      <td class="num calc">${m.promMensual}</td>
+      <td class="num calc">${m.pronostico}</td>
+      <td class="num calc">${m.comprasSugeridas}</td>
     </tr>`;
   }).join("");
 }
@@ -437,7 +449,7 @@ function buildKpiSelectors(){
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
 
   const yearSel = document.getElementById('kpiYear');
-  yearSel.innerHTML = yearCols.slice().reverse().map(y=>`<option value="${y}">${y}</option>`).join("");
+  yearSel.innerHTML = activeYearCols.slice().reverse().map(y=>`<option value="${y}">${y}</option>`).join("");
 
   buildKpiChecklist();
 }
@@ -460,7 +472,7 @@ function buildKpiChecklist(){
   const totals = {};
   rows.forEach(r => {
     const key = getKpiKey(r);
-    const sumAll = yearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
+    const sumAll = activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
     totals[key] = (totals[key] || 0) + sumAll;
   });
   const keys = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
