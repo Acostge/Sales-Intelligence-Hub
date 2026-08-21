@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIEMCA · GESTIÓN DE VENTAS</title>
+<title>PIEMCA · Gestión de Ventas</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -48,7 +48,7 @@
   }
   .brand img{height:60px;display:block;}
   .brand .divider{width:1px;height:28px;background:rgba(255,255,255,.25);}
-  .brand h1{font-size:20px;font-weight:600;margin:0;letter-spacing:.3px;opacity:.9;}
+  .brand h1{font-size:15px;font-weight:600;margin:0;letter-spacing:.3px;opacity:.9;text-transform:uppercase;}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .btn{
     background:rgba(255,255,255,.08);
@@ -148,7 +148,7 @@
   .segmented div{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--gray);}
   .segmented div.active{background:var(--navy);color:var(--white);font-weight:600;}
   .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;}
-  .kpi-checklist{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
+  .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
   .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;}
   .kpi-checklist label span.count{margin-left:auto;color:var(--gray);font-size:11.5px;}
   .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
@@ -229,11 +229,8 @@
   <div id="viewKpi" class="hidden">
     <div class="kpi-controls">
       <div class="field">
-        <label>Agrupar por</label>
-        <div class="segmented" id="groupToggle">
-          <div class="active" data-mode="familia">Grupo</div>
-          <div data-mode="producto">Producto individual</div>
-        </div>
+        <label>Buscar</label>
+        <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
       </div>
       <div class="field">
         <label>Proveedor</label>
@@ -243,12 +240,10 @@
         <label>Año</label>
         <select id="kpiYear"></select>
       </div>
-      <div class="kpi-hint" id="kpiHint">Selecciona los Grupos o Productos que quieres comparar.</div>
+      <div class="kpi-hint" id="kpiHint">Marca en la lista de abajo lo que quieres comparar.</div>
     </div>
     <div class="kpi-controls" style="margin-top:-4px;">
-      <div class="field" style="flex:1;min-width:280px;">
-        <label>Buscar en la lista</label>
-        <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
+      <div class="field" style="flex:1;">
         <div class="kpi-checklist" id="kpiChecklist"></div>
         <div class="checklist-actions">
           <button class="link-btn" id="kpiSelectVisible">Seleccionar visibles</button>
@@ -463,10 +458,9 @@ function getKpiBaseRows(){
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
-// Clave de agrupación según el modo activo (familia = variante sin talla, producto = descripción completa)
+// Clave de agrupación: variante (descripción sin la talla/medida final), agrupa todas las tallas de un mismo modelo
 function getKpiKey(row){
-  const mode = document.querySelector('#groupToggle div.active').dataset.mode;
-  return mode === "familia" ? getVariant(row.descripcion) : row.descripcion;
+  return getVariant(row.descripcion);
 }
 
 // Construye la lista de checkboxes con todas las familias/productos disponibles
@@ -502,11 +496,10 @@ function buildKpiChecklist(){
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
   const year = document.getElementById('kpiYear').value;
-  const mode = document.querySelector('#groupToggle div.active').dataset.mode;
   const subtitle = document.getElementById('chartSubtitle');
 
   if(!selectedFamilies.size){
-    subtitle.textContent = "Selecciona al menos una familia o producto en la lista de arriba";
+    subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
     document.getElementById('chartTitle').textContent = "Participación de ventas";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
@@ -524,7 +517,7 @@ function renderChart(){
   const entries = Object.entries(groups).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v]) => s + v, 0);
 
-  document.getElementById('chartTitle').textContent = `Ventas ${year} · comparación de ${selectedFamilies.size} ${mode === "familia" ? "familias" : "productos"}`;
+  document.getElementById('chartTitle').textContent = `Ventas ${year} · comparación de ${selectedFamilies.size} productos`;
   subtitle.textContent = total
     ? `${total} unidades vendidas en total entre lo seleccionado`
     : `Sin ventas registradas en ${year} para lo seleccionado`;
@@ -608,16 +601,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
     if(view === 'kpi') renderChart();
-  };
-});
-
-document.querySelectorAll('#groupToggle div').forEach(opt => {
-  opt.onclick = () => {
-    document.querySelectorAll('#groupToggle div').forEach(o => o.classList.remove('active'));
-    opt.classList.add('active');
-    selectedFamilies.clear(); // familia y producto usan claves distintas, se reinicia la selección
-    buildKpiChecklist();
-    renderChart();
   };
 });
 
