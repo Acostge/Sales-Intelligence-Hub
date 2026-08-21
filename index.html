@@ -4,319 +4,168 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PIEMCA · Gestión de Ventas</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
-    /* UI 2026 Modern Palette */
-    --brand-navy:#0A192F;
-    --brand-accent:#2563EB;
-    --brand-accent-hover:#1D4ED8;
-    --brand-light:#EFF6FF;
-    
-    --bg-main:#F8FAFC;
-    --card-bg:#FFFFFF;
-    --border-color:#E2E8F0;
-    --border-focus:#93C5FD;
-    
-    --text-primary:#0F172A;
-    --text-secondary:#64748B;
-    --text-muted:#94A3B8;
-    
-    --calc-bg:#F0F9FF;
-    --calc-text:#0284C7;
-    --calc-border:#BAE6FD;
-
-    --radius-sm:8px;
-    --radius-md:12px;
-    --radius-lg:16px;
-    --shadow-subtle:0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
-    --shadow-card:0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
-    --shadow-float:0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    --navy:#0B3B5C;
+    --navy-deep:#082B44;
+    --sky:#3FA9D9;
+    --sky-soft:#DCEFF9;
+    --gray:#5B6B78;
+    --gray-line:#DCE3E8;
+    --bg:#F3F6F8;
+    --white:#FFFFFF;
+    --text:#1E2A32;
+    --good:#2E9E6D;
+    --warn:#C9762E;
   }
-
-  *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
-  
+  *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background:var(--bg-main);
-    color:var(--text-primary);
+    font-family:"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
   }
-
-  /* Header Frosted Glass */
   header{
-    background:rgba(10, 25, 47, 0.95);
-    backdrop-filter:blur(12px);
-    color:#FFFFFF;
-    padding:12px 28px;
+    background:linear-gradient(120deg,var(--navy-deep),var(--navy) 70%);
+    color:var(--white);
+    padding:14px 24px;
     display:flex;
     align-items:center;
-    gap:24px;
+    gap:20px;
     flex-wrap:wrap;
     position:sticky;
     top:0;
     z-index:50;
-    border-bottom:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 2px 10px rgba(8,43,68,.25);
   }
-
   .brand{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
     margin-right:auto;
   }
-  .brand img{height:42px;display:block;}
-  .brand .divider{width:1px;height:24px;background:rgba(255,255,255,0.2);}
-  .brand h1{
-    font-size:14px;
-    font-weight:700;
-    margin:0;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:#F8FAFC;
-  }
-
-  .tabs{
-    display:flex;
-    background:rgba(255, 255, 255, 0.08);
-    padding:4px;
-    border-radius:var(--radius-md);
-    gap:4px;
-    border:1px solid rgba(255,255,255,0.1);
-  }
-  .tab{
-    padding:7px 16px;
-    border-radius:var(--radius-sm);
-    cursor:pointer;
-    font-size:13px;
-    font-weight:600;
-    color:var(--text-muted);
-    transition:all 0.2s ease;
-  }
-  .tab:hover{color:#FFFFFF;}
-  .tab.active{
-    background:#FFFFFF;
-    color:var(--brand-navy);
-    box-shadow:0 2px 6px rgba(0,0,0,0.15);
-  }
-
+  .brand img{height:60px;display:block;}
+  .brand .divider{width:1px;height:28px;background:rgba(255,255,255,.25);}
+  .brand h1{font-size:15px;font-weight:600;margin:0;letter-spacing:.3px;opacity:.9;text-transform:uppercase;}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .btn{
-    background:rgba(255, 255, 255, 0.08);
-    border:1px solid rgba(255, 255, 255, 0.15);
-    color:#FFFFFF;
-    padding:8px 14px;
-    border-radius:var(--radius-md);
-    font-size:12.5px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.3);
+    color:var(--white);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
     font-weight:600;
     cursor:pointer;
     display:flex;
     align-items:center;
-    gap:8px;
-    transition:all 0.2s ease;
+    gap:7px;
+    transition:.15s;
     white-space:nowrap;
   }
-  .btn:hover, .btn.active{
-    background:var(--brand-accent);
-    border-color:var(--brand-accent);
-    box-shadow:0 4px 12px rgba(37, 99, 235, 0.3);
-  }
+  .btn:hover{background:var(--sky);border-color:var(--sky);}
+  .btn.active{background:var(--sky);border-color:var(--sky);}
   .cov-badge{
-    background:rgba(255,255,255,0.2);
-    padding:2px 8px;
-    border-radius:12px;
-    font-size:11px;
+    background:rgba(255,255,255,.18);
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:12px;
     font-weight:700;
   }
+  .tabs{display:flex;gap:6px;margin-left:8px;}
+  .tab{
+    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;
+    color:rgba(255,255,255,.75);
+  }
+  .tab.active{background:var(--white);color:var(--navy);}
 
-  /* Paneles Flotantes Modernos */
   .panel{
-    position:fixed;
-    top:68px;
-    right:28px;
-    background:var(--card-bg);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-float);
-    padding:20px;
-    width:300px;
+    position:fixed;top:70px;right:24px;
+    background:var(--white);
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(8,43,68,.25);
+    padding:16px;
+    width:280px;
     z-index:60;
-    border:1px solid var(--border-color);
+    border:1px solid var(--gray-line);
     display:none;
-    animation:fadeIn 0.15s ease-out;
   }
-  @keyframes fadeIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-  
   .panel.open{display:block;}
-  .panel h3{margin:0 0 12px;font-size:12px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;letter-spacing:0.8px;}
+  .panel h3{margin:0 0 10px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
   .panel input[type=text]{
-    width:100%;
-    padding:10px 12px;
-    border:1px solid var(--border-color);
-    border-radius:var(--radius-md);
-    font-size:13px;
-    margin-bottom:12px;
-    font-family:inherit;
-    transition:border-color 0.2s, box-shadow 0.2s;
+    width:100%;padding:8px 10px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
   }
-  .panel input[type=text]:focus{
-    outline:none;
-    border-color:var(--brand-accent);
-    box-shadow:0 0 0 3px rgba(37, 99, 235, 0.15);
-  }
-  .prov-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
-  .prov-list label{font-size:13px;display:flex;gap:10px;align-items:center;cursor:pointer;color:var(--text-primary);font-weight:500;}
-  .prov-list input[type=checkbox]{accent-color:var(--brand-accent);width:16px;height:16px;border-radius:4px;}
-  .panel-actions{display:flex;justify-content:space-between;margin-top:14px;padding-top:10px;border-top:1px solid var(--border-color);}
-  .link-btn{background:none;border:none;color:var(--brand-accent);font-size:12px;cursor:pointer;font-weight:700;font-family:inherit;}
-  .link-btn:hover{text-decoration:underline;}
-  
-  .coverage-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-  .coverage-row input[type=range]{flex:1;accent-color:var(--brand-accent);}
-  .coverage-val{font-size:24px;font-weight:800;color:var(--brand-navy);width:36px;text-align:center;}
+  .prov-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+  .prov-list label{font-size:13px;display:flex;gap:8px;align-items:center;cursor:pointer;}
+  .panel-actions{display:flex;justify-content:space-between;margin-top:10px;}
+  .link-btn{background:none;border:none;color:var(--sky);font-size:12px;cursor:pointer;font-weight:600;}
+  .coverage-row{display:flex;align-items:center;gap:10px;}
+  .coverage-row input[type=range]{flex:1;}
+  .coverage-val{font-size:20px;font-weight:700;color:var(--navy);width:34px;text-align:center;}
 
-  /* Main Layout */
-  main{padding:24px 28px 60px;max-width:1600px;margin:0 auto;}
+  main{padding:18px 24px 60px;}
   .status-bar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:13px;
-    color:var(--text-secondary);
-    margin-bottom:16px;
-    font-weight:500;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:12.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
-  .status-bar .refresh{
-    color:var(--brand-accent);
-    cursor:pointer;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    transition:opacity 0.2s;
-  }
-  .status-bar .refresh:hover{opacity:0.8;}
-
-  /* Tabla Estilo Bento / Ultra Limpia */
+  .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
   .table-wrap{
-    background:var(--card-bg);
-    border-radius:var(--radius-lg);
+    background:var(--white);
+    border-radius:12px;
     overflow:auto;
-    box-shadow:var(--shadow-card);
+    box-shadow:0 2px 12px rgba(8,43,68,.08);
     max-height:74vh;
-    border:1px solid var(--border-color);
+    border:1px solid var(--gray-line);
   }
-  table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;}
   thead th{
-    position:sticky;
-    top:0;
-    background:#F1F5F9;
-    color:var(--text-secondary);
-    padding:12px 14px;
-    text-align:center;
-    font-weight:700;
-    white-space:nowrap;
-    z-index:5;
-    border-bottom:1px solid var(--border-color);
-    font-size:11.5px;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
+    position:sticky;top:0;background:var(--navy);color:var(--white);
+    padding:10px 10px;text-align:center;font-weight:600;white-space:nowrap;z-index:5;
+    border-right:1px solid rgba(255,255,255,.08);
   }
-  thead th.group-calc{
-    background:var(--calc-bg);
-    color:var(--calc-text);
-    border-bottom:1px solid var(--calc-border);
-  }
-  tbody td{
-    padding:10px 14px;
-    border-bottom:1px solid var(--border-color);
-    white-space:nowrap;
-    color:var(--text-primary);
-    font-weight:500;
-  }
-  tbody tr{transition:background 0.15s;}
-  tbody tr:hover{background:#F8FAFC;}
-  tbody tr:last-child td{border-bottom:none;}
-  
+  thead th.group-calc{background:var(--sky);color:var(--navy-deep);}
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--gray-line);white-space:nowrap;color:var(--text);}
+  tbody tr:hover{background:var(--sky-soft);}
+  tbody tr:nth-child(even){background:#FAFBFC;}
+  tbody tr:nth-child(even):hover{background:var(--sky-soft);}
   td.num{text-align:center;font-variant-numeric:tabular-nums;}
-  td.calc{
-    background:var(--calc-bg);
-    color:var(--calc-text);
-    font-weight:700;
-  }
+  td.calc{background:#F1F8FC;font-weight:600;}
   .sticky-col{position:sticky;background:inherit;}
-  th.sticky-col{background:#F1F5F9;}
-  .col-item{left:0;min-width:50px;}
-  .col-prov{left:50px;min-width:160px;}
-  .col-cod{left:210px;min-width:120px;}
-  .col-desc{left:330px;min-width:280px;box-shadow:4px 0 8px -2px rgba(0,0,0,0.05);}
+  th.sticky-col{background:var(--navy);}
+  .col-item{left:0;min-width:46px;}
+  .col-prov{left:46px;min-width:150px;}
+  .col-cod{left:196px;min-width:110px;}
+  .col-desc{left:306px;min-width:260px;box-shadow:2px 0 4px rgba(0,0,0,.06);}
 
-  .empty-state{padding:60px 20px;text-align:center;color:var(--text-muted);font-weight:600;}
+  .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
+  .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
 
-  /* Dashboard / Vista KPI Modernizada */
+  /* KPI view */
   .kpi-controls{
-    display:flex;
-    gap:16px;
-    flex-wrap:wrap;
-    align-items:flex-end;
-    background:var(--card-bg);
-    border:1px solid var(--border-color);
-    border-radius:var(--radius-lg);
-    padding:20px;
-    margin-bottom:16px;
-    box-shadow:var(--shadow-card);
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
   }
-  .field{display:flex;flex-direction:column;gap:6px;}
-  .field label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;}
-  .field input, .field select{
-    padding:9px 12px;
-    border:1px solid var(--border-color);
-    border-radius:var(--radius-md);
-    font-size:13px;
-    width:220px;
-    height:40px;
-    box-sizing:border-box;
-    font-weight:500;
-    font-family:inherit;
-    background:var(--card-bg);
-    color:var(--text-primary);
-  }
-  .field input:focus, .field select:focus{
-    outline:none;
-    border-color:var(--brand-accent);
-    box-shadow:0 0 0 3px rgba(37, 99, 235, 0.15);
-  }
-  .kpi-hint{font-size:12px;color:var(--text-muted);max-width:280px;line-height:1.4;font-weight:500;}
-  
-  .kpi-checklist{
-    max-height:350px;
-    overflow-y:auto;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    border:1px solid var(--border-color);
-    border-radius:var(--radius-md);
-    padding:12px;
-    background:var(--bg-main);
-  }
-  .kpi-checklist label{font-size:13px;display:flex;gap:10px;align-items:center;cursor:pointer;font-weight:500;}
-  .kpi-checklist input[type=checkbox]{accent-color:var(--brand-accent);width:16px;height:16px;border-radius:4px;}
-  .kpi-checklist label span.count{margin-left:auto;color:var(--text-muted);font-size:12px;font-weight:600;}
-  .checklist-actions{display:flex;justify-content:space-between;margin-top:10px;}
-
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+  .field input,.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
+  .segmented{display:flex;border:1px solid var(--gray-line);border-radius:7px;overflow:hidden;}
+  .segmented div{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--gray);}
+  .segmented div.active{background:var(--navy);color:var(--white);font-weight:600;}
+  .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;}
+  .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
+  .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;}
+  .kpi-checklist input[type=checkbox]{width:16px;height:16px;}
+  .kpi-checklist label span.count{margin-left:auto;color:var(--gray);font-size:11.5px;}
+  .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
   .chart-card{
-    background:var(--card-bg);
-    border:1px solid var(--border-color);
-    border-radius:var(--radius-lg);
-    padding:28px;
-    box-shadow:var(--shadow-card);
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;
   }
-  .chart-card h3{margin:0 0 6px;color:var(--brand-navy);font-size:18px;font-weight:800;letter-spacing:-0.3px;}
-  .chart-card p{margin:0 0 20px;color:var(--text-secondary);font-size:13px;font-weight:500;}
-  #barChart{max-height:500px;}
+  .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
+  .chart-card p{margin:0 0 14px;color:var(--gray);font-size:12.5px;}
+  #barChart{max-height:520px;}
   .hidden{display:none !important;}
 </style>
 </head>
@@ -356,7 +205,7 @@
 <div class="panel" id="panelBuscar">
   <h3>Buscar producto</h3>
   <input type="text" id="searchInput" placeholder="Descripción o código...">
-  <div class="kpi-hint">Filtra en tiempo real por Descripción o Código.</div>
+  <div class="kpi-hint">Filtra por Descripción o Código.</div>
 </div>
 
 <!-- Panel: cobertura -->
@@ -366,7 +215,7 @@
     <input type="range" id="coverageSlider" min="1" max="12" value="3">
     <div class="coverage-val" id="coverageVal">3</div>
   </div>
-  <div class="kpi-hint">Selecciona los meses de inventario que quieres cubrir.</div>
+  <div class="kpi-hint"> Selecciona los meses de inventario que quieres cubrir.</div>
 </div>
 
 <main>
@@ -401,7 +250,7 @@
       </div>
       <div class="kpi-hint" id="kpiHint">Selecciona productos según sus medidas para comparar su rotación.</div>
     </div>
-    <div class="kpi-controls" style="margin-top:-6px;">
+    <div class="kpi-controls" style="margin-top:-4px;">
       <div class="field" style="flex:1;">
         <div class="kpi-checklist" id="kpiChecklist"></div>
         <div class="checklist-actions">
@@ -422,15 +271,15 @@
 /* ============ CONFIG ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
 
-let rawData = [];      
-let yearCols = [];      
-let activeYearCols = []; 
-let providers = [];     
-let selectedProviders = new Set(); 
+let rawData = [];      // filas originales parseadas
+let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
+let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
+let providers = [];     // lista única de proveedores
+let selectedProviders = new Set(); // proveedores activos (vacio = todos)
 let searchText = "";
 let coverageMonths = 3;
 let chartInstance = null;
-let selectedFamilies = new Set(); 
+let selectedFamilies = new Set(); // familias/productos marcados manualmente para comparar en el gráfico
 
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
@@ -451,6 +300,7 @@ function loadData(){
 }
 
 function processData(rows, fields){
+  // Detecta columnas de año: cualquier encabezado de 4 dígitos
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
@@ -467,13 +317,15 @@ function processData(rows, fields){
       item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
     });
     return item;
-  }).filter(r => r.descripcion); 
+  }).filter(r => r.descripcion); // descarta filas vacías
 
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
+
+  // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
 
   document.getElementById('statusText').textContent =
-    `${rawData.length} productos cargados · ${providers.length} proveedores · años activos (${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]})`;
+    `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
 
   buildProviderPanel();
   buildKpiSelectors();
@@ -487,9 +339,13 @@ function computeMetrics(item){
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
+  // Pronóstico: promedio de los últimos 2 años activos con datos reales
+  // (ej. el pronóstico de 2027 se calcula con las ventas de 2025 y 2026)
   const last2 = dataYears.slice(-2);
   const pronostico = last2.length ? last2.reduce((s,y)=>s+item.years[y],0) / last2.length : 0;
 
+  // Stock sugerido: cuánto stock necesitas para cubrir los meses de cobertura elegidos,
+  // en base al ritmo de ventas mensual que arroja el pronóstico
   const stockSugerido = (pronostico / 12) * coverageMonths;
 
   return {
@@ -502,6 +358,7 @@ function computeMetrics(item){
   };
 }
 
+// Extrae la "variante" de una descripción quitando el tamaño/medida final
 function getVariant(desc){
   let s = desc.trim();
   const sizeTail = /\s*[\(\/]?\s*[\d][\d.\/°+x×\s-]*\)?\s*(mm|cm|metric)?\.?\s*$/i;
@@ -543,6 +400,7 @@ function renderTable(){
     <th class="group-calc">Prom. Mensual</th>
     <th class="group-calc">Stock Sugerido</th>
     <th class="group-calc">Pronóstico ${nextYear}</th>
+   
   `;
 
   const data = getFilteredData();
@@ -602,15 +460,18 @@ function buildKpiSelectors(){
   buildKpiChecklist();
 }
 
+// Devuelve el conjunto de filas a considerar según el proveedor elegido en la vista KPI
 function getKpiBaseRows(){
   const provFilter = document.getElementById('kpiProveedor').value;
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
+// Clave de agrupación: variante (descripción sin la talla/medida final), agrupa todas las tallas de un mismo modelo
 function getKpiKey(row){
   return getVariant(row.descripcion);
 }
 
+// Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
   const rows = getKpiBaseRows();
   const totals = {};
@@ -678,8 +539,8 @@ function renderChart(){
       datasets: [{
         label: `Unidades vendidas ${year}`,
         data: entries.map(([,v]) => v),
-        backgroundColor: '#2563EB',
-        borderRadius: 8,
+        backgroundColor: '#3FA9D9',
+        borderRadius: 4,
       }]
     },
     options: {
@@ -688,9 +549,6 @@ function renderChart(){
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#0A192F',
-          padding: 12,
-          cornerRadius: 8,
           callbacks: {
             label: (ctx) => {
               const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
@@ -700,7 +558,7 @@ function renderChart(){
         }
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: '#E2E8F0' } },
+        x: { beginAtZero: true, grid: { color: '#EAEFF2' } },
         y: { grid: { display: false } }
       }
     }
@@ -784,6 +642,7 @@ document.getElementById('kpiClearSelection').onclick = () => {
   renderChart();
 };
 
+// Cierra los paneles flotantes si se hace click fuera
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
   const isBtn = e.target.closest('.toolbar');
