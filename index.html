@@ -493,7 +493,7 @@ function buildKpiSelectors(){
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
 
   const yearSel = document.getElementById('kpiYear');
-  yearSel.innerHTML = `<option value="GENERAL">GENERAL (todos los años)</option>` +
+  yearSel.innerHTML = `<option value="GENERAL">General</option>` +
     activeYearCols.slice().reverse().map((y,i)=>`<option value="${y}" ${i===0 ? "selected":""}>${y}</option>`).join("");
 
   buildKpiChecklist();
