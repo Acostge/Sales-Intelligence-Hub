@@ -485,7 +485,8 @@ function buildKpiSelectors(){
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
 
   const yearSel = document.getElementById('kpiYear');
-  yearSel.innerHTML = activeYearCols.slice().reverse().map(y=>`<option value="${y}">${y}</option>`).join("");
+  yearSel.innerHTML = `<option value="GENERAL">GENERAL (todos los años)</option>` +
+    activeYearCols.slice().reverse().map((y,i)=>`<option value="${y}" ${i===0 ? "selected":""}>${y}</option>`).join("");
 
   buildKpiChecklist();
 }
@@ -566,17 +567,23 @@ function renderChart(){
   rows.forEach(r => {
     const key = getKpiKey(r);
     if(!selectedFamilies.has(key)) return;
-    const val = r.years[year] || 0;
+    const val = year === "GENERAL"
+      ? activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0)
+      : (r.years[year] || 0);
     groups[key] = (groups[key] || 0) + val;
   });
 
   const entries = Object.entries(groups).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v]) => s + v, 0);
 
-  document.getElementById('chartTitle').textContent = `Ventas ${year} · comparación de ${selectedFamilies.size} productos`;
+  const yearLabel = year === "GENERAL"
+    ? `General (${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]})`
+    : year;
+
+  document.getElementById('chartTitle').textContent = `Ventas ${yearLabel} · comparación de ${selectedFamilies.size} productos`;
   subtitle.textContent = total
     ? `${total} unidades vendidas en total entre lo seleccionado`
-    : `Sin ventas registradas en ${year} para lo seleccionado`;
+    : `Sin ventas registradas en ${yearLabel} para lo seleccionado`;
 
   const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
@@ -591,7 +598,7 @@ function renderChart(){
     data: {
       labels: entries.map(([k]) => k),
       datasets: [{
-        label: `Unidades vendidas ${year}`,
+        label: `Unidades vendidas ${yearLabel}`,
         data: entries.map(([,v]) => v),
         backgroundColor: '#3FA9D9',
         borderRadius: 4,
@@ -608,22 +615,28 @@ function renderChart(){
           align: 'end',
           offset: 4,
           clip: false,
-          color: '#0B3B5C',
           font: { weight: '500', size: 18 },
-          formatter: (value) => {
-            if(!value) return null; // no muestra la etiqueta cuando el valor es 0
-            const pct = total ? ((value / total) * 100).toFixed(1) : 0;
-            return `${value} (${pct}%)`;
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-              return `${ctx.raw} unidades (${pct}%)`;
+          labels: {
+            qty: {
+              color: '#0B3B5C',
+              formatter: (value) => value ? `${value}` : null
+            },
+            pct: {
+              formatter: (value) => {
+                if(!value) return null;
+                const pct = total ? ((value / total) * 100) : 0;
+                return `(${pct.toFixed(1)}%)`;
+              },
+              color: (ctx) => {
+                const value = ctx.dataset.data[ctx.dataIndex];
+                if(!value) return 'transparent';
+                const pct = total ? ((value / total) * 100) : 0;
+                return pct < 0.05 ? '#D64545' : '#0B3B5C';
+              }
             }
           }
-        }
+        },
+        tooltip: { enabled: false }
       },
       scales: {
         x: {
