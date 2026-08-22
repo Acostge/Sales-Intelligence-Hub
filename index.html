@@ -456,18 +456,19 @@ function renderTable(){
 
   body.innerHTML = data.map(r => {
     const m = computeMetrics(r);
+    const z = (v) => v ? v : ""; // deja en blanco los ceros, para no saturar la vista
     return `<tr>
       <td class="sticky-col col-item">${r.item}</td>
       <td class="sticky-col col-prov">${r.proveedor}</td>
       <td class="sticky-col col-cod">${r.codigo}</td>
       <td class="sticky-col col-desc">${r.descripcion}</td>
       <td class="num">${r.precio ? Math.round(r.precio) : "-"}</td>
-      ${activeYearCols.map(y => `<td class="num">${r.years[y] === null ? "" : r.years[y]}</td>`).join("")}
-      <td class="num calc">${m.total}</td>
-      <td class="num calc">${m.promAnual}</td>
-      <td class="num calc">${m.promMensual}</td>
-      <td class="num calc">${m.stockSugerido}</td>
-      <td class="num calc">${m.pronostico}</td>
+      ${activeYearCols.map(y => `<td class="num">${r.years[y] ? r.years[y] : ""}</td>`).join("")}
+      <td class="num calc">${z(m.total)}</td>
+      <td class="num calc">${z(m.promAnual)}</td>
+      <td class="num calc">${z(m.promMensual)}</td>
+      <td class="num calc">${z(m.stockSugerido)}</td>
+      <td class="num calc">${z(m.pronostico)}</td>
     </tr>`;
   }).join("");
 }
