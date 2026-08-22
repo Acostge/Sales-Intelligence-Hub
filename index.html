@@ -500,6 +500,14 @@ function getKpiKey(row){
   return row.descripcion;
 }
 
+// Aplica el texto de búsqueda actual a la lista (se reutiliza cada vez que se reconstruye la lista)
+function applyKpiSearchFilter(){
+  const t = document.getElementById('kpiSearchList').value.toLowerCase();
+  document.querySelectorAll('#kpiChecklist label').forEach(l => {
+    l.style.display = l.dataset.search.includes(t) ? "flex" : "none";
+  });
+}
+
 // Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
   const rows = getKpiBaseRows();
@@ -534,6 +542,8 @@ function buildKpiChecklist(){
       renderChart();
     });
   });
+
+  applyKpiSearchFilter(); // conserva el filtro de búsqueda activo tras reconstruir la lista
 }
 
 /* ============ GRAFICO KPI ============ */
@@ -655,12 +665,7 @@ document.getElementById('kpiProveedor').addEventListener('change', () => {
 
 document.getElementById('kpiYear').addEventListener('change', renderChart);
 
-document.getElementById('kpiSearchList').addEventListener('input', e => {
-  const t = e.target.value.toLowerCase();
-  document.querySelectorAll('#kpiChecklist label').forEach(l => {
-    l.style.display = l.dataset.search.includes(t) ? "flex" : "none";
-  });
-});
+document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
 
 // Botones "X" para limpiar los campos de búsqueda
 function setupClearableSearch(inputId, btnId){
