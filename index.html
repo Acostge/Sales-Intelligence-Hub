@@ -643,7 +643,7 @@ function renderChart(){
               formatter: (value) => {
                 if(!value) return null;
                 const pct = total ? ((value / total) * 100) : 0;
-                return `(${pct.toFixed(1)}%)`;
+                return `(${Math.round(pct)}%)`;
               }
             }
           }
