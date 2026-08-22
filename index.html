@@ -170,7 +170,7 @@
   .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
   .kpi-body{display:flex;gap:16px;align-items:stretch;}
   .kpi-list-panel{
-    flex:0 0 380px;
+    flex:0 0 480px;
     display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
   }
@@ -577,6 +577,12 @@ function renderChart(){
 
   const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
+
+  // Eje X: siempre en números enteros y con margen extra arriba para que la barra más alta no toque el borde
+  const maxVal = entries.length ? Math.max(...entries.map(([,v]) => v)) : 0;
+  const axisMax = Math.max(1, Math.ceil(maxVal * 1.15) + 1);
+  const stepSize = Math.max(1, Math.ceil(axisMax / 6));
+
   chartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -604,7 +610,12 @@ function renderChart(){
         }
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: '#EAEFF2' } },
+        x: {
+          beginAtZero: true,
+          max: axisMax,
+          ticks: { stepSize: stepSize, precision: 0 },
+          grid: { color: '#EAEFF2' }
+        },
         y: { grid: { display: false } }
       }
     }
@@ -668,7 +679,7 @@ document.getElementById('kpiYear').addEventListener('change', renderChart);
 document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
 
 // Botones "X" para limpiar los campos de búsqueda
-function setupClearableSearch(inputId, btnId){
+function setupClearableSearch(inputId, btnId, onClear){
   const input = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
   const syncBtn = () => btn.classList.toggle('show', input.value.length > 0);
@@ -677,11 +688,17 @@ function setupClearableSearch(inputId, btnId){
     input.value = "";
     input.dispatchEvent(new Event('input'));
     input.focus();
+    if(onClear) onClear();
   });
   syncBtn();
 }
 setupClearableSearch('searchInput', 'clearSearchInput');
-setupClearableSearch('kpiSearchList', 'clearKpiSearchList');
+setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
+  // Al limpiar el buscador del dashboard, también se limpia la selección del gráfico
+  selectedFamilies.clear();
+  buildKpiChecklist();
+  renderChart();
+});
 
 document.getElementById('kpiSelectVisible').onclick = () => {
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
