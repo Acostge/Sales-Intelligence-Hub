@@ -287,7 +287,7 @@
         </div>
       </div>
       <div class="chart-card">
-        <h3 id="chartTitle">Participación de ventas</h3>
+        <h3 id="chartTitle">ANÁLISIS DE VENTAS</h3>
         <p id="chartSubtitle">Selecciona al menos un producto en la lista de la izquierda</p>
         <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
       </div>
@@ -556,7 +556,7 @@ function renderChart(){
 
   if(!selectedFamilies.size){
     subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
-    document.getElementById('chartTitle').textContent = "Participación de ventas";
+    document.getElementById('chartTitle').textContent = "ANÁLISIS DE VENTAS";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
   }
@@ -611,6 +611,7 @@ function renderChart(){
           color: '#0B3B5C',
           font: { weight: '500', size: 18 },
           formatter: (value) => {
+            if(!value) return null; // no muestra la etiqueta cuando el valor es 0
             const pct = total ? ((value / total) * 100).toFixed(1) : 0;
             return `${value} (${pct}%)`;
           }
