@@ -151,21 +151,42 @@
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
   .field input,.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
+  .search-field{position:relative;}
+  .search-field input{width:100%;padding-right:28px;}
+  .search-clear{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    border:none;background:none;color:var(--gray);font-size:15px;line-height:1;
+    cursor:pointer;display:none;padding:4px;border-radius:50%;
+  }
+  .search-clear:hover{background:var(--gray-line);color:var(--text);}
+  .search-clear.show{display:block;}
   .segmented{display:flex;border:1px solid var(--gray-line);border-radius:7px;overflow:hidden;}
   .segmented div{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--gray);}
   .segmented div.active{background:var(--navy);color:var(--white);font-weight:600;}
   .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;}
-  .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
+  .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
   .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;}
-  .kpi-checklist input[type=checkbox]{width:16px;height:16px;}
   .kpi-checklist label span.count{margin-left:auto;color:var(--gray);font-size:11.5px;}
   .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
+  .kpi-body{display:flex;gap:16px;align-items:stretch;}
+  .kpi-list-panel{
+    flex:0 0 380px;
+    display:flex;flex-direction:column;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
+  }
+  .kpi-list-panel .kpi-checklist{flex:1;max-height:600px;}
   .chart-card{
+    flex:1;min-width:0;display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;
   }
   .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
   .chart-card p{margin:0 0 14px;color:var(--gray);font-size:12.5px;}
-  #barChart{max-height:520px;}
+  .chart-canvas-wrap{position:relative;flex:1;min-height:520px;}
+  #barChart{position:absolute;top:0;left:0;width:100% !important;height:100% !important;}
+  @media (max-width:900px){
+    .kpi-body{flex-direction:column;}
+    .kpi-list-panel{flex:1 1 auto;}
+  }
   .hidden{display:none !important;}
 </style>
 </head>
@@ -204,8 +225,11 @@
 <!-- Panel: buscar -->
 <div class="panel" id="panelBuscar">
   <h3>Buscar producto</h3>
-  <input type="text" id="searchInput" placeholder="Descripción o código...">
-  <div class="kpi-hint">Filtra por Descripción o Código.</div>
+  <div class="search-field">
+    <input type="text" id="searchInput" placeholder="Descripción o código...">
+    <button type="button" class="search-clear" id="clearSearchInput">✕</button>
+  </div>
+  <div class="kpi-hint">Filtra la tabla por coincidencia en la Descripción o el Código.</div>
 </div>
 
 <!-- Panel: cobertura -->
@@ -238,7 +262,10 @@
     <div class="kpi-controls">
       <div class="field">
         <label>Buscar</label>
-        <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
+        <div class="search-field">
+          <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
+          <button type="button" class="search-clear" id="clearKpiSearchList">✕</button>
+        </div>
       </div>
       <div class="field">
         <label>Proveedor</label>
@@ -248,21 +275,21 @@
         <label>Año</label>
         <select id="kpiYear"></select>
       </div>
-      <div class="kpi-hint" id="kpiHint">Selecciona productos según sus medidas para comparar su rotación.</div>
+      <div class="kpi-hint" id="kpiHint">Marca en la lista de la izquierda lo que quieres comparar.</div>
     </div>
-    <div class="kpi-controls" style="margin-top:-4px;">
-      <div class="field" style="flex:1;">
+    <div class="kpi-body">
+      <div class="kpi-list-panel">
         <div class="kpi-checklist" id="kpiChecklist"></div>
         <div class="checklist-actions">
           <button class="link-btn" id="kpiSelectVisible">Seleccionar visibles</button>
           <button class="link-btn" id="kpiClearSelection">Limpiar selección</button>
         </div>
       </div>
-    </div>
-    <div class="chart-card">
-      <h3 id="chartTitle">GRÁFICA DE VENTAS</h3>
-      <p id="chartSubtitle">Selecciona al menos un Grupo o Producto en la lista de arriba</p>
-      <canvas id="barChart"></canvas>
+      <div class="chart-card">
+        <h3 id="chartTitle">Participación de ventas</h3>
+        <p id="chartSubtitle">Selecciona al menos un producto en la lista de la izquierda</p>
+        <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
+      </div>
     </div>
   </div>
 </main>
@@ -466,30 +493,38 @@ function getKpiBaseRows(){
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
-// Clave de agrupación: variante (descripción sin la talla/medida final), agrupa todas las tallas de un mismo modelo
+// Clave de agrupación: usa la descripción completa (misma granularidad que el filtro de la Tabla,
+// una fila por cada talla/variante exacta) para que buscar "Copa Dualis" muestre las mismas tallas
+// que ves al filtrar en la Tabla.
 function getKpiKey(row){
-  return getVariant(row.descripcion);
+  return row.descripcion;
 }
 
 // Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
   const rows = getKpiBaseRows();
   const totals = {};
+  const codesByKey = {};
   rows.forEach(r => {
     const key = getKpiKey(r);
     const sumAll = activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
     totals[key] = (totals[key] || 0) + sumAll;
+    codesByKey[key] = codesByKey[key] || new Set();
+    if(r.codigo) codesByKey[key].add(r.codigo);
   });
   const keys = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
 
   const list = document.getElementById('kpiChecklist');
-  list.innerHTML = keys.map(k => `
-    <label data-key="${encodeURIComponent(k)}">
+  list.innerHTML = keys.map(k => {
+    const searchBlob = (k + " " + [...codesByKey[k]].join(" ")).toLowerCase();
+    return `
+    <label data-key="${encodeURIComponent(k)}" data-search="${searchBlob.replace(/"/g,'&quot;')}">
       <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
       ${k}
       <span class="count">${totals[k]} uds. hist.</span>
     </label>
-  `).join("");
+  `;
+  }).join("");
 
   list.querySelectorAll('.kpi-check').forEach(cb => {
     cb.addEventListener('change', () => {
@@ -508,7 +543,7 @@ function renderChart(){
 
   if(!selectedFamilies.size){
     subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
-    document.getElementById('chartTitle').textContent = "GRÁFICA DE VENTAS";
+    document.getElementById('chartTitle').textContent = "Participación de ventas";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
   }
@@ -546,6 +581,7 @@ function renderChart(){
     options: {
       indexAxis: 'y',
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -622,9 +658,25 @@ document.getElementById('kpiYear').addEventListener('change', renderChart);
 document.getElementById('kpiSearchList').addEventListener('input', e => {
   const t = e.target.value.toLowerCase();
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
-    l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none";
+    l.style.display = l.dataset.search.includes(t) ? "flex" : "none";
   });
 });
+
+// Botones "X" para limpiar los campos de búsqueda
+function setupClearableSearch(inputId, btnId){
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  const syncBtn = () => btn.classList.toggle('show', input.value.length > 0);
+  input.addEventListener('input', syncBtn);
+  btn.addEventListener('click', () => {
+    input.value = "";
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+  });
+  syncBtn();
+}
+setupClearableSearch('searchInput', 'clearSearchInput');
+setupClearableSearch('kpiSearchList', 'clearKpiSearchList');
 
 document.getElementById('kpiSelectVisible').onclick = () => {
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
