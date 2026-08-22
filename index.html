@@ -301,6 +301,14 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekI
 
 Chart.register(ChartDataLabels);
 
+// Mide el ancho real de un texto con una fuente dada, para poder ubicar
+// la etiqueta del porcentaje justo después de la cantidad, sin solaparse.
+const _measureCtx = document.createElement('canvas').getContext('2d');
+function measureTextWidth(text, font){
+  _measureCtx.font = font;
+  return _measureCtx.measureText(text).width;
+}
+
 let rawData = [];      // filas originales parseadas
 let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
 let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
@@ -485,7 +493,7 @@ function buildKpiSelectors(){
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
 
   const yearSel = document.getElementById('kpiYear');
-  yearSel.innerHTML = `<option value="GENERAL">GENERAL</option>` +
+  yearSel.innerHTML = `<option value="GENERAL">GENERAL (todos los años)</option>` +
     activeYearCols.slice().reverse().map((y,i)=>`<option value="${y}" ${i===0 ? "selected":""}>${y}</option>`).join("");
 
   buildKpiChecklist();
@@ -613,25 +621,29 @@ function renderChart(){
         datalabels: {
           anchor: 'end',
           align: 'end',
-          offset: 4,
           clip: false,
           font: { weight: '500', size: 18 },
           labels: {
+            // Cantidad: siempre azul marino
             qty: {
               color: '#0B3B5C',
+              offset: 4,
               formatter: (value) => value ? `${value}` : null
             },
+            // Porcentaje: siempre rojo, ubicado justo después de la cantidad (según su ancho real)
             pct: {
+              color: '#D64545',
+              offset: (ctx) => {
+                const value = ctx.dataset.data[ctx.dataIndex];
+                if(!value) return 4;
+                const font = '500 18px "Segoe UI", Roboto, Arial, sans-serif';
+                const qtyWidth = measureTextWidth(`${value}`, font);
+                return 4 + qtyWidth + 6;
+              },
               formatter: (value) => {
                 if(!value) return null;
                 const pct = total ? ((value / total) * 100) : 0;
                 return `(${pct.toFixed(1)}%)`;
-              },
-              color: (ctx) => {
-                const value = ctx.dataset.data[ctx.dataIndex];
-                if(!value) return 'transparent';
-                const pct = total ? ((value / total) * 100) : 0;
-                return pct < 0.05 ? '#D64545' : '#0B3B5C';
               }
             }
           }
