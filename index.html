@@ -673,7 +673,7 @@ function buildKpiChecklist(){
     <label data-key="${encodeURIComponent(k)}" data-search="${searchBlob.replace(/"/g,'&quot;')}">
       <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
       ${k}
-      <span class="count">${totals[k]} uds. hist.</span>
+      <span class="count">${totals[k]} Uds.</span>
     </label>
   `;
   }).join("");
