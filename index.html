@@ -221,8 +221,8 @@
 <div id="deviceBlock" class="hidden">
   <img src="logo-piemca.png" alt="PIEMCA">
   <div class="icon">🖥️</div>
-  <h2>Disponible solo en computadora o tablet</h2>
-  <p>Esta herramienta maneja demasiada información (tablas anchas, años y gráficos) para verse bien en un celular o una tablet pequeña en vertical. Ábrela desde una computadora, o desde una tablet de 9" o más girada en horizontal.</p>
+  <h2>Disponible solo en PC o Tablet</h2>
+  <p>Para ofrecerte la mejor experiencia, esta herramienta incluye gráficos y tablas complejas no optimizadas para celulares. Accede desde una PC o una Tablet (9" o superior) en formato horizontal..</p>
 </div>
 
 <header>
@@ -656,7 +656,12 @@ function buildKpiChecklist(){
     codesByKey[key] = codesByKey[key] || new Set();
     if(r.codigo) codesByKey[key].add(r.codigo);
   });
-  const keys = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
+  const keys = Object.keys(totals)
+    .filter(k => totals[k] > 0) // los productos sin ninguna venta histórica no se muestran en la lista
+    .sort((a,b) => totals[b] - totals[a]);
+
+  // Si alguno de estos productos en cero había quedado marcado antes, se limpia de la selección
+  [...selectedFamilies].forEach(k => { if(!totals[k]) selectedFamilies.delete(k); });
 
   const list = document.getElementById('kpiChecklist');
   list.innerHTML = keys.map(k => {
