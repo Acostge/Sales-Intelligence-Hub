@@ -122,14 +122,6 @@
     font-size:12.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
   .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
-  .year-toggle-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
-  .year-chip{
-    padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;
-    border:1.5px solid var(--gray-line);background:var(--white);color:var(--gray);
-    transition:.15s;user-select:none;
-  }
-  .year-chip.active{background:var(--navy);border-color:var(--navy);color:var(--white);}
-  .year-chip:hover{border-color:var(--sky);}
   .table-wrap{
     background:var(--white);
     border-radius:12px;
@@ -226,11 +218,22 @@
   </div>
 
   <div class="toolbar">
+    <button class="btn" id="btnAnios">🗓️ AÑOS</button>
     <button class="btn" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
     <button class="btn" id="btnBuscar">🔍 BUSCAR</button>
     <button class="btn" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
   </div>
 </header>
+
+<!-- Panel: años -->
+<div class="panel" id="panelAnios">
+  <h3>Filtrar por año</h3>
+  <div class="prov-list" id="anioList"></div>
+  <div class="panel-actions">
+    <button class="link-btn" id="anioAll">Seleccionar todos</button>
+    <button class="link-btn" id="anioNone">Limpiar</button>
+  </div>
+</div>
 
 <!-- Panel: proveedores -->
 <div class="panel" id="panelProv">
@@ -287,7 +290,6 @@
       <span id="statusText">Cargando Historial de Ventas...</span>
       <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
     </div>
-    <div class="year-toggle-bar" id="yearToggleBar"></div>
     <div class="table-wrap">
       <table id="mainTable">
         <thead><tr id="headRow"></tr></thead>
@@ -418,18 +420,16 @@ function processData(rows, fields){
   renderTable();
 }
 
-// Construye los "chips" de años (encendidos por defecto) que controlan qué columnas de año se ven en la Tabla
+// Construye la lista de checkboxes de años (encendidos por defecto) que controlan qué columnas de año se ven en la Tabla
 function buildYearToggleBar(){
-  const bar = document.getElementById('yearToggleBar');
-  bar.innerHTML = activeYearCols.map(y => `
-    <div class="year-chip ${visibleYearCols.has(y) ? "active" : ""}" data-year="${y}">${y}</div>
+  const list = document.getElementById('anioList');
+  list.innerHTML = activeYearCols.map(y => `
+    <label><input type="checkbox" value="${y}" class="anio-check" ${visibleYearCols.has(y) ? "checked" : ""}> ${y}</label>
   `).join("");
-  bar.querySelectorAll('.year-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const y = chip.dataset.year;
-      if(visibleYearCols.has(y)) visibleYearCols.delete(y);
-      else visibleYearCols.add(y);
-      buildYearToggleBar();
+  list.querySelectorAll('.anio-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if(cb.checked) visibleYearCols.add(cb.value);
+      else visibleYearCols.delete(cb.value);
       renderTable();
     });
   });
@@ -762,14 +762,26 @@ function renderChart(){
 
 /* ============ EVENTOS UI ============ */
 function togglePanel(id){
-  ['panelProv','panelBuscar','panelCobertura'].forEach(p => {
+  ['panelAnios','panelProv','panelBuscar','panelCobertura'].forEach(p => {
     document.getElementById(p).classList.toggle('open', p === id ? !document.getElementById(id).classList.contains('open') : false);
   });
 }
 
+document.getElementById('btnAnios').onclick = () => togglePanel('panelAnios');
 document.getElementById('btnProv').onclick = () => togglePanel('panelProv');
 document.getElementById('btnBuscar').onclick = () => togglePanel('panelBuscar');
 document.getElementById('btnCobertura').onclick = () => togglePanel('panelCobertura');
+
+document.getElementById('anioAll').onclick = () => {
+  visibleYearCols = new Set(activeYearCols);
+  document.querySelectorAll('.anio-check').forEach(cb => cb.checked = true);
+  renderTable();
+};
+document.getElementById('anioNone').onclick = () => {
+  visibleYearCols.clear();
+  document.querySelectorAll('.anio-check').forEach(cb => cb.checked = false);
+  renderTable();
+};
 
 document.getElementById('provAll').onclick = () => {
   selectedProviders = new Set(providers);
@@ -818,7 +830,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
 
     // Lista de proveedores / Buscar / Cobertura solo aplican a la vista Tabla
-    ['btnProv','btnBuscar','btnCobertura'].forEach(id => {
+    ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', view === 'kpi');
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
