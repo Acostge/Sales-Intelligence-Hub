@@ -649,22 +649,28 @@ function updateSelectedCount(){
 
 // Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
+  const year = document.getElementById('kpiYear').value;
   const rows = getKpiBaseRows();
-  const totals = {};
+  const totals = {};       // cantidad para el año/General elegido (lo que se muestra en la lista)
+  const historicalTotals = {}; // suma de todos los años, sin importar el filtro (solo para limpiar selección)
   const codesByKey = {};
   rows.forEach(r => {
     const key = getKpiKey(r);
+    const val = year === "GENERAL"
+      ? activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0)
+      : (r.years[year] || 0);
+    totals[key] = (totals[key] || 0) + val;
     const sumAll = activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
-    totals[key] = (totals[key] || 0) + sumAll;
+    historicalTotals[key] = (historicalTotals[key] || 0) + sumAll;
     codesByKey[key] = codesByKey[key] || new Set();
     if(r.codigo) codesByKey[key].add(r.codigo);
   });
   const keys = Object.keys(totals)
-    .filter(k => totals[k] > 0) // los productos sin ninguna venta histórica no se muestran en la lista
+    .filter(k => totals[k] > 0) // los productos sin venta en el año/General elegido no se muestran
     .sort((a,b) => totals[b] - totals[a]);
 
-  // Si alguno de estos productos en cero había quedado marcado antes, se limpia de la selección
-  [...selectedFamilies].forEach(k => { if(!totals[k]) selectedFamilies.delete(k); });
+  // Solo se quita de la selección lo que JAMÁS tuvo venta en ningún año (no lo que esté en cero solo en este filtro)
+  [...selectedFamilies].forEach(k => { if(!historicalTotals[k]) selectedFamilies.delete(k); });
 
   const list = document.getElementById('kpiChecklist');
   list.innerHTML = keys.map(k => {
@@ -880,7 +886,10 @@ document.getElementById('kpiProveedor').addEventListener('change', () => {
   renderChart();
 });
 
-document.getElementById('kpiYear').addEventListener('change', renderChart);
+document.getElementById('kpiYear').addEventListener('change', () => {
+  buildKpiChecklist();
+  renderChart();
+});
 
 document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
 
