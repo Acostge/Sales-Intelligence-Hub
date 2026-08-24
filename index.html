@@ -456,20 +456,28 @@ function computeMetrics(item){
   // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
   const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
 
-  // Stock de seguridad: único cálculo automático, a partir de la demanda diaria y el tiempo de entrega
-  const stockSeguridad = demandaDiaria * leadTimeDias;
+  // Verificamos si el producto tiene historial de ventas (si ha vendido al menos 1 unidad)
+  const tieneVentas = pronostico > 0;
 
-  // Stock sugerido: el stock de seguridad (fijo, según tiempo de entrega) + un colchón mensual
-  // que crece según los meses de Cobertura seleccionados (a más meses, más colchón)
-  const stockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
+  // Stock de seguridad:
+  // Si tiene ventas, garantizamos un PISO MÍNIMO de 1 unidad (para cubrir 1 cirugía/set).
+  // Si no tiene ventas (pronóstico 0), se queda en 0.
+  const rawStockSeguridad = demandaDiaria * leadTimeDias;
+  const stockSeguridad = tieneVentas ? Math.max(1, Math.round(rawStockSeguridad)) : 0;
+
+  // Stock sugerido:
+  // Si tiene ventas, garantizamos tu PISO COMERCIAL de 2 unidades.
+  // Si no tiene ventas, se queda en 0.
+  const rawStockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
+  const stockSugerido = tieneVentas ? Math.max(2, Math.round(rawStockSugerido)) : 0;
 
   return {
     total: Math.round(total),
     promAnual: Math.round(promAnual),
     promMensual: Math.round(promMensual),
     pronostico: Math.round(pronostico),
-    stockSeguridad: Math.round(stockSeguridad),
-    stockSugerido: Math.round(stockSugerido),
+    stockSeguridad: stockSeguridad,
+    stockSugerido: stockSugerido,
     dataYears
   };
 }
