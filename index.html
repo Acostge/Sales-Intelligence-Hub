@@ -443,9 +443,12 @@ function computeMetrics(item){
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: se toma directamente lo vendido en el último año encendido (año anterior)
-  const last1 = dataYears.slice(-1);
-  const pronostico = last1.length ? item.years[last1[0]] : 0;
+  // Pronóstico: promedio desde el primer año con venta real en adelante.
+  // - Los ceros ANTES de la primera venta se excluyen (el producto aún no existía en catálogo).
+  // - Los ceros DESPUÉS de la primera venta SÍ cuentan (indican que el producto está dejando de venderse).
+  const firstSaleIdx = dataYears.findIndex(y => item.years[y] > 0);
+  const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
+  const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
 
   // Demanda diaria: el pronóstico (ventas del año anterior) repartido entre los 365 días del año
   const demandaDiaria = pronostico / 365;
