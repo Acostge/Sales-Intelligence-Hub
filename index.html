@@ -735,9 +735,9 @@ function renderChart(){
               offset: 4,
               formatter: (value) => value ? `${value}` : null
             },
-            // Porcentaje: siempre rojo, ubicado justo después de la cantidad (según su ancho real)
+// Porcentaje: gris pizarra neutro, ubicado justo después de la cantidad
             pct: {
-              color: '#D64545',
+              color: '#5B6B78',
               offset: (ctx) => {
                 const value = ctx.dataset.data[ctx.dataIndex];
                 if(!value) return 4;
