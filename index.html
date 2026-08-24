@@ -98,6 +98,7 @@
     display:none;
   }
   .panel.open{display:block;}
+  .panel.panel-wide{width:340px;}
   .panel h3{margin:0 0 10px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
   .panel input[type=text]{
     width:100%;padding:8px 10px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
@@ -109,6 +110,11 @@
   .coverage-row{display:flex;align-items:center;gap:10px;}
   .coverage-row input[type=range]{flex:1;}
   .coverage-val{font-size:20px;font-weight:700;color:var(--navy);width:34px;text-align:center;}
+  .leadtime-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+  .leadtime-grid label{font-size:12px;color:var(--gray);font-weight:600;display:flex;flex-direction:column;gap:4px;}
+  .leadtime-grid input[type=number]{
+    padding:7px 9px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;font-weight:600;color:var(--text);width:100%;box-sizing:border-box;
+  }
 
   main{padding:18px 24px 60px;}
   .status-bar{
@@ -247,14 +253,31 @@
   <div class="kpi-hint">Filtra la tabla por coincidencia en la Descripción o el Código.</div>
 </div>
 
-<!-- Panel: cobertura -->
-<div class="panel" id="panelCobertura">
+<!-- Panel: cobertura + tiempo de entrega -->
+<div class="panel panel-wide" id="panelCobertura">
   <h3>Cobertura de compra</h3>
   <div class="coverage-row">
     <input type="range" id="coverageSlider" min="1" max="12" value="3">
     <div class="coverage-val" id="coverageVal">3</div>
   </div>
-  <div class="kpi-hint"> Selecciona los meses de inventario que quieres cubrir.</div>
+  <div class="kpi-hint">Selecciona los meses de inventario que quieres cubrir.</div>
+
+  <h3 style="margin-top:16px;">Tiempo de entrega (días)</h3>
+  <div class="leadtime-grid">
+    <label>Días de reorden
+      <input type="number" id="ltReorden" min="0" value="0">
+    </label>
+    <label>Aprobación de pago
+      <input type="number" id="ltPago" min="0" value="0">
+    </label>
+    <label>Preparación del fabricante
+      <input type="number" id="ltFabricante" min="0" value="0">
+    </label>
+    <label>Tiempo de traslado
+      <input type="number" id="ltTraslado" min="0" value="0">
+    </label>
+  </div>
+  <div class="kpi-hint">Total tiempo de entrega: <strong id="ltTotal">0</strong> días — el Stock de Seguridad se calcula solo a partir de este total.</div>
 </div>
 
 <main>
@@ -336,6 +359,8 @@ let providers = [];     // lista única de proveedores
 let selectedProviders = new Set(); // proveedores activos (vacio = todos)
 let searchText = "";
 let coverageMonths = 3;
+// Tiempo de entrega (días) — los 4 componentes que el usuario llena manualmente
+let leadTime = { reorden: 0, pago: 0, fabricante: 0, traslado: 0 };
 let chartInstance = null;
 let selectedFamilies = new Set(); // familias/productos marcados manualmente para comparar en el gráfico
 let showOnlySelected = false; // si está activo, la lista solo muestra lo que ya está marcado
@@ -422,15 +447,25 @@ function computeMetrics(item){
   const last1 = dataYears.slice(-1);
   const pronostico = last1.length ? item.years[last1[0]] : 0;
 
-  // Stock sugerido: cuánto stock necesitas para cubrir los meses de cobertura elegidos,
-  // en base al ritmo de ventas mensual que arroja el pronóstico
-  const stockSugerido = (pronostico / 12) * coverageMonths;
+  // Demanda diaria: el pronóstico (ventas del año anterior) repartido entre los 365 días del año
+  const demandaDiaria = pronostico / 365;
+
+  // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
+  const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
+
+  // Stock de seguridad: único cálculo automático, a partir de la demanda diaria y el tiempo de entrega
+  const stockSeguridad = demandaDiaria * leadTimeDias;
+
+  // Stock sugerido: el stock de seguridad (fijo, según tiempo de entrega) + un colchón mensual
+  // que crece según los meses de Cobertura seleccionados (a más meses, más colchón)
+  const stockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
 
   return {
     total: Math.round(total),
     promAnual: Math.round(promAnual),
     promMensual: Math.round(promMensual),
     pronostico: Math.round(pronostico),
+    stockSeguridad: Math.round(stockSeguridad),
     stockSugerido: Math.round(stockSugerido),
     dataYears
   };
@@ -478,6 +513,7 @@ function renderTable(){
     <th class="group-calc">Total Ventas</th>
     <th class="group-calc">Prom. Anual</th>
     <th class="group-calc">Prom. Mensual</th>
+    <th class="group-calc">Stock de Seguridad</th>
     <th class="group-calc">Stock Sugerido</th>
     <th class="group-calc">Pronóstico ${nextYear}</th>
    
@@ -486,7 +522,7 @@ function renderTable(){
   const data = getFilteredData();
   const body = document.getElementById('bodyRows');
   if(!data.length){
-    body.innerHTML = `<tr><td class="empty-state" colspan="${5+shownYears.length+5}">Sin resultados para este filtro.</td></tr>`;
+    body.innerHTML = `<tr><td class="empty-state" colspan="${5+shownYears.length+6}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
 
@@ -506,6 +542,7 @@ function renderTable(){
       <td class="num calc">${z(m.total)}</td>
       <td class="num calc">${z(m.promAnual)}</td>
       <td class="num calc">${z(m.promMensual)}</td>
+      <td class="num calc">${z(m.stockSeguridad)}</td>
       <td class="num calc">${z(m.stockSugerido)}</td>
       <td class="num calc">${z(m.pronostico)}</td>
     </tr>`;
@@ -752,6 +789,19 @@ document.getElementById('coverageSlider').addEventListener('input', e => {
   document.getElementById('coverageVal').textContent = coverageMonths;
   document.getElementById('covLabel').textContent = coverageMonths;
   renderTable();
+});
+
+// Campos de Tiempo de Entrega (días) — se suman en vivo y disparan el recálculo de la tabla
+['ltReorden','ltPago','ltFabricante','ltTraslado'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    leadTime.reorden = parseFloat(document.getElementById('ltReorden').value) || 0;
+    leadTime.pago = parseFloat(document.getElementById('ltPago').value) || 0;
+    leadTime.fabricante = parseFloat(document.getElementById('ltFabricante').value) || 0;
+    leadTime.traslado = parseFloat(document.getElementById('ltTraslado').value) || 0;
+    const total = leadTime.reorden + leadTime.pago + leadTime.fabricante + leadTime.traslado;
+    document.getElementById('ltTotal').textContent = total;
+    renderTable();
+  });
 });
 
 document.getElementById('refreshBtn').onclick = loadData;
