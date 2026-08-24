@@ -450,18 +450,18 @@ function computeMetrics(item){
   const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
   const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
 
-  // Demanda diaria: el pronóstico (ventas del año anterior) repartido entre los 365 días del año
-  const demandaDiaria = pronostico / 365;
+  // Demanda Mensual: el pronóstico (ventas del año anterior) repartido entre los 12 meses del año
+  const demandaMensual = pronostico / 12;
 
   // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
   const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
 
-  // Stock de seguridad: único cálculo automático, a partir de la demanda diaria y el tiempo de entrega
-  const stockSeguridad = demandaDiaria * leadTimeDias;
+  // Stock de seguridad: único cálculo automático, a partir de la demanda mensual y el tiempo de entrega
+  const stockSeguridad = demandaMensual * leadTimeDias;
 
   // Stock sugerido: el stock de seguridad (fijo, según tiempo de entrega) + un colchón mensual
   // que crece según los meses de Cobertura seleccionados (a más meses, más colchón)
-  const stockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
+  const stockSugerido = stockSeguridad + (demandaMensual * 30 * coverageMonths);
 
   return {
     total: Math.round(total),
