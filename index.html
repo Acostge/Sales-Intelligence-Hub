@@ -644,8 +644,8 @@ function buildKpiChecklist(){
     return `
     <label data-key="${encodeURIComponent(k)}" data-search="${searchBlob.replace(/"/g,'&quot;')}">
       <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
-      ${k}
-      <span class="count">${totals[k]} uds. hist.</span>
+      <span style="flex:1; margin-right:8px;">${k}</span>
+      <span class="count" style="background:#EBF2F7; color:#0B3B5C; padding:2px 8px; border-radius:12px; font-weight:700; font-size:11px;">${totals[k]} uds.</span>
     </label>
   `;
   }).join("");
@@ -705,6 +705,23 @@ function renderChart(){
   const maxVal = entries.length ? Math.max(...entries.map(([,v]) => v)) : 0;
   const axisMax = Math.max(1, Math.ceil(maxVal * 1.3) + 2);
   const stepSize = Math.max(1, Math.ceil(axisMax / 6));
+  
+  // Crear degradado elegante para las barras
+  const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+  gradient.addColorStop(0, '#3FA9D9');
+  gradient.addColorStop(1, '#1D82B6');
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{
+        label: `Unidades vendidas ${yearLabel}`,
+        data: entries.map(([,v]) => v),
+        backgroundColor: gradient, // <-- Usamos el degradado aquí
+        borderRadius: 6,
+      }]
+    },
 
   chartInstance = new Chart(ctx, {
     type: 'bar',
