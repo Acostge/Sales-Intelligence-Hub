@@ -450,7 +450,7 @@ function computeMetrics(item){
   const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
   const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
 
-  // Demanda Mensual: el pronóstico (ventas del año anterior) repartido entre los 12 meses del año
+  // Demanda mensual: el pronóstico (ventas del año anterior) repartido entre los 12 meses del año
   const demandaMensual = pronostico / 12;
 
   // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
@@ -461,7 +461,7 @@ function computeMetrics(item){
 
   // Stock sugerido: el stock de seguridad (fijo, según tiempo de entrega) + un colchón mensual
   // que crece según los meses de Cobertura seleccionados (a más meses, más colchón)
-  const stockSugerido = stockSeguridad + (demandaMensual * 30 * coverageMonths);
+  const stockSugerido = stockSeguridad + (demandaMensual * 12 * coverageMonths);
 
   return {
     total: Math.round(total),
