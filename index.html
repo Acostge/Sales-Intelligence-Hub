@@ -463,13 +463,13 @@ function computeMetrics(item){
   // Si tiene ventas, garantizamos un PISO MÍNIMO de 1 unidad (para cubrir 1 cirugía/set).
   // Si no tiene ventas (pronóstico 0), se queda en 0.
   const rawStockSeguridad = demandaDiaria * leadTimeDias;
-  const stockSeguridad = tieneVentas ? Math.max(1, Math.round(rawStockSeguridad)) : 0;
+  const stockSeguridad = tieneVentas ? Math.max(2, Math.round(rawStockSeguridad)) : 0;
 
   // Stock sugerido:
-  // Si tiene ventas, garantizamos tu PISO COMERCIAL de 2 unidades.
+  // Si tiene ventas, garantizamos tu PISO COMERCIAL de 3 unidades.
   // Si no tiene ventas, se queda en 0.
   const rawStockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
-  const stockSugerido = tieneVentas ? Math.max(2, Math.round(rawStockSugerido)) : 0;
+  const stockSugerido = tieneVentas ? Math.max(4, Math.round(rawStockSugerido)) : 0;
 
   return {
     total: Math.round(total),
