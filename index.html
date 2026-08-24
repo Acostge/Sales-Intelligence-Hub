@@ -345,27 +345,24 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekI
 
 Chart.register(ChartDataLabels);
 
-// Mide el ancho real de un texto con una fuente dada, para poder ubicar
-// la etiqueta del porcentaje justo después de la cantidad, sin solaparse.
 const _measureCtx = document.createElement('canvas').getContext('2d');
 function measureTextWidth(text, font){
   _measureCtx.font = font;
   return _measureCtx.measureText(text).width;
 }
 
-let rawData = [];      // filas originales parseadas
-let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
-let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
-let visibleYearCols = new Set(); // años actualmente activados en los "chips" de la Tabla
-let providers = [];     // lista única de proveedores
-let selectedProviders = new Set(); // proveedores activos (vacio = todos)
+let rawData = [];      
+let yearCols = [];      
+let activeYearCols = []; 
+let visibleYearCols = new Set(); 
+let providers = [];     
+let selectedProviders = new Set(); 
 let searchText = "";
 let coverageMonths = 3;
-// Tiempo de entrega (días) — los 4 componentes que el usuario llena manualmente
 let leadTime = { reorden: 0, pago: 0, fabricante: 0, traslado: 0 };
 let chartInstance = null;
-let selectedFamilies = new Set(); // familias/productos marcados manualmente para comparar en el gráfico
-let showOnlySelected = false; // si está activo, la lista solo muestra lo que ya está marcado
+let selectedFamilies = new Set(); 
+let showOnlySelected = false; 
 
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
@@ -386,7 +383,6 @@ function loadData(){
 }
 
 function processData(rows, fields){
-  // Detecta columnas de año: cualquier encabezado de 4 dígitos
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
@@ -403,13 +399,12 @@ function processData(rows, fields){
       item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
     });
     return item;
-  }).filter(r => r.descripcion); // descarta filas vacías
+  }).filter(r => r.descripcion); 
 
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
 
-  // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
-  visibleYearCols = new Set(activeYearCols); // por defecto, todos los años activos están encendidos
+  visibleYearCols = new Set(activeYearCols); 
 
   document.getElementById('statusText').textContent =
     `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
@@ -420,7 +415,6 @@ function processData(rows, fields){
   renderTable();
 }
 
-// Construye la lista de checkboxes de años (encendidos por defecto) que controlan qué columnas de año se ven en la Tabla
 function buildYearToggleBar(){
   const list = document.getElementById('anioList');
   list.innerHTML = activeYearCols.map(y => `
@@ -437,37 +431,22 @@ function buildYearToggleBar(){
 
 /* ============ CALCULOS ============ */
 function computeMetrics(item){
-  // Solo se toman en cuenta los años que están "encendidos" en los chips de arriba de la tabla
   const dataYears = activeYearCols.filter(y => visibleYearCols.has(y) && item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: promedio desde el primer año con venta real en adelante.
-  // - Los ceros ANTES de la primera venta se excluyen (el producto aún no existía en catálogo).
-  // - Los ceros DESPUÉS de la primera venta SÍ cuentan (indican que el producto está dejando de venderse).
   const firstSaleIdx = dataYears.findIndex(y => item.years[y] > 0);
   const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
   const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
 
-  // Demanda diaria: el pronóstico (ventas del año anterior) repartido entre los 365 días del año
   const demandaDiaria = pronostico / 365;
-
-  // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
   const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
-
-  // Verificamos si el producto tiene historial de ventas (si ha vendido al menos 1 unidad)
   const tieneVentas = pronostico > 0;
 
-  // Stock de seguridad:
-  // Si tiene ventas, garantizamos un PISO MÍNIMO de 1 unidad (para cubrir 1 cirugía/set).
-  // Si no tiene ventas (pronóstico 0), se queda en 0.
   const rawStockSeguridad = demandaDiaria * leadTimeDias;
   const stockSeguridad = tieneVentas ? Math.max(2, Math.round(rawStockSeguridad)) : 0;
 
-  // Stock sugerido:
-  // Si tiene ventas, garantizamos tu PISO COMERCIAL de 3 unidades.
-  // Si no tiene ventas, se queda en 0.
   const rawStockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
   const stockSugerido = tieneVentas ? Math.max(4, Math.round(rawStockSugerido)) : 0;
 
@@ -482,7 +461,6 @@ function computeMetrics(item){
   };
 }
 
-// Extrae la "variante" de una descripción quitando el tamaño/medida final
 function getVariant(desc){
   let s = desc.trim();
   const sizeTail = /\s*[\(\/]?\s*[\d][\d.\/°+x×\s-]*\)?\s*(mm|cm|metric)?\.?\s*$/i;
@@ -510,8 +488,8 @@ function getFilteredData(){
 
 /* ============ TABLA ============ */
 function renderTable(){
-  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); // solo los años "encendidos" en los chips
-  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; // si apagaron todo, cae de vuelta al historial completo
+  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); 
+  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; 
   const nextYear = Number(lastYearForForecast[lastYearForForecast.length-1]) + 1;
   const head = document.getElementById('headRow');
   head.innerHTML = `
@@ -527,7 +505,6 @@ function renderTable(){
     <th class="group-calc">Stock de Seguridad</th>
     <th class="group-calc">Stock Sugerido</th>
     <th class="group-calc">Pronóstico ${nextYear}</th>
-   
   `;
 
   const data = getFilteredData();
@@ -539,8 +516,6 @@ function renderTable(){
 
   body.innerHTML = data.map(r => {
     const m = computeMetrics(r);
-    // Los ceros se muestran, pero atenuados (rojo claro y transparente) para no saturar la vista.
-    // Una celda de año sin dato reportado (null) se deja realmente en blanco; un 0 explícito sí se muestra atenuado.
     const z = (v) => v ? v : `<span class="zero-val">0</span>`;
     const yearCell = (v) => v === null ? "" : z(v);
     return `<tr>
@@ -593,45 +568,38 @@ function buildKpiSelectors(){
   buildKpiChecklist();
 }
 
-// Devuelve el conjunto de filas a considerar según el proveedor elegido en la vista KPI
 function getKpiBaseRows(){
   const provFilter = document.getElementById('kpiProveedor').value;
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
-// Clave de agrupación: usa la descripción completa (misma granularidad que el filtro de la Tabla,
-// una fila por cada talla/variante exacta) para que buscar "Copa Dualis" muestre las mismas tallas
-// que ves al filtrar en la Tabla.
 function getKpiKey(row){
   return row.descripcion;
 }
 
-// Aplica el texto de búsqueda actual (y el filtro "solo seleccionados" si está activo) a la lista
 function applyKpiSearchFilter(){
-  const t = document.getElementById('kpiSearchList').value.toLowerCase();
+  const t = document.getElementById('kpiSearchList').value.toLowerCase().trim();
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
-    const key = decodeURIComponent(l.dataset.key);
-    const matchesSearch = l.dataset.search.includes(t);
-    const matchesSelected = !showOnlySelected || selectedFamilies.has(key);
+    const key = decodeURIComponent(l.dataset.key).toLowerCase();
+    const matchesSearch = !t || key.includes(t);
+    const matchesSelected = !showOnlySelected || selectedFamilies.has(decodeURIComponent(l.dataset.key));
+    
     l.style.display = (matchesSearch && matchesSelected) ? "flex" : "none";
   });
   updateSelectedCount();
 }
 
-// Muestra siempre cuántos productos hay marcados en total (aunque el buscador oculte algunos)
 function updateSelectedCount(){
   const el = document.getElementById('kpiSelectedCount');
   if(el) el.textContent = `${selectedFamilies.size} seleccionado${selectedFamilies.size === 1 ? "" : "s"} en total`;
 }
 
-// Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
   const container = document.getElementById('kpiChecklist');
   const year = document.getElementById('kpiYear').value;
   const rows = getKpiBaseRows();
   const totals = {};
 
-  // Calcular ventas según el año seleccionado en el filtro superior
   rows.forEach(r => {
     const key = getKpiKey(r);
     const val = year === "GENERAL"
@@ -640,7 +608,6 @@ function buildKpiChecklist(){
     totals[key] = (totals[key] || 0) + val;
   });
 
-  // Filtrar solo los productos que tengan ventas mayores a 0 en el periodo/año seleccionado
   const sortedKeys = Object.keys(totals)
     .filter(k => totals[k] > 0)
     .sort((a,b) => totals[b] - totals[a]);
@@ -651,28 +618,27 @@ function buildKpiChecklist(){
   }
 
   container.innerHTML = sortedKeys.map(k => {
-    const searchBlob = (k + " " + (totals[k] || "")).toLowerCase();
     return `
-    <label data-key="${encodeURIComponent(k)}" data-search="${searchBlob.replace(/"/g,'&quot;')}">
+    <label data-key="${encodeURIComponent(k)}">
       <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
       <span style="flex:1; margin-right:8px;">${k}</span>
       <span class="count" style="background:#EBF2F7; color:#0B3B5C; padding:2px 8px; border-radius:12px; font-weight:700; font-size:11px;">${totals[k]} uds.</span>
     </label>
   `}).join('');
 
-// Re-vincular eventos del checklist
   container.querySelectorAll('.kpi-check').forEach(chk => {
     chk.addEventListener('change', (e) => {
       const val = decodeURIComponent(e.target.value);
       if(e.target.checked) selectedFamilies.add(val);
       else selectedFamilies.delete(val);
-      updateSelectedCount(); // <-- Corregido
+      updateSelectedCount();
       renderChart();
     });
   });
 
-  updateSelectedCount(); // <-- Corregido
+  applyKpiSearchFilter();
 }
+
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
   const year = document.getElementById('kpiYear').value;
@@ -713,12 +679,10 @@ function renderChart(){
   const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
 
-  // Eje X: siempre en números enteros y con margen extra arriba para que la barra más alta no toque el borde
   const maxVal = entries.length ? Math.max(...entries.map(([,v]) => v)) : 0;
   const axisMax = Math.max(1, Math.ceil(maxVal * 1.3) + 2);
   const stepSize = Math.max(1, Math.ceil(axisMax / 6));
 
-  // Crear degradado elegante para las barras
   const gradient = ctx.createLinearGradient(0, 0, 400, 0);
   gradient.addColorStop(0, '#3FA9D9');
   gradient.addColorStop(1, '#1D82B6');
@@ -746,13 +710,11 @@ function renderChart(){
           clip: false,
           font: { weight: '500', size: 18 },
           labels: {
-            // Cantidad: siempre azul marino
             qty: {
               color: '#0B3B5C',
               offset: 4,
               formatter: (value) => value ? `${value}` : null
             },
-            // Porcentaje: gris pizarra neutro, ubicado justo después de la cantidad
             pct: {
               color: '#5B6B78',
               offset: (ctx) => {
@@ -831,7 +793,6 @@ document.getElementById('coverageSlider').addEventListener('input', e => {
   renderTable();
 });
 
-// Campos de Tiempo de Entrega (días) — se suman en vivo y disparan el recálculo de la tabla
 ['ltReorden','ltPago','ltFabricante','ltTraslado'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => {
     leadTime.reorden = parseFloat(document.getElementById('ltReorden').value) || 0;
@@ -854,7 +815,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
 
-    // Lista de proveedores / Buscar / Cobertura solo aplican a la vista Tabla
     ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', view === 'kpi');
     });
@@ -873,7 +833,6 @@ document.getElementById('kpiYear').addEventListener('change', renderChart);
 
 document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
 
-// Botones "X" para limpiar los campos de búsqueda
 function setupClearableSearch(inputId, btnId, onClear){
   const input = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
@@ -895,17 +854,9 @@ setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
 });
 
 document.getElementById('kpiSelectVisible').onclick = () => {
-  const t = document.getElementById('kpiSearchList').value.toLowerCase();
-  
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
-    const key = decodeURIComponent(l.dataset.key);
-    const searchBlob = l.dataset.search || "";
-    
-    // Evalúa exactamente lo que está filtrado por el texto de búsqueda y la regla de "solo seleccionados"
-    const matchesSearch = searchBlob.includes(t);
-    const matchesSelected = !showOnlySelected || selectedFamilies.has(key);
-    
-    if (matchesSearch && matchesSelected) {
+    if (l.style.display !== 'none') {
+      const key = decodeURIComponent(l.dataset.key);
       selectedFamilies.add(key);
     }
   });
@@ -926,7 +877,6 @@ document.getElementById('kpiToggleSelectedOnly').onclick = function(){
   applyKpiSearchFilter();
 };
 
-// Cierra los paneles flotantes si se hace click fuera
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
   const isBtn = e.target.closest('.toolbar');
