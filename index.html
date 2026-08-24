@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PIEMCA · Gestión de Ventas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
@@ -40,6 +43,7 @@
     top:0;
     z-index:50;
     box-shadow:0 2px 10px rgba(8,43,68,.25);
+    font-family:'Baloo 2',"Segoe UI",Roboto,Arial,sans-serif;
   }
   .brand{
     display:flex;
@@ -112,6 +116,14 @@
     font-size:12.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
   .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
+  .year-toggle-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .year-chip{
+    padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;
+    border:1.5px solid var(--gray-line);background:var(--white);color:var(--gray);
+    transition:.15s;user-select:none;
+  }
+  .year-chip.active{background:var(--navy);border-color:var(--navy);color:var(--white);}
+  .year-chip:hover{border-color:var(--sky);}
   .table-wrap{
     background:var(--white);
     border-radius:12px;
@@ -133,6 +145,7 @@
   tbody tr:nth-child(even):hover{background:var(--sky-soft);}
   td.num{text-align:center;font-variant-numeric:tabular-nums;}
   td.calc{background:#F1F8FC;font-weight:600;}
+  .zero-val{color:rgba(214,69,69,.45);}
   .sticky-col{position:sticky;background:inherit;}
   th.sticky-col{background:var(--navy);}
   .col-item{left:0;min-width:46px;}
@@ -251,6 +264,7 @@
       <span id="statusText">Cargando Historial de Ventas...</span>
       <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
     </div>
+    <div class="year-toggle-bar" id="yearToggleBar"></div>
     <div class="table-wrap">
       <table id="mainTable">
         <thead><tr id="headRow"></tr></thead>
@@ -317,6 +331,7 @@ function measureTextWidth(text, font){
 let rawData = [];      // filas originales parseadas
 let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
 let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
+let visibleYearCols = new Set(); // años actualmente activados en los "chips" de la Tabla
 let providers = [];     // lista única de proveedores
 let selectedProviders = new Set(); // proveedores activos (vacio = todos)
 let searchText = "";
@@ -367,24 +382,43 @@ function processData(rows, fields){
 
   // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
+  visibleYearCols = new Set(activeYearCols); // por defecto, todos los años activos están encendidos
 
   document.getElementById('statusText').textContent =
     `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
 
   buildProviderPanel();
   buildKpiSelectors();
+  buildYearToggleBar();
   renderTable();
+}
+
+// Construye los "chips" de años (encendidos por defecto) que controlan qué columnas de año se ven en la Tabla
+function buildYearToggleBar(){
+  const bar = document.getElementById('yearToggleBar');
+  bar.innerHTML = activeYearCols.map(y => `
+    <div class="year-chip ${visibleYearCols.has(y) ? "active" : ""}" data-year="${y}">${y}</div>
+  `).join("");
+  bar.querySelectorAll('.year-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const y = chip.dataset.year;
+      if(visibleYearCols.has(y)) visibleYearCols.delete(y);
+      else visibleYearCols.add(y);
+      buildYearToggleBar();
+      renderTable();
+    });
+  });
 }
 
 /* ============ CALCULOS ============ */
 function computeMetrics(item){
-  const dataYears = activeYearCols.filter(y => item.years[y] !== null);
+  // Solo se toman en cuenta los años que están "encendidos" en los chips de arriba de la tabla
+  const dataYears = activeYearCols.filter(y => visibleYearCols.has(y) && item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: promedio de los últimos 2 años activos con datos reales
-  // (ej. el pronóstico de 2027 se calcula con las ventas de 2025 y 2026)
+  // Pronóstico: promedio de los últimos 2 años activos (dentro de lo encendido) con datos reales
   const last2 = dataYears.slice(-2);
   const pronostico = last2.length ? last2.reduce((s,y)=>s+item.years[y],0) / last2.length : 0;
 
@@ -430,7 +464,9 @@ function getFilteredData(){
 
 /* ============ TABLA ============ */
 function renderTable(){
-  const nextYear = Number(activeYearCols[activeYearCols.length-1]) + 1;
+  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); // solo los años "encendidos" en los chips
+  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; // si apagaron todo, cae de vuelta al historial completo
+  const nextYear = Number(lastYearForForecast[lastYearForForecast.length-1]) + 1;
   const head = document.getElementById('headRow');
   head.innerHTML = `
     <th class="sticky-col col-item">Ítem</th>
@@ -438,7 +474,7 @@ function renderTable(){
     <th class="sticky-col col-cod">Código</th>
     <th class="sticky-col col-desc">Descripción</th>
     <th>Precio</th>
-    ${activeYearCols.map(y=>`<th>${y}</th>`).join("")}
+    ${shownYears.map(y=>`<th>${y}</th>`).join("")}
     <th class="group-calc">Total Ventas</th>
     <th class="group-calc">Prom. Anual</th>
     <th class="group-calc">Prom. Mensual</th>
@@ -450,20 +486,23 @@ function renderTable(){
   const data = getFilteredData();
   const body = document.getElementById('bodyRows');
   if(!data.length){
-    body.innerHTML = `<tr><td class="empty-state" colspan="${5+activeYearCols.length+5}">Sin resultados para este filtro.</td></tr>`;
+    body.innerHTML = `<tr><td class="empty-state" colspan="${5+shownYears.length+5}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
 
   body.innerHTML = data.map(r => {
     const m = computeMetrics(r);
-    const z = (v) => v ? v : ""; // deja en blanco los ceros, para no saturar la vista
+    // Los ceros se muestran, pero atenuados (rojo claro y transparente) para no saturar la vista.
+    // Una celda de año sin dato reportado (null) se deja realmente en blanco; un 0 explícito sí se muestra atenuado.
+    const z = (v) => v ? v : `<span class="zero-val">0</span>`;
+    const yearCell = (v) => v === null ? "" : z(v);
     return `<tr>
       <td class="sticky-col col-item">${r.item}</td>
       <td class="sticky-col col-prov">${r.proveedor}</td>
       <td class="sticky-col col-cod">${r.codigo}</td>
       <td class="sticky-col col-desc">${r.descripcion}</td>
       <td class="num">${r.precio ? Math.round(r.precio) : "-"}</td>
-      ${activeYearCols.map(y => `<td class="num">${r.years[y] ? r.years[y] : ""}</td>`).join("")}
+      ${shownYears.map(y => `<td class="num">${yearCell(r.years[y])}</td>`).join("")}
       <td class="num calc">${z(m.total)}</td>
       <td class="num calc">${z(m.promAnual)}</td>
       <td class="num calc">${z(m.promMensual)}</td>
