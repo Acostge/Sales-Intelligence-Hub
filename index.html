@@ -554,7 +554,7 @@ function renderTable(){
       <td class="num calc">${z(m.promAnual)}</td>
       <td class="num calc">${z(m.promMensual)}</td>
       <td class="num calc">${z(m.stockSeguridad)}</td>
-      <td class="num calc">${z(m.stockSugerido)}</td>
+      <td class="num calc" style="${m.stockSugerido > 0 ? 'color:var(--navy); font-weight:700; background:#E3F2FD;' : ''}">${z(m.stockSugerido)}</td>
       <td class="num calc">${z(m.pronostico)}</td>
     </tr>`;
   }).join("");
