@@ -418,9 +418,9 @@ function computeMetrics(item){
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: promedio de los últimos 2 años activos (dentro de lo encendido) con datos reales
-  const last2 = dataYears.slice(-2);
-  const pronostico = last2.length ? last2.reduce((s,y)=>s+item.years[y],0) / last2.length : 0;
+  // Pronóstico: se toma directamente lo vendido en el último año encendido (año anterior)
+  const last1 = dataYears.slice(-1);
+  const pronostico = last1.length ? item.years[last1[0]] : 0;
 
   // Stock sugerido: cuánto stock necesitas para cubrir los meses de cobertura elegidos,
   // en base al ritmo de ventas mensual que arroja el pronóstico
