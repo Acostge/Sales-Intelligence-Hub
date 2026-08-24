@@ -461,7 +461,7 @@ function computeMetrics(item){
 
   // Stock sugerido: el stock de seguridad (fijo, según tiempo de entrega) + un colchón mensual
   // que crece según los meses de Cobertura seleccionados (a más meses, más colchón)
-  const stockSugerido = stockSeguridad + (demandaMensual * 12 * coverageMonths);
+  const stockSugerido = stockSeguridad + (demandaMensual * 1 * coverageMonths);
 
   return {
     total: Math.round(total),
