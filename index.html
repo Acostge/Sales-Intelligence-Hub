@@ -895,11 +895,21 @@ setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
 });
 
 document.getElementById('kpiSelectVisible').onclick = () => {
+  const t = document.getElementById('kpiSearchList').value.toLowerCase();
+  
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
-    if(l.style.display !== "none"){
-      selectedFamilies.add(decodeURIComponent(l.dataset.key));
+    const key = decodeURIComponent(l.dataset.key);
+    const searchBlob = l.dataset.search || "";
+    
+    // Evalúa exactamente lo que está filtrado por el texto de búsqueda y la regla de "solo seleccionados"
+    const matchesSearch = searchBlob.includes(t);
+    const matchesSelected = !showOnlySelected || selectedFamilies.has(key);
+    
+    if (matchesSearch && matchesSelected) {
+      selectedFamilies.add(key);
     }
   });
+
   buildKpiChecklist();
   renderChart();
 };
