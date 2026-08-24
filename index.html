@@ -660,18 +660,18 @@ function buildKpiChecklist(){
     </label>
   `}).join('');
 
-  // Re-vincular eventos del checklist
+// Re-vincular eventos del checklist
   container.querySelectorAll('.kpi-check').forEach(chk => {
     chk.addEventListener('change', (e) => {
       const val = decodeURIComponent(e.target.value);
       if(e.target.checked) selectedFamilies.add(val);
       else selectedFamilies.delete(val);
-      updateKpiSelectedCount();
+      updateSelectedCount(); // <-- Corregido
       renderChart();
     });
   });
 
-  updateKpiSelectedCount();
+  updateSelectedCount(); // <-- Corregido
 }
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
@@ -889,9 +889,8 @@ function setupClearableSearch(inputId, btnId, onClear){
 }
 setupClearableSearch('searchInput', 'clearSearchInput');
 setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
-  // Al limpiar el buscador del dashboard, también se limpia la selección del gráfico
   selectedFamilies.clear();
-  buildKpiChecklist();
+  applyKpiSearchFilter();
   renderChart();
 });
 
