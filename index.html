@@ -124,7 +124,7 @@
   .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
   .section-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 
-.section-title{
+  .section-title{
     background: transparent;
     color: var(--navy);
     font-family: 'Baloo 2', sans-serif;
@@ -157,12 +157,13 @@
   td.num{text-align:center;font-variant-numeric:tabular-nums;}
   td.calc{background:#F1F8FC;font-weight:600;}
   .zero-val{color:rgba(214,69,69,.25);}
-  .sticky-col{position:sticky;background:inherit;}
-  th.sticky-col{background:var(--navy);}
+  .sticky-col{position:sticky;background:inherit;z-index:2;}
+  th.sticky-col{background:var(--navy);z-index:6;}
   .col-item{left:0;min-width:46px;}
   .col-prov{left:46px;min-width:150px;}
   .col-cod{left:196px;min-width:110px;}
-  .col-desc{left:306px;min-width:260px;box-shadow:2px 0 4px rgba(0,0,0,.06);}
+  .col-desc{left:306px;min-width:260px;}
+  .col-precio{left:566px;min-width:70px;box-shadow:2px 0 4px rgba(0,0,0,.06);}
 
   .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
   .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
@@ -271,7 +272,7 @@
     font-size:12.5px;
   }
 
-.inv-table td:first-child,
+  .inv-table td:first-child,
   .inv-table td:nth-child(3) {
     text-align: center;
   }
@@ -699,7 +700,7 @@ function renderTable(){
     <th class="sticky-col col-prov">Proveedor</th>
     <th class="sticky-col col-cod">Código</th>
     <th class="sticky-col col-desc">Descripción</th>
-    <th>Precio</th>
+    <th class="sticky-col col-precio">Precio</th>
     ${shownYears.map(y=>`<th>${y}</th>`).join("")}
     <th class="group-calc">Total Ventas</th>
     <th class="group-calc">Prom. Anual</th>
@@ -707,7 +708,6 @@ function renderTable(){
     <th class="group-calc">Stock de Seguridad</th>
     <th class="group-calc">Stock Sugerido</th>
     <th class="group-calc">Pronóstico ${nextYear}</th>
-   
   `;
 
   const data = getFilteredData();
@@ -728,7 +728,7 @@ function renderTable(){
       <td class="sticky-col col-prov">${r.proveedor}</td>
       <td class="sticky-col col-cod">${r.codigo}</td>
       <td class="sticky-col col-desc">${r.descripcion}</td>
-      <td class="num">${r.precio ? Math.round(r.precio) : "-"}</td>
+      <td class="sticky-col col-precio num">${r.precio ? Math.round(r.precio) : "-"}</td>
       ${shownYears.map(y => `<td class="num">${yearCell(r.years[y])}</td>`).join("")}
       <td class="num calc">${z(m.total)}</td>
       <td class="num calc">${z(m.promAnual)}</td>
