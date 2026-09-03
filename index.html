@@ -122,6 +122,11 @@
     font-size:12.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
   .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
+  .section-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .section-title{
+    background:var(--navy);color:var(--white);font-family:'Baloo 2',sans-serif;
+    font-size:16px;font-weight:700;letter-spacing:.4px;padding:8px 18px;border-radius:8px;
+  }
   .table-wrap{
     background:var(--white);
     border-radius:12px;
@@ -273,8 +278,6 @@
 <header>
   <div class="brand">
     <img src="logo-piemca.png" alt="PIEMCA">
-    <div class="divider"></div>
-    <h1>Gestión de Ventas</h1>
   </div>
 
   <div class="tabs">
@@ -353,7 +356,10 @@
   <!-- VISTA TABLA -->
   <div id="viewTabla">
     <div class="status-bar">
-      <span id="statusText">Cargando Historial de Ventas...</span>
+      <div class="section-title-row">
+        <span class="section-title">GESTIÓN DE VENTAS</span>
+        <span id="statusText">Cargando Historial de Ventas...</span>
+      </div>
       <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
     </div>
     <div class="table-wrap">
