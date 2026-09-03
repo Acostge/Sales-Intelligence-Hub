@@ -205,6 +205,42 @@
   }
   .hidden{display:none !important;}
 
+  /* ===== Vista Inventario ===== */
+  .inv-controls{
+    display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
+  }
+  .btn-solid{
+    background:var(--navy);color:var(--white);border:none;padding:10px 18px;border-radius:8px;
+    font-size:13px;font-weight:700;cursor:pointer;height:36px;
+  }
+  .btn-solid:hover{background:var(--sky);}
+  .inv-sheet{
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:28px;color:var(--text);
+  }
+  .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+  .inv-logo{height:44px;}
+  .inv-header h2{flex:1;text-align:center;margin:0;font-size:18px;letter-spacing:.5px;color:var(--navy);}
+  .inv-fecha{font-size:13px;font-weight:700;white-space:nowrap;}
+  .inv-meta{border:1px solid #222;border-top:none;margin-bottom:0;font-size:12.5px;}
+  .inv-meta-box{border-top:1px solid #222;padding:7px 10px;}
+  .inv-meta-box.inv-firma{min-height:34px;}
+  .inv-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px;}
+  .inv-table th{background:#111;color:#fff;padding:8px 10px;text-align:left;border:1px solid #111;}
+  .inv-table td{padding:7px 10px;border:1px solid #ccc;}
+  .inv-table td.inv-check{width:70px;text-align:center;}
+  .inv-check-box{display:inline-block;width:18px;height:18px;border:1.5px solid #444;border-radius:3px;}
+
+  @media print{
+    body *{visibility:hidden;}
+    .inv-sheet, .inv-sheet *{visibility:visible;}
+    .inv-sheet{position:absolute;top:0;left:0;width:100%;border:none;padding:0;}
+    .no-print{display:none !important;}
+    header, .status-bar, .table-wrap, .kpi-body, .kpi-controls{display:none !important;}
+    thead{display:table-header-group;}
+    tr{page-break-inside:avoid;}
+  }
+
   /* Pantalla de bloqueo para celulares y tablets pequeñas */
   #deviceBlock{
     position:fixed;inset:0;z-index:9999;
@@ -238,6 +274,7 @@
   <div class="tabs">
     <div class="tab active" data-view="TABLA">Tabla</div>
     <div class="tab" data-view="kpi">DASHBOARD</div>
+    <div class="tab" data-view="inventario">INVENTARIO</div>
   </div>
 
   <div class="toolbar">
@@ -360,6 +397,50 @@
       </div>
     </div>
   </div>
+
+  <!-- VISTA INVENTARIO -->
+  <div id="viewInventario" class="hidden">
+    <div class="inv-controls no-print">
+      <div class="field">
+        <label>Proveedor</label>
+        <select id="invProveedor"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label>Almacén</label>
+        <input type="text" id="invAlmacen" placeholder="Nombre del almacén">
+      </div>
+      <div class="field">
+        <label>Responsable</label>
+        <input type="text" id="invResponsable" placeholder="Nombre del responsable">
+      </div>
+      <button class="btn btn-solid" id="invPrint">🖨️ Generar / Imprimir</button>
+    </div>
+
+    <div class="inv-sheet" id="invSheet">
+      <div class="inv-header">
+        <img src="logo-piemca.png" alt="PIEMCA" class="inv-logo">
+        <h2>TOMA FÍSICA DE INVENTARIOS</h2>
+        <div class="inv-fecha">FECHA: <span id="invFecha"></span></div>
+      </div>
+      <div class="inv-meta">
+        <div class="inv-meta-box"><strong>ALMACÉN:</strong> <span id="invAlmacenOut"></span></div>
+        <div class="inv-meta-box"><strong>RESPONSABLE DE LA TOMA DEL INVENTARIO:</strong> <span id="invResponsableOut"></span></div>
+        <div class="inv-meta-box inv-firma"><strong>FIRMA</strong></div>
+      </div>
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Ítem</th>
+            <th>Proveedor</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Check</th>
+          </tr>
+        </thead>
+        <tbody id="invBody"></tbody>
+      </table>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -440,6 +521,7 @@ function processData(rows, fields){
   buildProviderPanel();
   buildKpiSelectors();
   buildYearToggleBar();
+  buildInventarioSelectors();
   renderTable();
 }
 
@@ -602,6 +684,33 @@ function buildProviderPanel(){
       l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none";
     });
   });
+}
+
+/* ============ INVENTARIO ============ */
+function buildInventarioSelectors(){
+  const provSel = document.getElementById('invProveedor');
+  provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
+
+  const hoy = new Date();
+  document.getElementById('invFecha').textContent = hoy.toLocaleDateString('es-ES');
+}
+
+function renderInventario(){
+  const provFilter = document.getElementById('invProveedor').value;
+  const rows = provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
+
+  document.getElementById('invAlmacenOut').textContent = document.getElementById('invAlmacen').value;
+  document.getElementById('invResponsableOut').textContent = document.getElementById('invResponsable').value;
+
+  document.getElementById('invBody').innerHTML = rows.map((r,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.proveedor}</td>
+      <td>${r.codigo}</td>
+      <td>${r.descripcion}</td>
+      <td class="inv-check"><span class="inv-check-box"></span></td>
+    </tr>
+  `).join("");
 }
 
 /* ============ SELECTORES KPI ============ */
@@ -870,16 +979,23 @@ document.querySelectorAll('.tab').forEach(tab => {
     const view = tab.dataset.view.toLowerCase();
     document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
+    document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
 
-    // Lista de proveedores / Buscar / Cobertura solo aplican a la vista Tabla
+    // Lista de proveedores / Buscar / Cobertura / Años solo aplican a la vista Tabla
     ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
-      document.getElementById(id).classList.toggle('hidden', view === 'kpi');
+      document.getElementById(id).classList.toggle('hidden', view !== 'tabla');
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
 
     if(view === 'kpi') renderChart();
+    if(view === 'inventario') renderInventario();
   };
 });
+
+document.getElementById('invProveedor').addEventListener('change', renderInventario);
+document.getElementById('invAlmacen').addEventListener('input', renderInventario);
+document.getElementById('invResponsable').addEventListener('input', renderInventario);
+document.getElementById('invPrint').addEventListener('click', () => window.print());
 
 document.getElementById('kpiProveedor').addEventListener('change', () => {
   buildKpiChecklist();
