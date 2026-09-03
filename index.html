@@ -219,19 +219,19 @@
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:28px;color:var(--text);
   }
   .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
-  .inv-logo{height:44px;}
+  .inv-logo{height:64px;}
   .inv-header h2{flex:1;text-align:center;margin:0;font-size:18px;letter-spacing:.5px;color:var(--navy);}
   .inv-fecha{font-size:13px;font-weight:700;white-space:nowrap;}
-  .inv-meta{border:1px solid #222;border-top:none;margin-bottom:0;font-size:12.5px;}
-  .inv-meta-box{border-top:1px solid #222;padding:7px 10px;}
+  .inv-meta{border:1px solid #999;border-top:none;margin-bottom:0;font-size:12.5px;}
+  .inv-meta-box{border-top:1px solid #999;padding:7px 10px;}
   .inv-meta-box.inv-firma{min-height:34px;}
-  .inv-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px;}
-  .inv-table th{background:#111;color:#fff;padding:8px 10px;text-align:left;border:1px solid #111;}
-  .inv-table td{padding:7px 10px;border:1px solid #ccc;}
-  .inv-table td.inv-check{width:70px;text-align:center;}
-  .inv-check-box{display:inline-block;width:18px;height:18px;border:1.5px solid #444;border-radius:3px;}
+  .inv-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;border:1px solid #ddd;}
+  .inv-table th{background:#233;color:#fff;padding:5px 10px;text-align:left;border:1px solid #445;font-weight:600;}
+  .inv-table td{padding:3px 10px;border:1px solid #eee;}
+  .inv-table td.inv-check{width:90px;}
 
   @media print{
+    @page{ margin: 12mm; }
     body *{visibility:hidden;}
     .inv-sheet, .inv-sheet *{visibility:visible;}
     .inv-sheet{position:absolute;top:0;left:0;width:100%;border:none;padding:0;}
@@ -414,6 +414,7 @@
         <input type="text" id="invResponsable" placeholder="Nombre del responsable">
       </div>
       <button class="btn btn-solid" id="invPrint">🖨️ Generar / Imprimir</button>
+      <div class="kpi-hint" style="max-width:260px;">Tip: en el diálogo de impresión, apaga "Encabezados y pies de página" (en Más opciones) para que no salga la fecha/URL arriba de la hoja.</div>
     </div>
 
     <div class="inv-sheet" id="invSheet">
@@ -708,7 +709,7 @@ function renderInventario(){
       <td>${r.proveedor}</td>
       <td>${r.codigo}</td>
       <td>${r.descripcion}</td>
-      <td class="inv-check"><span class="inv-check-box"></span></td>
+      <td class="inv-check"></td>
     </tr>
   `).join("");
 }
