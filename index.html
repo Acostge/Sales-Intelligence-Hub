@@ -270,20 +270,36 @@
   .inv-table tbody tr:nth-child(odd){background:#ffffff;}
   .inv-table tbody tr:nth-child(even){background:#f9fafb;}
 
-  @media print{
-    @page{ margin: 12mm; }
-    body *{visibility:hidden;}
-    .inv-sheet, .inv-sheet *{visibility:visible;}
-    .inv-sheet{
-      position:absolute;top:0;left:0;width:100%;
-      border:none !important;padding:0 !important;border-radius:0 !important;
-      box-shadow:none !important;background:#ffffff !important;
-    }
-    .no-print{display:none !important;}
-    header, .status-bar, .table-wrap, .kpi-body, .kpi-controls{display:none !important;}
-    thead{display:table-header-group;}
-    tr{page-break-inside:avoid;}
+  @media print {
+  @page { margin: 12mm; }
+  
+  /* Forzar que el fondo de la página sea totalmente blanco */
+  html, body, main {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
   }
+
+  body * { visibility: hidden; }
+  
+  .inv-sheet, .inv-sheet * { visibility: visible; }
+  
+  .inv-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .no-print { display: none !important; }
+  header, .status-bar, .table-wrap, .kpi-body, .kpi-controls { display: none !important; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+}
 
   /* Pantalla de bloqueo para celulares y tablets pequeñas */
   #deviceBlock{
