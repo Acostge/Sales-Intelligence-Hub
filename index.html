@@ -176,11 +176,9 @@
   .col-prov{width:150px; min-width:150px;}
   .col-cod{width:110px; min-width:110px;}
   .col-desc{width:260px; min-width:260px;}
-  .col-precio{width:70px; min-width:70px;}
+  .col-precio{width:80px; min-width:80px;}
 
   .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
-  .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
 
   /* KPI view */
   .kpi-controls{
@@ -199,9 +197,6 @@
   }
   .search-clear:hover{background:var(--gray-line);color:var(--text);}
   .search-clear.show{display:block;}
-  .segmented{display:flex;border:1px solid var(--gray-line);border-radius:7px;overflow:hidden;}
-  .segmented div{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--gray);}
-  .segmented div.active{background:var(--navy);color:var(--white);font-weight:600;}
   .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;}
   .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
   .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;}
@@ -232,7 +227,7 @@
   }
   .hidden{display:none !important;}
 
-  /* ===== Vista Inventario ===== */
+  /* Vista Inventario */
   .inv-controls{
     display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
@@ -283,49 +278,27 @@
     font-weight:700;
     font-size:12.5px;
   }
-
-  .inv-table td:first-child,
-  .inv-table td:nth-child(3) {
-    text-align: center;
-  }
-
-  .inv-table td{
-    padding:5px 10px;
-    border:1px solid #e0e0e0;
-  }
+  .inv-table td:first-child, .inv-table td:nth-child(3) { text-align: center; }
+  .inv-table td{ padding:5px 10px; border:1px solid #e0e0e0; }
   .inv-table td.inv-check{width:90px;}
   .inv-table tbody tr:nth-child(odd){background:#ffffff;}
   .inv-table tbody tr:nth-child(even){background:#f9fafb;}
 
   @media print {
-  @page { margin: 12mm; }
-  
-  html, body, main {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
+    @page { margin: 12mm; }
+    html, body, main { background: #ffffff !important; background-color: #ffffff !important; }
+    body * { visibility: hidden; }
+    .inv-sheet, .inv-sheet * { visibility: visible; }
+    .inv-sheet {
+      position: absolute; top: 0; left: 0; width: 100%;
+      border: none !important; padding: 0 !important; border-radius: 0 !important;
+      box-shadow: none !important; background: #ffffff !important;
+    }
+    .no-print { display: none !important; }
+    header, .status-bar, .table-wrap, .kpi-body, .kpi-controls { display: none !important; }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
   }
-
-  body * { visibility: hidden; }
-  
-  .inv-sheet, .inv-sheet * { visibility: visible; }
-  
-  .inv-sheet {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    border: none !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
-  }
-
-  .no-print { display: none !important; }
-  header, .status-bar, .table-wrap, .kpi-body, .kpi-controls { display: none !important; }
-  thead { display: table-header-group; }
-  tr { page-break-inside: avoid; }
-}
 
   /* Pantalla de bloqueo */
   #deviceBlock{
@@ -369,7 +342,7 @@
   </div>
 </header>
 
-<!-- Panel: años -->
+<!-- Panels -->
 <div class="panel" id="panelAnios">
   <h3>Filtrar por año</h3>
   <div class="prov-list" id="anioList"></div>
@@ -379,7 +352,6 @@
   </div>
 </div>
 
-<!-- Panel: proveedores -->
 <div class="panel" id="panelProv">
   <h3>Filtrar por proveedor</h3>
   <input type="text" id="provSearch" placeholder="Buscar Proveedor...">
@@ -390,7 +362,6 @@
   </div>
 </div>
 
-<!-- Panel: buscar -->
 <div class="panel" id="panelBuscar">
   <h3>Buscar producto</h3>
   <div class="search-field">
@@ -400,7 +371,6 @@
   <div class="kpi-hint">Filtra la tabla por coincidencia en la Descripción o el Código.</div>
 </div>
 
-<!-- Panel: cobertura + tiempo de entrega -->
 <div class="panel panel-wide" id="panelCobertura">
   <h3>Cobertura de compra</h3>
   <div class="coverage-row">
@@ -411,18 +381,10 @@
 
   <h3 style="margin-top:16px;">Tiempo de entrega (días)</h3>
   <div class="leadtime-grid">
-    <label>Días de reorden
-      <input type="number" id="ltReorden" min="0" value="0">
-    </label>
-    <label>Aprobación de pago
-      <input type="number" id="ltPago" min="0" value="0">
-    </label>
-    <label>Preparación del fabricante
-      <input type="number" id="ltFabricante" min="0" value="0">
-    </label>
-    <label>Tiempo de traslado
-      <input type="number" id="ltTraslado" min="0" value="0">
-    </label>
+    <label>Días de reorden <input type="number" id="ltReorden" min="0" value="0"></label>
+    <label>Aprobación de pago <input type="number" id="ltPago" min="0" value="0"></label>
+    <label>Preparación del fabricante <input type="number" id="ltFabricante" min="0" value="0"></label>
+    <label>Tiempo de traslado <input type="number" id="ltTraslado" min="0" value="0"></label>
   </div>
   <div class="kpi-hint">Total tiempo de entrega: <strong id="ltTotal">0</strong> días — el Stock de Seguridad se calcula solo a partir de este total.</div>
 </div>
@@ -439,7 +401,6 @@
     </div>
     
     <div class="table-wrap">
-      <!-- PANEL FIJO IZQUIERDA -->
       <div class="split-fixed" id="splitFixed">
         <table>
           <thead>
@@ -457,7 +418,6 @@
         </table>
       </div>
 
-      <!-- PANEL MOVIL DERECHA (SCROLL) -->
       <div class="split-scroll" id="splitScroll">
         <table>
           <thead>
@@ -593,24 +553,32 @@ function loadData(){
     },
     error: function(err){
       document.getElementById('statusText').textContent =
-        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web (Archivo > Compartir > Publicar en la web).";
+        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
       console.error(err);
     }
   });
 }
 
 function processData(rows, fields){
+  // Filtra dinámicamente las columnas de 4 dígitos (años: 2019, 2020, etc.)
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
+    // Lee el campo Moneda/Divisa o busca símbolo
+    const rawMoneda = (r["MONEDA"] || r["Moneda"] || r["DIVISA"] || r["Divisa"] || "").toString().trim().toUpperCase();
+    const esEuro = rawMoneda.includes("EUR") || rawMoneda.includes("€");
+    const simbolo = esEuro ? "€" : "$";
+
     const item = {
       item: r["ITEM"] || r["Item"] || "",
       proveedor: (r["PROVEEDOR"] || r["Proveedor"] || "").trim(),
       codigo: (r["CODIGO"] || r["CÓDIGO"] || r["Código"] || "").trim(),
       descripcion: (r["DESCRIPCION"] || r["DESCRIPCIÓN"] || r["Descripción"] || "").trim(),
       precio: parseFloat((r["PRECIO"] || r["Precio"] || "0").toString().replace(",",".")) || 0,
+      simbolo: simbolo,
       years: {}
     };
+
     yearCols.forEach(y => {
       const raw = (r[y] !== undefined ? r[y] : "").toString().trim();
       item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
@@ -679,19 +647,6 @@ function computeMetrics(item){
   };
 }
 
-function getVariant(desc){
-  let s = desc.trim();
-  const sizeTail = /\s*[\(\/]?\s*[\d][\d.\/°+x×\s-]*\)?\s*(mm|cm|metric)?\.?\s*$/i;
-  let prev;
-  let guard = 0;
-  do{
-    prev = s;
-    s = s.replace(sizeTail, "").trim();
-    guard++;
-  } while(s !== prev && guard < 5 && s.length > 3);
-  return s.replace(/[-,]\s*$/,"").trim() || desc.trim();
-}
-
 /* ============ FILTROS ============ */
 function getFilteredData(){
   return rawData.filter(r => {
@@ -710,7 +665,6 @@ function renderTable(){
   const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; 
   const nextYear = Number(lastYearForForecast[lastYearForForecast.length-1]) + 1;
 
-  // Render Encabezado del Panel Móvil
   const headScroll = document.getElementById('headRowScroll');
   headScroll.innerHTML = `
     ${shownYears.map(y=>`<th>${y}</th>`).join("")}
@@ -732,16 +686,19 @@ function renderTable(){
     return;
   }
 
-  // Render Filas Fijas
-  bodyFixed.innerHTML = data.map(r => `
-    <tr>
-      <td class="col-item">${r.item}</td>
-      <td class="col-prov">${r.proveedor}</td>
-      <td class="col-cod">${r.codigo}</td>
-      <td class="col-desc">${r.descripcion}</td>
-      <td class="col-precio num">${r.precio ? Math.round(r.precio) : "-"}</td>
-    </tr>
-  `).join("");
+  // Render Filas Fijas (Con Símbolo Unificado)
+  bodyFixed.innerHTML = data.map(r => {
+    const precioTxt = r.precio ? `${r.simbolo} ${Math.round(r.precio)}` : "-";
+    return `
+      <tr>
+        <td class="col-item">${r.item}</td>
+        <td class="col-prov">${r.proveedor}</td>
+        <td class="col-cod">${r.codigo}</td>
+        <td class="col-desc">${r.descripcion}</td>
+        <td class="col-precio num">${precioTxt}</td>
+      </tr>
+    `;
+  }).join("");
 
   // Render Filas Móviles
   const z = (v) => v ? v : `<span class="zero-val">0</span>`;
@@ -761,7 +718,7 @@ function renderTable(){
   }).join("");
 }
 
-// Sincronización del Scroll Vertical entre ambos paneles
+// Sincronización del Scroll Vertical
 const splitScroll = document.getElementById('splitScroll');
 const splitFixed = document.getElementById('splitFixed');
 
@@ -794,9 +751,7 @@ function buildProviderPanel(){
 function buildInventarioSelectors(){
   const provSel = document.getElementById('invProveedor');
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
-
-  const hoy = new Date();
-  document.getElementById('invFecha').textContent = hoy.toLocaleDateString('es-ES');
+  document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES');
 }
 
 function renderInventario(){
@@ -860,6 +815,7 @@ function buildKpiChecklist(){
   const totals = {};       
   const historicalTotals = {}; 
   const codesByKey = {};
+
   rows.forEach(r => {
     const key = getKpiKey(r);
     const val = year === "GENERAL"
@@ -871,6 +827,7 @@ function buildKpiChecklist(){
     codesByKey[key] = codesByKey[key] || new Set();
     if(r.codigo) codesByKey[key].add(r.codigo);
   });
+
   const keys = Object.keys(totals)
     .filter(k => totals[k] > 0) 
     .sort((a,b) => totals[b] - totals[a]);
