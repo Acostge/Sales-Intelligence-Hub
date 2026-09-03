@@ -221,21 +221,54 @@
   }
   .btn-solid:hover{background:var(--sky);}
   .inv-sheet{
-    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:28px;color:var(--text);
+    background:#ffffff;
+    border:1px solid #e0e0e0;
+    border-radius:12px;
+    padding:28px;
+    color:var(--text);
   }
   .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
   .inv-logo{height:64px;}
-  .inv-header h2{flex:1;text-align:center;margin:0;font-size:18px;letter-spacing:.5px;color:var(--navy);}
-  .inv-fecha{font-size:13px;font-weight:700;white-space:nowrap;}
-  .inv-meta{border:1px solid #999;border-top:none;margin-bottom:0;font-size:12.5px;}
-  .inv-meta-box{border-top:1px solid #999;padding:7px 10px;}
+  .inv-header h2{
+    flex:1;
+    text-align:center;
+    margin:0;
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:.5px;
+    color:var(--navy);
+    background:none;
+    padding:0;
+  }
+  .inv-fecha{font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);}
+  .inv-meta{border:1px solid #e0e0e0;border-top:none;margin-bottom:0;font-size:12.5px;}
+  .inv-meta-box{border-top:1px solid #e0e0e0;padding:7px 10px;}
   .inv-meta-box.inv-firma{min-height:34px;}
-  .inv-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;border:1px solid #ddd;}
-  .inv-table th{background:#233;color:#fff;padding:5px 10px;text-align:left;border:1px solid #445;font-weight:600;}
-  .inv-table td{padding:3px 10px;border:1px solid #eee;}
+  
+  /* Tabla de Inventario limpia con tono cebra e hilos finos */
+  .inv-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:14px;
+    font-size:12px;
+    border:1px solid #e0e0e0;
+  }
+  .inv-table th{
+    background:transparent;
+    color:var(--navy);
+    padding:8px 10px;
+    text-align:left;
+    border:1px solid #e0e0e0;
+    font-weight:700;
+    font-size:12.5px;
+  }
+  .inv-table td{
+    padding:5px 10px;
+    border:1px solid #e0e0e0;
+  }
   .inv-table td.inv-check{width:90px;}
   .inv-table tbody tr:nth-child(odd){background:#ffffff;}
-  .inv-table tbody tr:nth-child(even){background:#f2f4f6;}
+  .inv-table tbody tr:nth-child(even){background:#f9fafb;}
 
   @media print{
     @page{ margin: 12mm; }
@@ -244,7 +277,7 @@
     .inv-sheet{
       position:absolute;top:0;left:0;width:100%;
       border:none !important;padding:0 !important;border-radius:0 !important;
-      box-shadow:none !important;background:transparent !important;
+      box-shadow:none !important;background:#ffffff !important;
     }
     .no-print{display:none !important;}
     header, .status-bar, .table-wrap, .kpi-body, .kpi-controls{display:none !important;}
