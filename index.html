@@ -135,14 +135,28 @@
     border-radius: 0;
   }
 
+  /* ESTRUCTURA SPLIT TABLA */
   .table-wrap{
     background:var(--white);
     border-radius:12px;
-    overflow:auto;
     box-shadow:0 2px 12px rgba(8,43,68,.08);
-    max-height:74vh;
     border:1px solid var(--gray-line);
+    display:flex;
+    overflow:hidden;
+    max-height:74vh;
   }
+  .split-fixed{
+    flex:0 0 auto;
+    overflow-y:hidden;
+    box-shadow: 3px 0 6px rgba(0,0,0,0.06);
+    z-index:10;
+  }
+  .split-scroll{
+    flex:1;
+    overflow-x:auto;
+    overflow-y:auto;
+  }
+
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;}
   thead th{
     position:sticky;top:0;background:var(--navy);color:var(--white);
@@ -157,13 +171,12 @@
   td.num{text-align:center;font-variant-numeric:tabular-nums;}
   td.calc{background:#F1F8FC;font-weight:600;}
   .zero-val{color:rgba(214,69,69,.25);}
-  .sticky-col{position:sticky;background:inherit;z-index:2;}
-  th.sticky-col{background:var(--navy);z-index:6;}
-  .col-item{left:0;min-width:46px;}
-  .col-prov{left:46px;min-width:150px;}
-  .col-cod{left:196px;min-width:110px;}
-  .col-desc{left:306px;min-width:260px;}
-  .col-precio{left:566px;min-width:70px;box-shadow:2px 0 4px rgba(0,0,0,.06);}
+
+  .col-item{width:46px; min-width:46px;}
+  .col-prov{width:150px; min-width:150px;}
+  .col-cod{width:110px; min-width:110px;}
+  .col-desc{width:260px; min-width:260px;}
+  .col-precio{width:70px; min-width:70px;}
 
   .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
   .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
@@ -254,7 +267,6 @@
   .inv-meta-box{border-top:1px solid #e0e0e0;padding:7px 10px;}
   .inv-meta-box.inv-firma{min-height:34px;}
   
-  /* Tabla de Inventario limpia con tono cebra e hilos finos */
   .inv-table{
     width:100%;
     border-collapse:collapse;
@@ -288,7 +300,6 @@
   @media print {
   @page { margin: 12mm; }
   
-  /* Forzar que el fondo de la página sea totalmente blanco */
   html, body, main {
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -316,7 +327,7 @@
   tr { page-break-inside: avoid; }
 }
 
-  /* Pantalla de bloqueo para celulares y tablets pequeñas */
+  /* Pantalla de bloqueo */
   #deviceBlock{
     position:fixed;inset:0;z-index:9999;
     background:linear-gradient(160deg,var(--navy-deep),var(--navy) 80%);
@@ -426,11 +437,37 @@
       </div>
       <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
     </div>
+    
     <div class="table-wrap">
-      <table id="mainTable">
-        <thead><tr id="headRow"></tr></thead>
-        <tbody id="bodyRows"><tr><td class="empty-state">Cargando...</td></tr></tbody>
-      </table>
+      <!-- PANEL FIJO IZQUIERDA -->
+      <div class="split-fixed" id="splitFixed">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-item">Ítem</th>
+              <th class="col-prov">Proveedor</th>
+              <th class="col-cod">Código</th>
+              <th class="col-desc">Descripción</th>
+              <th class="col-precio">Precio</th>
+            </tr>
+          </thead>
+          <tbody id="bodyFixed">
+            <tr><td colspan="5" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PANEL MOVIL DERECHA (SCROLL) -->
+      <div class="split-scroll" id="splitScroll">
+        <table>
+          <thead>
+            <tr id="headRowScroll"></tr>
+          </thead>
+          <tbody id="bodyScroll">
+            <tr><td class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -525,27 +562,24 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekI
 
 Chart.register(ChartDataLabels);
 
-// Mide el ancho real de un texto con una fuente dada, para poder ubicar
-// la etiqueta del porcentaje justo después de la cantidad, sin solaparse.
 const _measureCtx = document.createElement('canvas').getContext('2d');
 function measureTextWidth(text, font){
   _measureCtx.font = font;
   return _measureCtx.measureText(text).width;
 }
 
-let rawData = [];      // filas originales parseadas
-let yearCols = [];      // TODAS las columnas de año detectadas en el encabezado, ej [2019,...,2035]
-let activeYearCols = []; // solo los años que tienen al menos un dato cargado (lo que se muestra)
-let visibleYearCols = new Set(); // años actualmente activados en los "chips" de la Tabla
-let providers = [];     // lista única de proveedores
-let selectedProviders = new Set(); // proveedores activos (vacio = todos)
+let rawData = [];      
+let yearCols = [];      
+let activeYearCols = []; 
+let visibleYearCols = new Set(); 
+let providers = [];     
+let selectedProviders = new Set(); 
 let searchText = "";
 let coverageMonths = 3;
-// Tiempo de entrega (días) — los 4 componentes que el usuario llena manualmente
 let leadTime = { reorden: 0, pago: 0, fabricante: 0, traslado: 0 };
 let chartInstance = null;
-let selectedFamilies = new Set(); // familias/productos marcados manualmente para comparar en el gráfico
-let showOnlySelected = false; // si está activo, la lista solo muestra lo que ya está marcado
+let selectedFamilies = new Set(); 
+let showOnlySelected = false; 
 
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
@@ -566,7 +600,6 @@ function loadData(){
 }
 
 function processData(rows, fields){
-  // Detecta columnas de año: cualquier encabezado de 4 dígitos
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
@@ -583,13 +616,12 @@ function processData(rows, fields){
       item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
     });
     return item;
-  }).filter(r => r.descripcion); // descarta filas vacías
+  }).filter(r => r.descripcion); 
 
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
 
-  // Un año se considera "activo" si al menos un producto tiene un valor cargado ahí
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
-  visibleYearCols = new Set(activeYearCols); // por defecto, todos los años activos están encendidos
+  visibleYearCols = new Set(activeYearCols); 
 
   document.getElementById('statusText').textContent =
     `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
@@ -601,7 +633,6 @@ function processData(rows, fields){
   renderTable();
 }
 
-// Construye la lista de checkboxes de años (encendidos por defecto) que controlan qué columnas de año se ven en la Tabla
 function buildYearToggleBar(){
   const list = document.getElementById('anioList');
   list.innerHTML = activeYearCols.map(y => `
@@ -618,37 +649,22 @@ function buildYearToggleBar(){
 
 /* ============ CALCULOS ============ */
 function computeMetrics(item){
-  // Solo se toman en cuenta los años que están "encendidos" en los chips de arriba de la tabla
   const dataYears = activeYearCols.filter(y => visibleYearCols.has(y) && item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
   const promMensual = promAnual / 12;
 
-  // Pronóstico: promedio desde el primer año con venta real en adelante.
-  // - Los ceros ANTES de la primera venta se excluyen (el producto aún no existía en catálogo).
-  // - Los ceros DESPUÉS de la primera venta SÍ cuentan (indican que el producto está dejando de venderse).
   const firstSaleIdx = dataYears.findIndex(y => item.years[y] > 0);
   const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
   const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
 
-  // Demanda diaria: el pronóstico (ventas del año anterior) repartido entre los 365 días del año
   const demandaDiaria = pronostico / 365;
-
-  // Tiempo de entrega total = suma de los 4 componentes que se llenan en el panel de Cobertura
   const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
-
-  // Verificamos si el producto tiene historial de ventas (si ha vendido al menos 1 unidad)
   const tieneVentas = pronostico > 0;
 
-  // Stock de seguridad:
-  // Si tiene ventas, garantizamos un PISO MÍNIMO de 1 unidad (para cubrir 1 cirugía/set).
-  // Si no tiene ventas (pronóstico 0), se queda en 0.
   const rawStockSeguridad = demandaDiaria * leadTimeDias;
   const stockSeguridad = tieneVentas ? Math.max(2, Math.round(rawStockSeguridad)) : 0;
 
-  // Stock sugerido:
-  // Si tiene ventas, garantizamos tu PISO COMERCIAL de 4 unidades.
-  // Si no tiene ventas, se queda en 0.
   const rawStockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
   const stockSugerido = tieneVentas ? Math.max(4, Math.round(rawStockSugerido)) : 0;
 
@@ -663,7 +679,6 @@ function computeMetrics(item){
   };
 }
 
-// Extrae la "variante" de una descripción quitando el tamaño/medida final
 function getVariant(desc){
   let s = desc.trim();
   const sizeTail = /\s*[\(\/]?\s*[\d][\d.\/°+x×\s-]*\)?\s*(mm|cm|metric)?\.?\s*$/i;
@@ -689,18 +704,15 @@ function getFilteredData(){
   });
 }
 
-/* ============ TABLA ============ */
+/* ============ TABLA SPLIT ============ */
 function renderTable(){
-  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); // solo los años "encendidos" en los chips
-  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; // si apagaron todo, cae de vuelta al historial completo
+  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); 
+  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; 
   const nextYear = Number(lastYearForForecast[lastYearForForecast.length-1]) + 1;
-  const head = document.getElementById('headRow');
-  head.innerHTML = `
-    <th class="sticky-col col-item">Ítem</th>
-    <th class="sticky-col col-prov">Proveedor</th>
-    <th class="sticky-col col-cod">Código</th>
-    <th class="sticky-col col-desc">Descripción</th>
-    <th class="sticky-col col-precio">Precio</th>
+
+  // Render Encabezado del Panel Móvil
+  const headScroll = document.getElementById('headRowScroll');
+  headScroll.innerHTML = `
     ${shownYears.map(y=>`<th>${y}</th>`).join("")}
     <th class="group-calc">Total Ventas</th>
     <th class="group-calc">Prom. Anual</th>
@@ -711,24 +723,33 @@ function renderTable(){
   `;
 
   const data = getFilteredData();
-  const body = document.getElementById('bodyRows');
+  const bodyFixed = document.getElementById('bodyFixed');
+  const bodyScroll = document.getElementById('bodyScroll');
+
   if(!data.length){
-    body.innerHTML = `<tr><td class="empty-state" colspan="${5+shownYears.length+6}">Sin resultados para este filtro.</td></tr>`;
+    bodyFixed.innerHTML = `<tr><td class="empty-state" colspan="5">Sin resultados.</td></tr>`;
+    bodyScroll.innerHTML = `<tr><td class="empty-state" colspan="${shownYears.length+6}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
 
-  body.innerHTML = data.map(r => {
+  // Render Filas Fijas
+  bodyFixed.innerHTML = data.map(r => `
+    <tr>
+      <td class="col-item">${r.item}</td>
+      <td class="col-prov">${r.proveedor}</td>
+      <td class="col-cod">${r.codigo}</td>
+      <td class="col-desc">${r.descripcion}</td>
+      <td class="col-precio num">${r.precio ? Math.round(r.precio) : "-"}</td>
+    </tr>
+  `).join("");
+
+  // Render Filas Móviles
+  const z = (v) => v ? v : `<span class="zero-val">0</span>`;
+  const yearCell = (v) => v === null ? "" : z(v);
+
+  bodyScroll.innerHTML = data.map(r => {
     const m = computeMetrics(r);
-    // Los ceros se muestran, pero atenuados (rojo claro y transparente) para no saturar la vista.
-    // Una celda de año sin dato reportado (null) se deja realmente en blanco; un 0 explícito sí se muestra atenuado.
-    const z = (v) => v ? v : `<span class="zero-val">0</span>`;
-    const yearCell = (v) => v === null ? "" : z(v);
     return `<tr>
-      <td class="sticky-col col-item">${r.item}</td>
-      <td class="sticky-col col-prov">${r.proveedor}</td>
-      <td class="sticky-col col-cod">${r.codigo}</td>
-      <td class="sticky-col col-desc">${r.descripcion}</td>
-      <td class="sticky-col col-precio num">${r.precio ? Math.round(r.precio) : "-"}</td>
       ${shownYears.map(y => `<td class="num">${yearCell(r.years[y])}</td>`).join("")}
       <td class="num calc">${z(m.total)}</td>
       <td class="num calc">${z(m.promAnual)}</td>
@@ -739,6 +760,14 @@ function renderTable(){
     </tr>`;
   }).join("");
 }
+
+// Sincronización del Scroll Vertical entre ambos paneles
+const splitScroll = document.getElementById('splitScroll');
+const splitFixed = document.getElementById('splitFixed');
+
+splitScroll.addEventListener('scroll', () => {
+  splitFixed.scrollTop = splitScroll.scrollTop;
+});
 
 /* ============ PANEL PROVEEDORES ============ */
 function buildProviderPanel(){
@@ -800,20 +829,15 @@ function buildKpiSelectors(){
   buildKpiChecklist();
 }
 
-// Devuelve el conjunto de filas a considerar según el proveedor elegido en la vista KPI
 function getKpiBaseRows(){
   const provFilter = document.getElementById('kpiProveedor').value;
   return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
-// Clave de agrupación: usa la descripción completa (misma granularidad que el filtro de la Tabla,
-// una fila por cada talla/variante exacta) para que buscar "Copa Dualis" muestre las mismas tallas
-// que ves al filtrar en la Tabla.
 function getKpiKey(row){
   return row.descripcion;
 }
 
-// Aplica el texto de búsqueda actual (y el filtro "solo seleccionados" si está activo) a la lista
 function applyKpiSearchFilter(){
   const t = document.getElementById('kpiSearchList').value.toLowerCase();
   document.querySelectorAll('#kpiChecklist label').forEach(l => {
@@ -825,18 +849,16 @@ function applyKpiSearchFilter(){
   updateSelectedCount();
 }
 
-// Muestra siempre cuántos productos hay marcados en total (aunque el buscador oculte algunos)
 function updateSelectedCount(){
   const el = document.getElementById('kpiSelectedCount');
   if(el) el.textContent = `${selectedFamilies.size} seleccionado${selectedFamilies.size === 1 ? "" : "s"} en total`;
 }
 
-// Construye la lista de checkboxes con todas las familias/productos disponibles
 function buildKpiChecklist(){
   const year = document.getElementById('kpiYear').value;
   const rows = getKpiBaseRows();
-  const totals = {};       // cantidad para el año/General elegido (lo que se muestra en la lista)
-  const historicalTotals = {}; // suma de todos los años, sin importar el filtro (solo para limpiar selección)
+  const totals = {};       
+  const historicalTotals = {}; 
   const codesByKey = {};
   rows.forEach(r => {
     const key = getKpiKey(r);
@@ -850,10 +872,9 @@ function buildKpiChecklist(){
     if(r.codigo) codesByKey[key].add(r.codigo);
   });
   const keys = Object.keys(totals)
-    .filter(k => totals[k] > 0) // los productos sin venta en el año/General elegido no se muestran
+    .filter(k => totals[k] > 0) 
     .sort((a,b) => totals[b] - totals[a]);
 
-  // Solo se quita de la selección lo que JAMÁS tuvo venta en ningún año (no lo que esté en cero solo en este filtro)
   [...selectedFamilies].forEach(k => { if(!historicalTotals[k]) selectedFamilies.delete(k); });
 
   const list = document.getElementById('kpiChecklist');
@@ -873,12 +894,12 @@ function buildKpiChecklist(){
       const key = decodeURIComponent(cb.value);
       if(cb.checked) selectedFamilies.add(key);
       else selectedFamilies.delete(key);
-      applyKpiSearchFilter(); // refresca el contador y, si aplica, el filtro "solo seleccionados"
+      applyKpiSearchFilter(); 
       renderChart();
     });
   });
 
-  applyKpiSearchFilter(); // conserva el filtro de búsqueda activo tras reconstruir la lista
+  applyKpiSearchFilter(); 
 }
 
 /* ============ GRAFICO KPI ============ */
@@ -919,7 +940,6 @@ function renderChart(){
   const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
 
-  // Eje X: siempre en números enteros y con margen extra arriba para que la barra más alta no toque el borde
   const maxVal = entries.length ? Math.max(...entries.map(([,v]) => v)) : 0;
   const axisMax = Math.max(1, Math.ceil(maxVal * 1.3) + 2);
   const stepSize = Math.max(1, Math.ceil(axisMax / 6));
@@ -947,13 +967,11 @@ function renderChart(){
           clip: false,
           font: { weight: '500', size: 18 },
           labels: {
-            // Cantidad: siempre azul marino
             qty: {
               color: '#0B3B5C',
               offset: 4,
               formatter: (value) => value ? `${value}` : null
             },
-            // Porcentaje: siempre rojo, ubicado justo después de la cantidad (según su ancho real)
             pct: {
               color: '#D64545',
               offset: (ctx) => {
@@ -1032,7 +1050,6 @@ document.getElementById('coverageSlider').addEventListener('input', e => {
   renderTable();
 });
 
-// Campos de Tiempo de Entrega (días) — se suman en vivo y disparan el recálculo de la tabla
 ['ltReorden','ltPago','ltFabricante','ltTraslado'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => {
     leadTime.reorden = parseFloat(document.getElementById('ltReorden').value) || 0;
@@ -1056,7 +1073,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
     document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
 
-    // Lista de proveedores / Buscar / Cobertura / Años solo aplican a la vista Tabla
     ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', view !== 'tabla');
     });
@@ -1084,7 +1100,6 @@ document.getElementById('kpiYear').addEventListener('change', () => {
 
 document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
 
-// Botones "X" para limpiar los campos de búsqueda
 function setupClearableSearch(inputId, btnId, onClear){
   const input = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
@@ -1100,7 +1115,6 @@ function setupClearableSearch(inputId, btnId, onClear){
 }
 setupClearableSearch('searchInput', 'clearSearchInput');
 setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
-  // Al limpiar el buscador del dashboard, también se limpia la selección del gráfico
   selectedFamilies.clear();
   buildKpiChecklist();
   renderChart();
@@ -1128,7 +1142,6 @@ document.getElementById('kpiToggleSelectedOnly').onclick = function(){
   applyKpiSearchFilter();
 };
 
-// Cierra los paneles flotantes si se hace click fuera
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
   const isBtn = e.target.closest('.toolbar');
@@ -1137,8 +1150,8 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* ============ BLOQUEO DE CELULARES Y TABLETS PEQUEÑAS ============ */
-const MIN_WIDTH_ALLOWED = 1024; // tablets de ~9" en horizontal (o más grandes) y computadoras
+/* ============ BLOQUEO DE DISPOSITIVOS ============ */
+const MIN_WIDTH_ALLOWED = 1024; 
 
 function isPhoneDevice(){
   const ua = navigator.userAgent;
@@ -1151,7 +1164,7 @@ function checkDeviceBlock(){
   document.getElementById('deviceBlock').classList.toggle('hidden', !blocked);
   if(!blocked && !appStarted){
     appStarted = true;
-    loadData(); // arranca apenas el dispositivo/orientación sea válido (sin recargar la página)
+    loadData(); 
   }
 }
 window.addEventListener('resize', checkDeviceBlock);
