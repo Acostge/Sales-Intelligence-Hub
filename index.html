@@ -229,6 +229,8 @@
   .inv-table th{background:#233;color:#fff;padding:5px 10px;text-align:left;border:1px solid #445;font-weight:600;}
   .inv-table td{padding:3px 10px;border:1px solid #eee;}
   .inv-table td.inv-check{width:90px;}
+  .inv-table tbody tr:nth-child(odd){background:#ffffff;}
+  .inv-table tbody tr:nth-child(even){background:#f2f4f6;}
 
   @media print{
     @page{ margin: 12mm; }
@@ -418,7 +420,7 @@
         <input type="text" id="invResponsable" placeholder="Nombre del responsable">
       </div>
       <button class="btn btn-solid" id="invPrint">🖨️ Generar / Imprimir</button>
-      </div>
+    </div>
 
     <div class="inv-sheet" id="invSheet">
       <div class="inv-header">
