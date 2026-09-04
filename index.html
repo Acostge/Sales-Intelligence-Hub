@@ -164,6 +164,22 @@
   .col-cod{left:196px;min-width:110px;}
   .col-desc{left:306px;min-width:260px;box-shadow:2px 0 4px rgba(0,0,0,.06);}
 
+
+/* Centrar Ítem y Código en cabecera y cuerpo de la tabla principal */
+  #mainTable .col-item,
+  #mainTable .col-cod {
+    text-align: center !important;
+  }
+
+  /* Control de ancho personalizado para la columna Precio (5.ª columna) */
+  #mainTable th:nth-child(5),
+  #mainTable td:nth-child(5) {
+    text-align: center !important;
+    min-width: 90px !important; /* Da espacio suficiente para que cifras como 1000 no se corten */
+    font-size: 11.5px !important; /* Ajuste fino de lectura */
+  }
+
+
   .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
   .spinner{width:34px;height:34px;border:4px solid var(--sky-soft);border-top-color:var(--sky);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -328,11 +344,6 @@
   #deviceBlock p{max-width:360px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.8);margin:0;}
   #deviceBlock .icon{font-size:38px;margin-bottom:16px;}
 
-/* Pégalo justo antes de cerrar la etiqueta style */
-  .tabla-ventas td,
-  .tabla-ventas th {
-    text-align: center !important;
-  }
 </style>
 </head>
 <body>
