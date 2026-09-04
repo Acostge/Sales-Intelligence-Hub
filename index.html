@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIEMCA · Gestión de Ventas (Diseño Actualizado)</title>
+<title>PIEMCA · Gestión de Ventas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
@@ -58,8 +58,14 @@
   }
   .tab.active{background:var(--white);color:var(--navy);}
 
-  /* CAMBIO 4: Toolbar corrida a la derecha */
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center; margin-left: auto;}
+  /* CAMBIO 4: Opciones de arriba desplazadas a la derecha y Buscar alineado a la derecha */
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-left: auto;
+  }
   .btn{
     background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.3);
@@ -77,22 +83,21 @@
   }
   .btn:hover{background:var(--sky);border-color:var(--sky);}
   .btn.active{background:var(--sky);border-color:var(--sky);}
-  
-  /* Botón Cobertura reubicado (definido en .section-title-row ahora) */
+
+  /* CAMBIO 2 y 3: Estilo de Cobertura integrado en la línea de título */
   #btnCobertura.btn-cobertura-inline {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.3);
+    background: var(--navy);
+    border: 1px solid rgba(255,255,255,.3);
     color: var(--white);
-    padding: 7px 14px;
-    font-size: 12px;
+    padding: 8px 16px;
   }
+
   .cov-badge{
     background:rgba(255,255,255,.18);
     padding:2px 9px;
     border-radius:20px;
     font-size:12px;
     font-weight:700;
-    margin-left: 5px;
   }
 
   .panel{
@@ -125,14 +130,31 @@
     padding:7px 9px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;font-weight:600;color:var(--text);width:100%;box-sizing:border-box;
   }
 
-  main{padding:18px 24px 80px;} /* Margen inferior extra para el botón Actualizar */
+  main{padding:18px 24px 80px;}
+  
   .status-bar{
-    display:flex;justify-content:space-between;align-items:center;
-    font-size:13.5px;color:var(--gray);margin-bottom:12px;flex-wrap:nowrap;gap:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13.5px;
+    color:var(--gray);
+    margin-bottom:12px;
   }
-  /* CAMBIO 1: Título alineado con Item (aprox 46px margin-left) y CAMBIO 2: Cobertura en la misma línea */
-  .section-title-row{display:flex;align-items:center;gap:14px;flex: 1; justify-content: space-between;}
-  .title-group { display: flex; align-items: center; gap: 14px; margin-left: 46px; } /* Ajuste de margen para alinear con Item */
+  
+  .section-title-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width: 100%;
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    /* CAMBIO 1: El título se rueda a la derecha alineándose con la columna Ítem */
+    margin-left: 46px; 
+  }
 
   .section-title{
     background: transparent;
@@ -145,6 +167,29 @@
     border-radius: 0;
   }
 
+  /* CAMBIO 1: Botón Actualizar Datos abajo a la izquierda */
+  .footer-refresh-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 12px 24px;
+    background: var(--bg);
+    border-top: 1px solid var(--gray-line);
+    display: flex;
+    justify-content: flex-start;
+    z-index: 40;
+  }
+  .footer-refresh-bar .refresh{
+    color:var(--sky);
+    cursor:pointer;
+    font-weight:600;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   /* ESTRUCTURA SPLIT TABLA */
   .table-wrap{
     background:var(--white);
@@ -153,7 +198,7 @@
     border:1px solid var(--gray-line);
     display:flex;
     overflow:hidden;
-    max-height:70vh; /* Ajuste ligero para el botón inferior */
+    max-height:68vh;
   }
   .split-fixed{
     flex:0 0 auto;
@@ -190,70 +235,134 @@
 
   .empty-state{padding:60px 20px;text-align:center;color:var(--gray);}
 
-  /* CAMBIO 2: Botón Actualizar datos abajo a la izquierda */
-  .footer-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 12px 24px;
-    background: var(--bg);
-    border-top: 1px solid var(--gray-line);
-    display: flex;
-    justify-content: flex-start;
-    z-index: 40;
+  /* KPI view */
+  .kpi-controls{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
   }
-  .footer-bar .refresh{
-    color:var(--sky);cursor:pointer;font-weight:600; font-size: 13.5px;
-    background: none; border: none; padding: 0; display: flex; align-items: center; gap: 5px;
-  }
-
-  /* Estilos KPI e Inventario (sin cambios) */
-  .kpi-controls{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;}
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
   .field input,.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
   .search-field{position:relative;}
   .search-field input[type=text]{width:100%;padding-right:28px;margin-bottom:0;}
-  .search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:none;color:var(--gray);font-size:15px;line-height:1;cursor:pointer;display:none;padding:4px;border-radius:50%;}
+  .search-clear{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    border:none;background:none;color:var(--gray);font-size:15px;line-height:1;
+    cursor:pointer;display:none;padding:4px;border-radius:50%;
+  }
   .search-clear:hover{background:var(--gray-line);color:var(--text);}
   .search-clear.show{display:block;}
   .kpi-hint{font-size:12px;color:var(--gray);max-width:260px;line-height:1.4;}
   .kpi-checklist{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--gray-line);border-radius:7px;padding:8px;background:#FBFCFD;}
   .kpi-checklist label{font-size:12.5px;display:flex;gap:8px;align-items:center;cursor:pointer;}
-  .kpi-checklist label span.count{margin-left:auto;color:var(--navy);font-size:11.5px;font-weight:700;background:var(--sky-soft);padding:3px 10px;border-radius:20px;white-space:nowrap;}
+  .kpi-checklist label span.count{
+    margin-left:auto;color:var(--navy);font-size:11.5px;font-weight:700;
+    background:var(--sky-soft);padding:3px 10px;border-radius:20px;white-space:nowrap;
+  }
   .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
   .kpi-selected-bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray);margin-bottom:8px;font-weight:600;}
   .kpi-body{display:flex;gap:16px;align-items:stretch;}
-  .kpi-list-panel{flex:0 0 580px;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;}
+  .kpi-list-panel{
+    flex:0 0 580px;
+    display:flex;flex-direction:column;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
+  }
   .kpi-list-panel .kpi-checklist{flex:1;max-height:600px;}
-  .chart-card{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;}
+  .chart-card{
+    flex:1;min-width:0;display:flex;flex-direction:column;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;
+  }
   .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
   .chart-card p{margin:0 0 14px;color:var(--gray);font-size:12.5px;}
   .chart-canvas-wrap{position:relative;flex:1;min-height:520px;}
   #barChart{position:absolute;top:0;left:0;width:100% !important;height:100% !important;}
-  @media (max-width:900px){.kpi-body{flex-direction:column;}.kpi-list-panel{flex:1 1 auto;}}
+  @media (max-width:900px){
+    .kpi-body{flex-direction:column;}
+    .kpi-list-panel{flex:1 1 auto;}
+  }
   .hidden{display:none !important;}
-  .inv-controls{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;}
-  .btn-solid{background:var(--navy);color:var(--white);border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;height:36px;}
+
+  /* Vista Inventario */
+  .inv-controls{
+    display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
+  }
+  .btn-solid{
+    background:var(--navy);color:var(--white);border:none;padding:10px 18px;border-radius:8px;
+    font-size:13px;font-weight:700;cursor:pointer;height:36px;
+  }
   .btn-solid:hover{background:var(--sky);}
-  .inv-sheet{background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:28px;color:var(--text);}
+  .inv-sheet{
+    background:#ffffff;
+    border:1px solid #e0e0e0;
+    border-radius:12px;
+    padding:28px;
+    color:var(--text);
+  }
   .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
   .inv-logo{height:64px;}
-  .inv-header h2{flex:1;text-align:center;margin:0;font-size:20px;font-weight:800;letter-spacing:.5px;color:var(--navy);background:none;padding:0;}
+  .inv-header h2{
+    flex:1;
+    text-align:center;
+    margin:0;
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:.5px;
+    color:var(--navy);
+    background:none;
+    padding:0;
+  }
   .inv-fecha{font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);}
   .inv-meta{border:1px solid #e0e0e0;border-top:none;margin-bottom:0;font-size:12.5px;}
   .inv-meta-box{border-top:1px solid #e0e0e0;padding:7px 10px;}
   .inv-meta-box.inv-firma{min-height:34px;}
-  .inv-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;border:1px solid #e0e0e0;}
-  .inv-table th{background:transparent;color:var(--navy);padding:8px 10px;text-align:center;border:1px solid #e0e0e0;font-weight:700;font-size:12.5px;}
+  
+  .inv-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:14px;
+    font-size:12px;
+    border:1px solid #e0e0e0;
+  }
+  .inv-table th{
+    background:transparent;
+    color:var(--navy);
+    padding:8px 10px;
+    text-align:center;
+    border:1px solid #e0e0e0;
+    font-weight:700;
+    font-size:12.5px;
+  }
   .inv-table td:first-child, .inv-table td:nth-child(3) { text-align: center; }
   .inv-table td{ padding:5px 10px; border:1px solid #e0e0e0; }
   .inv-table td.inv-check{width:90px;}
   .inv-table tbody tr:nth-child(odd){background:#ffffff;}
   .inv-table tbody tr:nth-child(even){background:#f9fafb;}
-  @media print {@page { margin: 12mm; }html, body, main { background: #ffffff !important; background-color: #ffffff !important; }body * { visibility: hidden; }.inv-sheet, .inv-sheet * { visibility: visible; }.inv-sheet {position: absolute; top: 0; left: 0; width: 100%;border: none !important; padding: 0 !important; border-radius: 0 !important;box-shadow: none !important; background: #ffffff !important;}.no-print { display: none !important; }header, .status-bar, .table-wrap, .kpi-body, .kpi-controls, .footer-bar { display: none !important; }thead { display: table-header-group; }tr { page-break-inside: avoid; }}
-  #deviceBlock{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,var(--navy-deep),var(--navy) 80%);color:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;}
+
+  @media print {
+    @page { margin: 12mm; }
+    html, body, main { background: #ffffff !important; background-color: #ffffff !important; }
+    body * { visibility: hidden; }
+    .inv-sheet, .inv-sheet * { visibility: visible; }
+    .inv-sheet {
+      position: absolute; top: 0; left: 0; width: 100%;
+      border: none !important; padding: 0 !important; border-radius: 0 !important;
+      box-shadow: none !important; background: #ffffff !important;
+    }
+    .no-print { display: none !important; }
+    header, .status-bar, .table-wrap, .kpi-body, .kpi-controls, .footer-refresh-bar { display: none !important; }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
+  }
+
+  /* Pantalla de bloqueo */
+  #deviceBlock{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(160deg,var(--navy-deep),var(--navy) 80%);
+    color:var(--white);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:32px;
+  }
   #deviceBlock img{height:56px;margin-bottom:22px;}
   #deviceBlock h2{font-family:'Baloo 2',sans-serif;font-size:20px;margin:0 0 12px;}
   #deviceBlock p{max-width:360px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.8);margin:0;}
@@ -280,11 +389,10 @@
     <div class="tab" data-view="inventario">INVENTARIO</div>
   </div>
 
-  <!-- CAMBIO 4: Toolbar movida a la derecha -->
+  <!-- CAMBIO 4: toolbar corrida a la derecha y buscar alineado con Cobertura -->
   <div class="toolbar">
     <button class="btn" id="btnAnios">🗓️ AÑOS</button>
     <button class="btn" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
-    <!-- El botón BUSCAR quedará alineado a la derecha con el de Cobertura abajo -->
     <button class="btn" id="btnBuscar">🔍 BUSCAR</button>
   </div>
 </header>
@@ -340,13 +448,13 @@
   <!-- VISTA TABLA -->
   <div id="viewTabla">
     <div class="status-bar">
-      <!-- CAMBIO 1: Título alineado y CAMBIO 2: Cobertura en la misma línea -->
       <div class="section-title-row">
+        <!-- CAMBIO 1: Título corrido a la derecha alineado con columna Ítem -->
         <div class="title-group">
             <span class="section-title">GESTIÓN DE VENTAS</span>
-            <span id="statusText">Cargando...</span>
+            <span id="statusText">Cargando Historial de Ventas...</span>
         </div>
-        <!-- CAMBIO 2: Cobertura a la derecha en la misma línea -->
+        <!-- CAMBIO 2 y 3: Cobertura bajado a la misma línea que Gestión de Ventas (esquina derecha) -->
         <button class="btn btn-cobertura-inline" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
       </div>
     </div>
@@ -382,18 +490,18 @@
     </div>
   </div>
 
-  <!-- Barra inferior para Actualizar Datos (CAMBIO 3) -->
-  <div class="footer-bar no-print" id="tableFooter">
-    <button class="refresh" id="refreshBtn">↻ Actualizar datos</button>
+  <!-- CAMBIO 1: Botón Actualizar datos abajo a la izquierda -->
+  <div class="footer-refresh-bar no-print" id="footerBar">
+      <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
   </div>
 
-  <!-- VISTA KPI (DASHBOARD) -->
+  <!-- VISTA KPI -->
   <div id="viewKpi" class="hidden">
     <div class="kpi-controls">
       <div class="field">
         <label>Buscar</label>
         <div class="search-field">
-          <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa...">
+          <input type="text" id="kpiSearchList" placeholder="ej: Anclas, Copa, Glenosferas...">
           <button type="button" class="search-clear" id="clearKpiSearchList">✕</button>
         </div>
       </div>
@@ -405,7 +513,7 @@
         <label>Año</label>
         <select id="kpiYear"></select>
       </div>
-      <div class="kpi-hint" id="kpiHint">Marca en la lista lo que quieres comparar.</div>
+      <div class="kpi-hint" id="kpiHint">Marca en la lista de la izquierda lo que quieres comparar.</div>
     </div>
     <div class="kpi-body">
       <div class="kpi-list-panel">
@@ -421,7 +529,7 @@
       </div>
       <div class="chart-card">
         <h3 id="chartTitle">ANÁLISIS DE VENTAS</h3>
-        <p id="chartSubtitle">Selecciona al menos un producto</p>
+        <p id="chartSubtitle">Selecciona al menos un producto en la lista de la izquierda</p>
         <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
       </div>
     </div>
@@ -453,12 +561,18 @@
       </div>
       <div class="inv-meta">
         <div class="inv-meta-box"><strong>ALMACÉN:</strong> <span id="invAlmacenOut"></span></div>
-        <div class="inv-meta-box"><strong>RESPONSABLE TOMA:</strong> <span id="invResponsableOut"></span></div>
+        <div class="inv-meta-box"><strong>RESPONSABLE DE LA TOMA DEL INVENTARIO:</strong> <span id="invResponsableOut"></span></div>
         <div class="inv-meta-box inv-firma"><strong>FIRMA</strong></div>
       </div>
       <table class="inv-table">
         <thead>
-          <tr><th>Ítem</th><th>Proveedor</th><th>Código</th><th>Descripción</th><th>Check</th></tr>
+          <tr>
+            <th>Ítem</th>
+            <th>Proveedor</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Check</th>
+          </tr>
         </thead>
         <tbody id="invBody"></tbody>
       </table>
@@ -467,198 +581,620 @@
 </main>
 
 <script>
-/* Mismo Script JS original, solo adaptando referencias de botones reubicados */
+/* ============ CONFIG (CÓDIGO ORIGINAL ÍNTEGRO) ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
-Chart.register(ChartDataLabels);
-const _measureCtx = document.createElement('canvas').getContext('2d');
-function measureTextWidth(text, font){ _measureCtx.font = font; return _measureCtx.measureText(text).width; }
-let rawData = [], yearCols = [], activeYearCols = [], visibleYearCols = new Set(), providers = [], selectedProviders = new Set(), searchText = "", coverageMonths = 3, leadTime = { reorden: 0, pago: 0, fabricante: 0, traslado: 0 }, chartInstance = null, selectedFamilies = new Set(), showOnlySelected = false;
 
+Chart.register(ChartDataLabels);
+
+const _measureCtx = document.createElement('canvas').getContext('2d');
+function measureTextWidth(text, font){
+  _measureCtx.font = font;
+  return _measureCtx.measureText(text).width;
+}
+
+let rawData = [];      
+let yearCols = [];      
+let activeYearCols = []; 
+let visibleYearCols = new Set(); 
+let providers = [];     
+let selectedProviders = new Set(); 
+let searchText = "";
+let coverageMonths = 3;
+let leadTime = { reorden: 0, pago: 0, fabricante: 0, traslado: 0 };
+let chartInstance = null;
+let selectedFamilies = new Set(); 
+let showOnlySelected = false; 
+
+/* ============ CARGA DE DATOS ============ */
 function loadData(){
-  document.getElementById('statusText').textContent = "Cargando...";
+  document.getElementById('statusText').textContent = "Cargando Historial de Ventas...";
   Papa.parse(SHEET_CSV_URL, {
-    download:true, header:true, skipEmptyLines:true,
-    complete: (results) => processData(results.data, results.meta.fields),
-    error: (err) => { document.getElementById('statusText').textContent = "Error de carga."; console.error(err); }
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete: function(results){
+      processData(results.data, results.meta.fields);
+    },
+    error: function(err){
+      document.getElementById('statusText').textContent =
+        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
+      console.error(err);
+    }
   });
 }
-function parsePrecio(raw){ const s = (raw || "").toString().trim(); if(!s || s === "-") return 0; return parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0; }
+
+function parsePrecio(raw){
+  const s = (raw || "").toString().trim();
+  if(!s || s === "-") return 0;
+  const cleaned = s.replace(/\./g, "").replace(",", ".");
+  return parseFloat(cleaned) || 0;
+}
 
 function processData(rows, fields){
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
+
   rawData = rows.map(r => {
-    const rawMoneda = (r["MONEDA"] || r["Divisa"] || "").toString().trim().toUpperCase();
-    const simbolo = rawMoneda.includes("EUR") || rawMoneda.includes("€") ? "€" : "$";
+    const rawMoneda = (r["MONEDA"] || r["Moneda"] || r["DIVISA"] || r["Divisa"] || "").toString().trim().toUpperCase();
+    const esEuro = rawMoneda.includes("EUR") || rawMoneda.includes("€");
+    const simbolo = esEuro ? "€" : "$";
+
     const item = {
       item: r["ITEM"] || r["Item"] || "",
       proveedor: (r["PROVEEDOR"] || r["Proveedor"] || "").trim(),
-      codigo: (r["CODIGO"] || r["Código"] || "").trim(),
-      descripcion: (r["DESCRIPCION"] || r["Descripción"] || "").trim(),
+      codigo: (r["CODIGO"] || r["CÓDIGO"] || r["Código"] || "").trim(),
+      descripcion: (r["DESCRIPCION"] || r["DESCRIPCIÓN"] || r["Descripción"] || "").trim(),
       precio: parsePrecio(r["PRECIO"] || r["Precio"]),
-      simbolo: simbolo, years: {}
+      simbolo: simbolo,
+      years: {}
     };
-    yearCols.forEach(y => { const raw = (r[y] !== undefined ? r[y] : "").toString().trim(); item.years[y] = raw === "" ? null : (parseFloat(raw) || 0); });
+
+    yearCols.forEach(y => {
+      const raw = (r[y] !== undefined ? r[y] : "").toString().trim();
+      item.years[y] = raw === "" ? null : (parseFloat(raw) || 0);
+    });
     return item;
-  }).filter(r => r.descripcion);
+  }).filter(r => r.descripcion); 
+
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
+
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
-  visibleYearCols = new Set(activeYearCols);
-  document.getElementById('statusText').textContent = `${rawData.length} prods. · ${providers.length} provs. · data ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
-  buildProviderPanel(); buildKpiSelectors(); buildYearToggleBar(); buildInventarioSelectors(); renderTable();
+  visibleYearCols = new Set(activeYearCols); 
+
+  document.getElementById('statusText').textContent =
+    `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
+
+  buildProviderPanel();
+  buildKpiSelectors();
+  buildYearToggleBar();
+  buildInventarioSelectors();
+  renderTable();
 }
 
 function buildYearToggleBar(){
   const list = document.getElementById('anioList');
-  list.innerHTML = activeYearCols.map(y => `<label><input type="checkbox" value="${y}" class="anio-check" ${visibleYearCols.has(y) ? "checked" : ""}> ${y}</label>`).join("");
-  list.querySelectorAll('.anio-check').forEach(cb => cb.addEventListener('change', () => { if(cb.checked) visibleYearCols.add(cb.value); else visibleYearCols.delete(cb.value); renderTable(); }));
+  list.innerHTML = activeYearCols.map(y => `
+    <label><input type="checkbox" value="${y}" class="anio-check" ${visibleYearCols.has(y) ? "checked" : ""}> ${y}</label>
+  `).join("");
+  list.querySelectorAll('.anio-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if(cb.checked) visibleYearCols.add(cb.value);
+      else visibleYearCols.delete(cb.value);
+      renderTable();
+    });
+  });
 }
 
+/* ============ CALCULOS ============ */
 function computeMetrics(item){
   const dataYears = activeYearCols.filter(y => visibleYearCols.has(y) && item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
   const promAnual = dataYears.length ? total / dataYears.length : 0;
-  const demandaDiaria = promAnual / 365;
-  const leadTimeDias = leadTime.reorden + leadTime.pago + leadTime.fabricante + leadTime.traslado;
-  const tieneVentas = promAnual > 0;
-  const stockSeguridad = tieneVentas ? Math.max(2, Math.round(demandaDiaria * leadTimeDias)) : 0;
-  const stockSugerido = tieneVentas ? Math.max(4, Math.round(stockSeguridad + (demandaDiaria * 30 * coverageMonths))) : 0;
-  const consideredYears = dataYears.slice(dataYears.findIndex(y => item.years[y] > 0));
+  const promMensual = promAnual / 12;
+
+  const firstSaleIdx = dataYears.findIndex(y => item.years[y] > 0);
+  const consideredYears = firstSaleIdx === -1 ? [] : dataYears.slice(firstSaleIdx);
   const pronostico = consideredYears.length ? consideredYears.reduce((s,y)=>s+item.years[y],0) / consideredYears.length : 0;
-  return { total: Math.round(total), promAnual: Math.round(promAnual), promMensual: Math.round(promAnual/12), stockSeguridad, stockSugerido, pronostico: Math.round(pronostico), dataYears };
+
+  const demandaDiaria = pronostico / 365;
+  const leadTimeDias = (leadTime.reorden || 0) + (leadTime.pago || 0) + (leadTime.fabricante || 0) + (leadTime.traslado || 0);
+  const tieneVentas = pronostico > 0;
+
+  const rawStockSeguridad = demandaDiaria * leadTimeDias;
+  const stockSeguridad = tieneVentas ? Math.max(2, Math.round(rawStockSeguridad)) : 0;
+
+  const rawStockSugerido = stockSeguridad + (demandaDiaria * 30 * coverageMonths);
+  const stockSugerido = tieneVentas ? Math.max(4, Math.round(rawStockSugerido)) : 0;
+
+  return {
+    total: Math.round(total),
+    promAnual: Math.round(promAnual),
+    promMensual: Math.round(promMensual),
+    pronostico: Math.round(pronostico),
+    stockSeguridad: stockSeguridad,
+    stockSugerido: stockSugerido,
+    dataYears
+  };
 }
 
+/* ============ FILTROS ============ */
 function getFilteredData(){
   return rawData.filter(r => {
     if(selectedProviders.size && !selectedProviders.has(r.proveedor)) return false;
-    if(searchText){ const t = searchText.toLowerCase(); if(!r.descripcion.toLowerCase().includes(t) && !r.codigo.toLowerCase().includes(t)) return false; }
+    if(searchText){
+      const t = searchText.toLowerCase();
+      if(!r.descripcion.toLowerCase().includes(t) && !r.codigo.toLowerCase().includes(t)) return false;
+    }
     return true;
   });
 }
 
+/* ============ TABLA SPLIT ============ */
 function renderTable(){
-  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y));
-  const nextYear = Number(activeYearCols[activeYearCols.length-1]) + 1;
+  const shownYears = activeYearCols.filter(y => visibleYearCols.has(y)); 
+  const lastYearForForecast = shownYears.length ? shownYears : activeYearCols; 
+  const nextYear = Number(lastYearForForecast[lastYearForForecast.length-1]) + 1;
+
   const headScroll = document.getElementById('headRowScroll');
-  headScroll.innerHTML = `${shownYears.map(y=>`<th>${y}</th>`).join("")}<th class="group-calc">Total</th><th class="group-calc">Prom.Anual</th><th class="group-calc">Prom.Mensual</th><th class="group-calc">Stock Seg.</th><th class="group-calc">Stock Sug.</th><th class="group-calc">Pronóstico ${nextYear}</th>`;
+  headScroll.innerHTML = `
+    ${shownYears.map(y=>`<th>${y}</th>`).join("")}
+    <th class="group-calc">Total Ventas</th>
+    <th class="group-calc">Prom. Anual</th>
+    <th class="group-calc">Prom. Mensual</th>
+    <th class="group-calc">Stock de Seguridad</th>
+    <th class="group-calc">Stock Sugerido</th>
+    <th class="group-calc">Pronóstico ${nextYear}</th>
+  `;
+
   const data = getFilteredData();
-  const bodyFixed = document.getElementById('bodyFixed'), bodyScroll = document.getElementById('bodyScroll');
+  const bodyFixed = document.getElementById('bodyFixed');
+  const bodyScroll = document.getElementById('bodyScroll');
+
   if(!data.length){
-    bodyFixed.innerHTML = `<tr><td colspan="5" class="empty-state">Sin resultados.</td></tr>`;
-    bodyScroll.innerHTML = `<tr><td colspan="${shownYears.length+6}" class="empty-state">Filtre de nuevo.</td></tr>`;
+    bodyFixed.innerHTML = `<tr><td class="empty-state" colspan="5">Sin resultados.</td></tr>`;
+    bodyScroll.innerHTML = `<tr><td class="empty-state" colspan="${shownYears.length+6}">Sin resultados para este filtro.</td></tr>`;
     return;
   }
-  bodyFixed.innerHTML = data.map(r => `<tr><td class="col-item">${r.item}</td><td class="col-prov">${r.proveedor}</td><td class="col-cod">${r.codigo}</td><td class="col-desc">${r.descripcion}</td><td class="col-precio num">${r.precio ? `${r.simbolo} ${Math.round(r.precio)}` : "-"}</td></tr>`).join("");
+
+  bodyFixed.innerHTML = data.map(r => {
+    const precioTxt = r.precio ? `${r.simbolo} ${Math.round(r.precio)}` : "-";
+    return `
+      <tr>
+        <td class="col-item">${r.item}</td>
+        <td class="col-prov">${r.proveedor}</td>
+        <td class="col-cod">${r.codigo}</td>
+        <td class="col-desc">${r.descripcion}</td>
+        <td class="col-precio num">${precioTxt}</td>
+      </tr>
+    `;
+  }).join("");
+
   const z = (v) => v ? v : `<span class="zero-val">0</span>`;
+  const yearCell = (v) => v === null ? "" : z(v);
+
   bodyScroll.innerHTML = data.map(r => {
     const m = computeMetrics(r);
-    return `<tr>${shownYears.map(y => `<td class="num">${r.years[y]===null ? "" : z(r.years[y])}</td>`).join("")}<td class="num calc">${z(m.total)}</td><td class="num calc">${z(m.promAnual)}</td><td class="num calc">${z(m.promMensual)}</td><td class="num calc">${z(m.stockSeguridad)}</td><td class="num calc">${z(m.stockSugerido)}</td><td class="num calc">${z(m.pronostico)}</td></tr>`;
+    return `<tr>
+      ${shownYears.map(y => `<td class="num">${yearCell(r.years[y])}</td>`).join("")}
+      <td class="num calc">${z(m.total)}</td>
+      <td class="num calc">${z(m.promAnual)}</td>
+      <td class="num calc">${z(m.promMensual)}</td>
+      <td class="num calc">${z(m.stockSeguridad)}</td>
+      <td class="num calc">${z(m.stockSugerido)}</td>
+      <td class="num calc">${z(m.pronostico)}</td>
+    </tr>`;
   }).join("");
 }
 
-const splitScroll = document.getElementById('splitScroll'), splitFixed = document.getElementById('splitFixed');
-splitScroll.addEventListener('scroll', () => splitFixed.scrollTop = splitScroll.scrollTop);
+const splitScroll = document.getElementById('splitScroll');
+const splitFixed = document.getElementById('splitFixed');
 
+splitScroll.addEventListener('scroll', () => {
+  splitFixed.scrollTop = splitScroll.scrollTop;
+});
+
+/* ============ PANEL PROVEEDORES ============ */
 function buildProviderPanel(){
   const list = document.getElementById('provList');
-  list.innerHTML = providers.map(p => `<label><input type="checkbox" value="${p}" class="prov-check"> ${p}</label>`).join("");
-  list.querySelectorAll('.prov-check').forEach(cb => cb.addEventListener('change', () => { if(cb.checked) selectedProviders.add(cb.value); else selectedProviders.delete(cb.value); renderTable(); }));
-  document.getElementById('provSearch').addEventListener('input', e => { const t = e.target.value.toLowerCase(); list.querySelectorAll('label').forEach(l => l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none"); });
+  list.innerHTML = providers.map(p => `
+    <label><input type="checkbox" value="${p}" class="prov-check"> ${p}</label>
+  `).join("");
+  list.querySelectorAll('.prov-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if(cb.checked) selectedProviders.add(cb.value);
+      else selectedProviders.delete(cb.value);
+      renderTable();
+    });
+  });
+  document.getElementById('provSearch').addEventListener('input', e => {
+    const t = e.target.value.toLowerCase();
+    list.querySelectorAll('label').forEach(l => {
+      l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none";
+    });
+  });
 }
 
+/* ============ INVENTARIO ============ */
 function buildInventarioSelectors(){
   const provSel = document.getElementById('invProveedor');
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
   document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES');
 }
+
 function renderInventario(){
   const provFilter = document.getElementById('invProveedor').value;
   const rows = provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
+
   document.getElementById('invAlmacenOut').textContent = document.getElementById('invAlmacen').value;
   document.getElementById('invResponsableOut').textContent = document.getElementById('invResponsable').value;
-  document.getElementById('invBody').innerHTML = rows.map((r,i) => `<tr><td>${i+1}</td><td>${r.proveedor}</td><td>${r.codigo}</td><td>${r.descripcion}</td><td class="inv-check"></td></tr>`).join("");
+
+  document.getElementById('invBody').innerHTML = rows.map((r,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.proveedor}</td>
+      <td>${r.codigo}</td>
+      <td>${r.descripcion}</td>
+      <td class="inv-check"></td>
+    </tr>
+  `).join("");
 }
 
+/* ============ SELECTORES KPI ============ */
 function buildKpiSelectors(){
-  document.getElementById('kpiProveedor').innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
-  document.getElementById('kpiYear').innerHTML = `<option value="GENERAL">General</option>` + activeYearCols.slice().reverse().map((y,i)=>`<option value="${y}" ${i===0?"selected":""}>${y}</option>`).join("");
+  const provSel = document.getElementById('kpiProveedor');
+  provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
+
+  const yearSel = document.getElementById('kpiYear');
+  yearSel.innerHTML = `<option value="GENERAL">General</option>` +
+    activeYearCols.slice().reverse().map((y,i)=>`<option value="${y}" ${i===0 ? "selected":""}>${y}</option>`).join("");
+
   buildKpiChecklist();
 }
-function getKpiKey(row){ return row.descripcion; }
-function applyKpiSearchFilter(){
-  const t = document.getElementById('kpiSearchList').value.toLowerCase();
-  document.querySelectorAll('#kpiChecklist label').forEach(l => { const key = decodeURIComponent(l.dataset.key); l.style.display = (l.dataset.search.includes(t) && (!showOnlySelected || selectedFamilies.has(key))) ? "flex" : "none"; });
-  document.getElementById('kpiSelectedCount').textContent = `${selectedFamilies.size} sel.`;
-}
-function buildKpiChecklist(){
-  const year = document.getElementById('kpiYear').value, rows = (document.getElementById('kpiProveedor').value ? rawData.filter(r=>r.proveedor===document.getElementById('kpiProveedor').value) : rawData);
-  const totals = {}; rows.forEach(r => { const key = getKpiKey(r); totals[key] = (totals[key] || 0) + (year === "GENERAL" ? activeYearCols.reduce((s,y)=>s+(r.years[y]||0),0) : (r.years[year]||0)); });
-  const keys = Object.keys(totals).filter(k=>totals[k]>0).sort((a,b)=>totals[b]-totals[a]);
-  const list = document.getElementById('kpiChecklist');
-  list.innerHTML = keys.map(k => `<label data-key="${encodeURIComponent(k)}" data-search="${k.toLowerCase()}"><input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k)?"checked":""}>${k}<span class="count">${totals[k]} Uds.</span></label>`).join("");
-  list.querySelectorAll('.kpi-check').forEach(cb => cb.addEventListener('change', () => { const key = decodeURIComponent(cb.value); if(cb.checked) selectedFamilies.add(key); else selectedFamilies.delete(key); applyKpiSearchFilter(); renderChart(); }));
-  applyKpiSearchFilter();
+
+function getKpiBaseRows(){
+  const provFilter = document.getElementById('kpiProveedor').value;
+  return provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 }
 
+function getKpiKey(row){
+  return row.descripcion;
+}
+
+function applyKpiSearchFilter(){
+  const t = document.getElementById('kpiSearchList').value.toLowerCase();
+  document.querySelectorAll('#kpiChecklist label').forEach(l => {
+    const key = decodeURIComponent(l.dataset.key);
+    const matchesSearch = l.dataset.search.includes(t);
+    const matchesSelected = !showOnlySelected || selectedFamilies.has(key);
+    l.style.display = (matchesSearch && matchesSelected) ? "flex" : "none";
+  });
+  updateSelectedCount();
+}
+
+function updateSelectedCount(){
+  const el = document.getElementById('kpiSelectedCount');
+  if(el) el.textContent = `${selectedFamilies.size} seleccionado${selectedFamilies.size === 1 ? "" : "s"} en total`;
+}
+
+function buildKpiChecklist(){
+  const year = document.getElementById('kpiYear').value;
+  const rows = getKpiBaseRows();
+  const totals = {};       
+  const historicalTotals = {}; 
+  const codesByKey = {};
+
+  rows.forEach(r => {
+    const key = getKpiKey(r);
+    const val = year === "GENERAL"
+      ? activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0)
+      : (r.years[year] || 0);
+    totals[key] = (totals[key] || 0) + val;
+    const sumAll = activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0);
+    historicalTotals[key] = (historicalTotals[key] || 0) + sumAll;
+    codesByKey[key] = codesByKey[key] || new Set();
+    if(r.codigo) codesByKey[key].add(r.codigo);
+  });
+
+  const keys = Object.keys(totals)
+    .filter(k => totals[k] > 0) 
+    .sort((a,b) => totals[b] - totals[a]);
+
+  [...selectedFamilies].forEach(k => { if(!historicalTotals[k]) selectedFamilies.delete(k); });
+
+  const list = document.getElementById('kpiChecklist');
+  list.innerHTML = keys.map(k => {
+    const searchBlob = (k + " " + [...codesByKey[k]].join(" ")).toLowerCase();
+    return `
+    <label data-key="${encodeURIComponent(k)}" data-search="${searchBlob.replace(/"/g,'&quot;')}">
+      <input type="checkbox" class="kpi-check" value="${encodeURIComponent(k)}" ${selectedFamilies.has(k) ? "checked" : ""}>
+      ${k}
+      <span class="count">${totals[k]} Uds.</span>
+    </label>
+  `;
+  }).join("");
+
+  list.querySelectorAll('.kpi-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = decodeURIComponent(cb.value);
+      if(cb.checked) selectedFamilies.add(key);
+      else selectedFamilies.delete(key);
+      applyKpiSearchFilter(); 
+      renderChart();
+    });
+  });
+
+  applyKpiSearchFilter(); 
+}
+
+/* ============ GRAFICO KPI ============ */
 function renderChart(){
-  if(!selectedFamilies.size){ document.getElementById('chartSubtitle').textContent = "Seleccione productos"; if(chartInstance) chartInstance.destroy(); return; }
-  const year = document.getElementById('kpiYear').value, rows = (document.getElementById('kpiProveedor').value ? rawData.filter(r=>r.proveedor===document.getElementById('kpiProveedor').value) : rawData);
-  const groups = {}; rows.forEach(r => { const key = getKpiKey(r); if(selectedFamilies.has(key)) groups[key] = (groups[key]||0) + (year === "GENERAL" ? activeYearCols.reduce((s,y)=>s+(r.years[y]||0),0) : (r.years[year]||0)); });
-  const entries = Object.entries(groups).sort((a,b)=>b[1]-a[1]), total = entries.reduce((s,[,v])=>s+v,0);
-  document.getElementById('chartTitle').textContent = `Ventas ${year==="GENERAL"?"Históricas":year}`;
-  document.getElementById('chartSubtitle').textContent = total ? `${total} uds. en total` : "Sin ventas";
+  const year = document.getElementById('kpiYear').value;
+  const subtitle = document.getElementById('chartSubtitle');
+
+  if(!selectedFamilies.size){
+    subtitle.textContent = "Selecciona al menos un producto en la lista de la izquierda";
+    document.getElementById('chartTitle').textContent = "ANÁLISIS DE VENTAS";
+    if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
+    return;
+  }
+
+  const rows = getKpiBaseRows();
+  const groups = {};
+  rows.forEach(r => {
+    const key = getKpiKey(r);
+    if(!selectedFamilies.has(key)) return;
+    const val = year === "GENERAL"
+      ? activeYearCols.reduce((s,y) => s + (r.years[y] || 0), 0)
+      : (r.years[year] || 0);
+    groups[key] = (groups[key] || 0) + val;
+  });
+
+  const entries = Object.entries(groups).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v]) => s + v, 0);
+
+  const yearLabel = year === "GENERAL"
+    ? `General (${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]})`
+    : year;
+
+  document.getElementById('chartTitle').textContent = `Ventas ${yearLabel} · comparación de ${selectedFamilies.size} productos`;
+  subtitle.textContent = total
+    ? `${total} unidades vendidas en total entre lo seleccionado`
+    : `Sin ventas registradas en ${yearLabel} para lo seleccionado`;
+
+  const ctx = document.getElementById('barChart').getContext('2d');
   if(chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(document.getElementById('barChart'), {
-    type:'bar', data:{ labels:entries.map(([k])=>k), datasets:[{data:entries.map(([,v])=>v), backgroundColor:'#3FA9D9', borderRadius:4}] },
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, datalabels:{ anchor:'end', align:'end', font:{weight:'500',size:12}, color:var(--navy), formatter:(v)=>v?v:null }, tooltip:{enabled:false} }, scales:{ x:{beginAtZero:true, grid:{color:'#EAEFF2'}}, y:{grid:{display:false}} } }
+
+  const maxVal = entries.length ? Math.max(...entries.map(([,v]) => v)) : 0;
+  const axisMax = Math.max(1, Math.ceil(maxVal * 1.3) + 2);
+  const stepSize = Math.max(1, Math.ceil(axisMax / 6));
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{
+        label: `Unidades vendidas ${yearLabel}`,
+        data: entries.map(([,v]) => v),
+        backgroundColor: '#3FA9D9',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          clip: false,
+          font: { weight: '500', size: 18 },
+          labels: {
+            qty: {
+              color: '#0B3B5C',
+              offset: 4,
+              formatter: (value) => value ? `${value}` : null
+            },
+            pct: {
+              color: '#D64545',
+              offset: (ctx) => {
+                const value = ctx.dataset.data[ctx.dataIndex];
+                if(!value) return 4;
+                const font = '500 18px "Segoe UI", Roboto, Arial, sans-serif';
+                const qtyWidth = measureTextWidth(`${value}`, font);
+                return 4 + qtyWidth + 6;
+              },
+              formatter: (value) => {
+                if(!value) return null;
+                const pct = total ? ((value / total) * 100) : 0;
+                return `(${Math.round(pct)}%)`;
+              }
+            }
+          }
+        },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: axisMax,
+          ticks: { stepSize: stepSize, precision: 0 },
+          grid: { color: '#EAEFF2' }
+        },
+        y: { grid: { display: false } }
+      }
+    }
   });
 }
 
-function togglePanel(id){ ['panelAnios','panelProv','panelBuscar','panelCobertura'].forEach(p => document.getElementById(p).classList.toggle('open', p===id?!document.getElementById(id).classList.contains('open'):false)); }
-document.getElementById('btnAnios').onclick=()=>togglePanel('panelAnios');
-document.getElementById('btnProv').onclick=()=>togglePanel('panelProv');
-document.getElementById('btnBuscar').onclick=()=>togglePanel('panelBuscar');
-// CAMBIO 2: Botón Cobertura reubicado abre su panel
-document.getElementById('btnCobertura').onclick=()=>togglePanel('panelCobertura');
+/* ============ EVENTOS UI ============ */
+function togglePanel(id){
+  ['panelAnios','panelProv','panelBuscar','panelCobertura'].forEach(p => {
+    document.getElementById(p).classList.toggle('open', p === id ? !document.getElementById(id).classList.contains('open') : false);
+  });
+}
 
-document.getElementById('anioAll').onclick=()=>{ visibleYearCols=new Set(activeYearCols); document.querySelectorAll('.anio-check').forEach(cb=>cb.checked=true); renderTable(); };
-document.getElementById('anioNone').onclick=()=>{ visibleYearCols.clear(); document.querySelectorAll('.anio-check').forEach(cb=>cb.checked=false); renderTable(); };
-document.getElementById('provAll').onclick=()=>{ selectedProviders=new Set(providers); document.querySelectorAll('.prov-check').forEach(cb=>cb.checked=true); renderTable(); };
-document.getElementById('provNone').onclick=()=>{ selectedProviders.clear(); document.querySelectorAll('.prov-check').forEach(cb=>cb.checked=false); renderTable(); };
-document.getElementById('searchInput').addEventListener('input', e=>{ searchText=e.target.value; renderTable(); });
-document.getElementById('coverageSlider').addEventListener('input', e=>{ coverageMonths=parseInt(e.target.value); document.getElementById('coverageVal').textContent=coverageMonths; document.getElementById('covLabel').textContent=coverageMonths; renderTable(); });
-['ltReorden','ltPago','ltFabricante','ltTraslado'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>{ leadTime[id.replace('lt','').toLowerCase()]=parseFloat(document.getElementById(id).value)||0; document.getElementById('ltTotal').textContent=leadTime.reorden+leadTime.pago+leadTime.fabricante+leadTime.traslado; renderTable(); }));
-// CAMBIO 3: Botón Actualizar reubicado
-document.getElementById('refreshBtn').onclick=loadData;
+document.getElementById('btnAnios').onclick = () => togglePanel('panelAnios');
+document.getElementById('btnProv').onclick = () => togglePanel('panelProv');
+document.getElementById('btnBuscar').onclick = () => togglePanel('panelBuscar');
+document.getElementById('btnCobertura').onclick = () => togglePanel('panelCobertura');
 
-document.querySelectorAll('.tab').forEach(tab => tab.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active');
-  const v = tab.dataset.view.toLowerCase();
-  document.getElementById('viewTabla').classList.toggle('hidden', v!=='tabla');
-  document.getElementById('viewKpi').classList.toggle('hidden', v!=='kpi');
-  document.getElementById('viewInventario').classList.toggle('hidden', v!=='inventario');
-  // Ocultar toolbar de tabla en otras vistas y footer (CAMBIO 3)
-  document.querySelector('header .toolbar').classList.toggle('hidden', v!=='tabla');
-  document.getElementById('tableFooter').classList.toggle('hidden', v!=='tabla');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));
-  if(v==='kpi') renderChart(); if(v==='inventario') renderInventario();
+document.getElementById('anioAll').onclick = () => {
+  visibleYearCols = new Set(activeYearCols);
+  document.querySelectorAll('.anio-check').forEach(cb => cb.checked = true);
+  renderTable();
+};
+document.getElementById('anioNone').onclick = () => {
+  visibleYearCols.clear();
+  document.querySelectorAll('.anio-check').forEach(cb => cb.checked = false);
+  renderTable();
+};
+
+document.getElementById('provAll').onclick = () => {
+  selectedProviders = new Set(providers);
+  document.querySelectorAll('.prov-check').forEach(cb => cb.checked = true);
+  renderTable();
+};
+document.getElementById('provNone').onclick = () => {
+  selectedProviders.clear();
+  document.querySelectorAll('.prov-check').forEach(cb => cb.checked = false);
+  renderTable();
+};
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchText = e.target.value;
+  renderTable();
+});
+
+document.getElementById('coverageSlider').addEventListener('input', e => {
+  coverageMonths = parseInt(e.target.value);
+  document.getElementById('coverageVal').textContent = coverageMonths;
+  document.getElementById('covLabel').textContent = coverageMonths;
+  renderTable();
+});
+
+['ltReorden','ltPago','ltFabricante','ltTraslado'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    leadTime.reorden = parseFloat(document.getElementById('ltReorden').value) || 0;
+    leadTime.pago = parseFloat(document.getElementById('ltPago').value) || 0;
+    leadTime.fabricante = parseFloat(document.getElementById('ltFabricante').value) || 0;
+    leadTime.traslado = parseFloat(document.getElementById('ltTraslado').value) || 0;
+    const total = leadTime.reorden + leadTime.pago + leadTime.fabricante + leadTime.traslado;
+    document.getElementById('ltTotal').textContent = total;
+    renderTable();
+  });
+});
+
+document.getElementById('refreshBtn').onclick = loadData;
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const view = tab.dataset.view.toLowerCase();
+    document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
+    document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
+    document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
+
+    document.querySelector('.toolbar').classList.toggle('hidden', view !== 'tabla');
+    document.getElementById('footerBar').classList.toggle('hidden', view !== 'tabla');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+
+    if(view === 'kpi') renderChart();
+    if(view === 'inventario') renderInventario();
+  };
 });
 
 document.getElementById('invProveedor').addEventListener('change', renderInventario);
 document.getElementById('invAlmacen').addEventListener('input', renderInventario);
 document.getElementById('invResponsable').addEventListener('input', renderInventario);
-document.getElementById('invPrint').onclick=()=>window.print();
-document.getElementById('kpiProveedor').addEventListener('change', ()=>{ buildKpiChecklist(); renderChart(); });
-document.getElementById('kpiYear').addEventListener('change', ()=>{ buildKpiChecklist(); renderChart(); });
-document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
-document.getElementById('clearSearchInput').onclick=()=>{ const i=document.getElementById('searchInput'); i.value=""; searchText=""; i.dispatchEvent(new Event('input')); };
-document.getElementById('clearKpiSearchList').onclick=()=>{ const i=document.getElementById('kpiSearchList'); i.value=""; i.dispatchEvent(new Event('input')); };
-document.getElementById('kpiSelectVisible').onclick=()=>{ document.querySelectorAll('#kpiChecklist label').forEach(l=>{ if(l.style.display!=='none') selectedFamilies.add(decodeURIComponent(l.dataset.key)); }); buildKpiChecklist(); renderChart(); };
-document.getElementById('kpiClearSelection').onclick=()=>{ selectedFamilies.clear(); buildKpiChecklist(); renderChart(); };
-document.getElementById('kpiToggleSelectedOnly').onclick=function(){ showOnlySelected=!showOnlySelected; this.textContent=showOnlySelected?"Ver todos":"Solo sel."; applyKpiSearchFilter(); };
-document.addEventListener('click',e=>{ if(!e.target.closest('.panel') && !e.target.closest('.toolbar') && !e.target.closest('#btnCobertura')) document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open')); });
+document.getElementById('invPrint').addEventListener('click', () => window.print());
 
-if(window.innerWidth<1024){ document.getElementById('deviceBlock').classList.remove('hidden'); } else { loadData(); }
-window.addEventListener('resize', ()=>{ if(window.innerWidth<1024){ document.getElementById('deviceBlock').classList.remove('hidden'); } else { document.getElementById('deviceBlock').classList.add('hidden'); if(!rawData.length) loadData(); } });
+document.getElementById('kpiProveedor').addEventListener('change', () => {
+  buildKpiChecklist();
+  renderChart();
+});
+
+document.getElementById('kpiYear').addEventListener('change', () => {
+  buildKpiChecklist();
+  renderChart();
+});
+
+document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
+
+function setupClearableSearch(inputId, btnId, onClear){
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  const syncBtn = () => btn.classList.toggle('show', input.value.length > 0);
+  input.addEventListener('input', syncBtn);
+  btn.addEventListener('click', () => {
+    input.value = "";
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+    if(onClear) onClear();
+  });
+  syncBtn();
+}
+setupClearableSearch('searchInput', 'clearSearchInput');
+setupClearableSearch('kpiSearchList', 'clearKpiSearchList', () => {
+  selectedFamilies.clear();
+  buildKpiChecklist();
+  renderChart();
+});
+
+document.getElementById('kpiSelectVisible').onclick = () => {
+  document.querySelectorAll('#kpiChecklist label').forEach(l => {
+    if(l.style.display !== "none"){
+      selectedFamilies.add(decodeURIComponent(l.dataset.key));
+    }
+  });
+  buildKpiChecklist();
+  renderChart();
+};
+
+document.getElementById('kpiClearSelection').onclick = () => {
+  selectedFamilies.clear();
+  buildKpiChecklist();
+  renderChart();
+};
+
+document.getElementById('kpiToggleSelectedOnly').onclick = function(){
+  showOnlySelected = !showOnlySelected;
+  this.textContent = showOnlySelected ? "Ver todos" : "Ver solo seleccionados";
+  applyKpiSearchFilter();
+};
+
+document.addEventListener('click', (e) => {
+  const isPanel = e.target.closest('.panel');
+  const isBtn = e.target.closest('.toolbar');
+  const isCovBtn = e.target.closest('#btnCobertura');
+  if(!isPanel && !isBtn && !isCovBtn){
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+  }
+});
+
+/* ============ BLOQUEO DE DISPOSITIVOS ============ */
+const MIN_WIDTH_ALLOWED = 1024; 
+
+function isPhoneDevice(){
+  const ua = navigator.userAgent;
+  return /iPhone|iPod/i.test(ua) || (/Android/i.test(ua) && /Mobile/i.test(ua));
+}
+
+let appStarted = false;
+function checkDeviceBlock(){
+  const blocked = isPhoneDevice() || window.innerWidth < MIN_WIDTH_ALLOWED;
+  document.getElementById('deviceBlock').classList.toggle('hidden', !blocked);
+  if(!blocked && !appStarted){
+    appStarted = true;
+    loadData(); 
+  }
+}
+window.addEventListener('resize', checkDeviceBlock);
+window.addEventListener('orientationchange', () => setTimeout(checkDeviceBlock, 200));
+
+/* ============ INICIO ============ */
+checkDeviceBlock();
 </script>
 </body>
 </html>
