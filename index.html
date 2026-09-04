@@ -559,6 +559,15 @@ function loadData(){
   });
 }
 
+// Convierte un precio en formato español (punto = miles, coma = decimales) a número real.
+// Ej: "1.000" -> 1000 ; "1.234,56" -> 1234.56 ; "205" -> 205 ; "-" o vacío -> 0
+function parsePrecio(raw){
+  const s = (raw || "").toString().trim();
+  if(!s || s === "-") return 0;
+  const cleaned = s.replace(/\./g, "").replace(",", ".");
+  return parseFloat(cleaned) || 0;
+}
+
 function processData(rows, fields){
   // Filtra dinámicamente las columnas de 4 dígitos (años: 2019, 2020, etc.)
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
@@ -574,7 +583,7 @@ function processData(rows, fields){
       proveedor: (r["PROVEEDOR"] || r["Proveedor"] || "").trim(),
       codigo: (r["CODIGO"] || r["CÓDIGO"] || r["Código"] || "").trim(),
       descripcion: (r["DESCRIPCION"] || r["DESCRIPCIÓN"] || r["Descripción"] || "").trim(),
-      precio: parseFloat((r["PRECIO"] || r["Precio"] || "0").toString().replace(",",".")) || 0,
+      precio: parsePrecio(r["PRECIO"] || r["Precio"]),
       simbolo: simbolo,
       years: {}
     };
