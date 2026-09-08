@@ -49,23 +49,12 @@
     display:flex;
     align-items:center;
     gap:10px;
+    margin-right:auto;
   }
   .brand img{height:60px;display:block;}
-  .tabs{display:flex;gap:6px;margin-left:8px; flex: 1;}
-  .tab{
-    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;
-    color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.3px;
-  }
-  .tab.active{background:var(--white);color:var(--navy);}
-
-  /* CAMBIO 4: Opciones de arriba desplazadas a la derecha y Buscar alineado a la derecha */
-  .toolbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-left: auto;
-  }
+  .brand .divider{width:1px;height:28px;background:rgba(255,255,255,.25);}
+  .brand h1{font-size:15px;font-weight:600;margin:0;letter-spacing:.3px;opacity:.9;text-transform:uppercase;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .btn{
     background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.3);
@@ -83,15 +72,6 @@
   }
   .btn:hover{background:var(--sky);border-color:var(--sky);}
   .btn.active{background:var(--sky);border-color:var(--sky);}
-
-  /* CAMBIO 2 y 3: Estilo de Cobertura integrado en la línea de título */
-  #btnCobertura.btn-cobertura-inline {
-    background: var(--navy);
-    border: 1px solid rgba(255,255,255,.3);
-    color: var(--white);
-    padding: 8px 16px;
-  }
-
   .cov-badge{
     background:rgba(255,255,255,.18);
     padding:2px 9px;
@@ -99,6 +79,12 @@
     font-size:12px;
     font-weight:700;
   }
+  .tabs{display:flex;gap:6px;margin-left:8px;}
+  .tab{
+    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;
+    color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.3px;
+  }
+  .tab.active{background:var(--white);color:var(--navy);}
 
   .panel{
     position:fixed;top:70px;right:24px;
@@ -130,31 +116,14 @@
     padding:7px 9px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;font-weight:600;color:var(--text);width:100%;box-sizing:border-box;
   }
 
-  main{padding:18px 24px 80px;}
-  
+  main{padding:18px 24px 60px;}
   .status-bar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:13.5px;
-    color:var(--gray);
-    margin-bottom:12px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
-  
-  .section-title-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    width: 100%;
-  }
-
-  .title-group {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    /* CAMBIO 1: El título se rueda a la derecha alineándose con la columna Ítem */
-    margin-left: 46px; 
-  }
+  .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
+  .section-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-left:11px;}
+  .table-bottom-bar{margin-top:8px;font-size:13.5px;}
 
   .section-title{
     background: transparent;
@@ -167,29 +136,6 @@
     border-radius: 0;
   }
 
-  /* CAMBIO 1: Botón Actualizar Datos abajo a la izquierda */
-  .footer-refresh-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 12px 24px;
-    background: var(--bg);
-    border-top: 1px solid var(--gray-line);
-    display: flex;
-    justify-content: flex-start;
-    z-index: 40;
-  }
-  .footer-refresh-bar .refresh{
-    color:var(--sky);
-    cursor:pointer;
-    font-weight:600;
-    font-size: 13.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
   /* ESTRUCTURA SPLIT TABLA */
   .table-wrap{
     background:var(--white);
@@ -198,7 +144,7 @@
     border:1px solid var(--gray-line);
     display:flex;
     overflow:hidden;
-    max-height:68vh;
+    max-height:74vh;
   }
   .split-fixed{
     flex:0 0 auto;
@@ -350,7 +296,7 @@
       box-shadow: none !important; background: #ffffff !important;
     }
     .no-print { display: none !important; }
-    header, .status-bar, .table-wrap, .kpi-body, .kpi-controls, .footer-refresh-bar { display: none !important; }
+    header, .status-bar, .table-wrap, .table-bottom-bar, .kpi-body, .kpi-controls { display: none !important; }
     thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
   }
@@ -389,7 +335,6 @@
     <div class="tab" data-view="inventario">INVENTARIO</div>
   </div>
 
-  <!-- CAMBIO 4: toolbar corrida a la derecha y buscar alineado con Cobertura -->
   <div class="toolbar">
     <button class="btn" id="btnAnios">🗓️ AÑOS</button>
     <button class="btn" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
@@ -449,14 +394,10 @@
   <div id="viewTabla">
     <div class="status-bar">
       <div class="section-title-row">
-        <!-- CAMBIO 1: Título corrido a la derecha alineado con columna Ítem -->
-        <div class="title-group">
-            <span class="section-title">GESTIÓN DE VENTAS</span>
-            <span id="statusText">Cargando Historial de Ventas...</span>
-        </div>
-        <!-- CAMBIO 2 y 3: Cobertura bajado a la misma línea que Gestión de Ventas (esquina derecha) -->
-        <button class="btn btn-cobertura-inline" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
+        <span class="section-title">GESTIÓN DE VENTAS</span>
+        <span id="statusText">Cargando Historial de Ventas...</span>
       </div>
+      <button class="btn" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
     </div>
     
     <div class="table-wrap">
@@ -488,11 +429,9 @@
         </table>
       </div>
     </div>
-  </div>
-
-  <!-- CAMBIO 1: Botón Actualizar datos abajo a la izquierda -->
-  <div class="footer-refresh-bar no-print" id="footerBar">
+    <div class="table-bottom-bar">
       <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
+    </div>
   </div>
 
   <!-- VISTA KPI -->
@@ -581,7 +520,7 @@
 </main>
 
 <script>
-/* ============ CONFIG (CÓDIGO ORIGINAL ÍNTEGRO) ============ */
+/* ============ CONFIG ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
 
 Chart.register(ChartDataLabels);
@@ -623,6 +562,8 @@ function loadData(){
   });
 }
 
+// Convierte un precio en formato español (punto = miles, coma = decimales) a número real.
+// Ej: "1.000" -> 1000 ; "1.234,56" -> 1234.56 ; "205" -> 205 ; "-" o vacío -> 0
 function parsePrecio(raw){
   const s = (raw || "").toString().trim();
   if(!s || s === "-") return 0;
@@ -631,9 +572,11 @@ function parsePrecio(raw){
 }
 
 function processData(rows, fields){
+  // Filtra dinámicamente las columnas de 4 dígitos (años: 2019, 2020, etc.)
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
+    // Lee el campo Moneda/Divisa o busca símbolo
     const rawMoneda = (r["MONEDA"] || r["Moneda"] || r["DIVISA"] || r["Divisa"] || "").toString().trim().toUpperCase();
     const esEuro = rawMoneda.includes("EUR") || rawMoneda.includes("€");
     const simbolo = esEuro ? "€" : "$";
@@ -755,6 +698,7 @@ function renderTable(){
     return;
   }
 
+  // Render Filas Fijas (Con Símbolo Unificado)
   bodyFixed.innerHTML = data.map(r => {
     const precioTxt = r.precio ? `${r.simbolo} ${Math.round(r.precio)}` : "-";
     return `
@@ -768,6 +712,7 @@ function renderTable(){
     `;
   }).join("");
 
+  // Render Filas Móviles
   const z = (v) => v ? v : `<span class="zero-val">0</span>`;
   const yearCell = (v) => v === null ? "" : z(v);
 
@@ -785,6 +730,7 @@ function renderTable(){
   }).join("");
 }
 
+// Sincronización del Scroll Vertical
 const splitScroll = document.getElementById('splitScroll');
 const splitFixed = document.getElementById('splitFixed');
 
@@ -931,7 +877,7 @@ function renderChart(){
   const subtitle = document.getElementById('chartSubtitle');
 
   if(!selectedFamilies.size){
-    subtitle.textContent = "Selecciona al menos un producto en la lista de la izquierda";
+    subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
     document.getElementById('chartTitle').textContent = "ANÁLISIS DE VENTAS";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
@@ -1096,8 +1042,9 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
     document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
 
-    document.querySelector('.toolbar').classList.toggle('hidden', view !== 'tabla');
-    document.getElementById('footerBar').classList.toggle('hidden', view !== 'tabla');
+    ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
+      document.getElementById(id).classList.toggle('hidden', view !== 'tabla');
+    });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
 
     if(view === 'kpi') renderChart();
@@ -1167,8 +1114,7 @@ document.getElementById('kpiToggleSelectedOnly').onclick = function(){
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
   const isBtn = e.target.closest('.toolbar');
-  const isCovBtn = e.target.closest('#btnCobertura');
-  if(!isPanel && !isBtn && !isCovBtn){
+  if(!isPanel && !isBtn){
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
   }
 });
