@@ -70,8 +70,10 @@
     transition:.15s;
     white-space:nowrap;
   }
-  .btn:hover{background:var(--sky);border-color:var(--sky);}
+  .btn:hover:not(:disabled){background:var(--sky);border-color:var(--sky);}
   .btn.active{background:var(--sky);border-color:var(--sky);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+  
   .cov-badge{
     background:rgba(255,255,255,.18);
     padding:2px 9px;
@@ -121,9 +123,48 @@
     display:flex;justify-content:space-between;align-items:center;
     font-size:13.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
-  .status-bar .refresh{color:var(--sky);cursor:pointer;font-weight:600;}
   .section-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-left:11px;}
-  .table-bottom-bar{margin-top:8px;font-size:13.5px;}
+  
+  /* ESTILOS DE BARRA INFERIOR DE TABLA Y BOTON DE REFRESCAR */
+  .table-bottom-bar{
+    margin-top:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12.5px;
+    color:var(--gray);
+    font-weight:600;
+  }
+  .sync-info{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--gray);
+  }
+  .btn-refresh{
+    background:var(--navy);
+    color:var(--white);
+    border:none;
+    padding:8px 16px;
+    border-radius:6px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:background .2s ease;
+  }
+  .btn-refresh:hover{background:var(--sky);}
+  .btn-refresh:disabled{background:var(--gray);cursor:not-allowed;}
+  .btn-refresh .icon-spin{
+    display:inline-block;
+    transition:transform 0.3s linear;
+  }
+  .btn-refresh.loading .icon-spin{
+    animation:spin 1s infinite linear;
+  }
+  @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
 
   .section-title{
     background: transparent;
@@ -429,8 +470,16 @@
         </table>
       </div>
     </div>
+    
+    <!-- BARRA INFERIOR DE SINCRONIZACIÓN Y REFRESCAR -->
     <div class="table-bottom-bar">
-      <span class="refresh" id="refreshBtn">↻ Actualizar datos</span>
+      <div class="sync-info">
+        <span>Última sincronización de datos:</span>
+        <strong id="lastSyncText">Pendiente...</strong>
+      </div>
+      <button class="btn-refresh" id="refreshBtn">
+        <span class="icon-spin">↻</span> Actualizar datos
+      </button>
     </div>
   </div>
 
@@ -544,26 +593,57 @@ let chartInstance = null;
 let selectedFamilies = new Set(); 
 let showOnlySelected = false; 
 
+/* ============ ACTUALIZACIÓN DE FECHA Y HORARIO DE FECHA DE SINCRONIZACIÓN ============ */
+function updateSyncTimestamp(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // Formato 12 horas
+  const hoursStr = hours.toString().padStart(2, '0');
+  
+  const formattedStamp = `${dateStr} ${hoursStr}:${minutes} ${ampm}`;
+  const el = document.getElementById('lastSyncText');
+  if(el) el.textContent = formattedStamp;
+}
+
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
+  const refreshBtn = document.getElementById('refreshBtn');
   document.getElementById('statusText').textContent = "Cargando Historial de Ventas...";
+  
+  if(refreshBtn){
+    refreshBtn.classList.add('loading');
+    refreshBtn.disabled = true;
+  }
+
   Papa.parse(SHEET_CSV_URL, {
     download:true,
     header:true,
     skipEmptyLines:true,
     complete: function(results){
       processData(results.data, results.meta.fields);
+      updateSyncTimestamp();
+      if(refreshBtn){
+        refreshBtn.classList.remove('loading');
+        refreshBtn.disabled = false;
+      }
     },
     error: function(err){
       document.getElementById('statusText').textContent =
         "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
       console.error(err);
+      if(refreshBtn){
+        refreshBtn.classList.remove('loading');
+        refreshBtn.disabled = false;
+      }
     }
   });
 }
 
 // Convierte un precio en formato español (punto = miles, coma = decimales) a número real.
-// Ej: "1.000" -> 1000 ; "1.234,56" -> 1234.56 ; "205" -> 205 ; "-" o vacío -> 0
 function parsePrecio(raw){
   const s = (raw || "").toString().trim();
   if(!s || s === "-") return 0;
