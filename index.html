@@ -101,6 +101,7 @@
   }
   .panel.open{display:block;}
   .panel.panel-wide{width:340px;}
+  #panelCobertura{top:132px;}
   .panel h3{margin:0 0 10px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
   .panel input[type=text]{
     width:100%;padding:8px 10px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
@@ -1193,7 +1194,7 @@ document.getElementById('kpiToggleSelectedOnly').onclick = function(){
 
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
-  const isBtn = e.target.closest('.toolbar');
+  const isBtn = e.target.closest('.btn'); // cualquier botón disparador (Cobertura ya no vive dentro de .toolbar)
   if(!isPanel && !isBtn){
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
   }
