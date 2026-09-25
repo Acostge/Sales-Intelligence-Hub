@@ -602,7 +602,6 @@ let selectedFamilies = new Set();
 let showOnlySelected = false; 
 
 /* ============ ACTUALIZACIÓN DE FECHA Y HORARIO DE FECHA DE SINCRONIZACIÓN ============ */
-// Pone el sello de tiempo actual en pantalla (se usa solo cuando SÍ hay datos nuevos)
 function updateSyncTimestamp(){
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -612,99 +611,56 @@ function updateSyncTimestamp(){
   hours = hours % 12;
   hours = hours ? hours : 12; // Formato 12 horas
   const hoursStr = hours.toString().padStart(2, '0');
-
+  
   const formattedStamp = `${dateStr} ${hoursStr}:${minutes} ${ampm}`;
   const el = document.getElementById('lastSyncText');
   if(el) el.textContent = formattedStamp;
-  return formattedStamp;
-}
-
-// Hash simple del texto del CSV, para poder comparar "¿esto cambió respecto a la última vez?"
-// sin tener que guardar el CSV completo en el navegador.
-function simpleHash(str){
-  let hash = 0;
-  for(let i = 0; i < str.length; i++){
-    hash = (hash * 31 + str.charCodeAt(i)) | 0;
-  }
-  return hash.toString(36);
-}
-
-// Solo actualiza (y guarda) el sello de "Última sincronización" cuando el contenido del
-// Google Sheet realmente cambió desde la última vez que se revisó. Si no cambió nada,
-// se mantiene mostrando la fecha del último cambio real, aunque se haya vuelto a cargar la página.
-function checkAndUpdateSyncTimestamp(csvText){
-  const newHash = simpleHash(csvText);
-  let storedHash = null, storedStamp = null;
-  try {
-    storedHash = localStorage.getItem('piemca_last_hash');
-    storedStamp = localStorage.getItem('piemca_last_stamp');
-  } catch(e){ /* si el navegador bloquea localStorage, se ignora y no rompe nada */ }
-
-  if(newHash !== storedHash){
-    const stamp = updateSyncTimestamp(); // hay datos nuevos: sí se actualiza el sello
-    try {
-      localStorage.setItem('piemca_last_hash', newHash);
-      localStorage.setItem('piemca_last_stamp', stamp);
-    } catch(e){}
-  } else if(storedStamp){
-    const el = document.getElementById('lastSyncText'); // sin cambios: se conserva el sello anterior
-    if(el) el.textContent = storedStamp;
-  } else {
-    updateSyncTimestamp(); // primera vez y sin nada guardado todavía
-  }
 }
 
 /* ============ CARGA DE DATOS ============ */
 function loadData(){
   const refreshBtn = document.getElementById('refreshBtn');
   document.getElementById('statusText').textContent = "Cargando Historial de Ventas...";
-
+  
   if(refreshBtn){
     refreshBtn.classList.add('loading');
     refreshBtn.disabled = true;
   }
 
-  function onError(err){
-    document.getElementById('statusText').textContent =
-      "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
-    console.error(err);
-    if(refreshBtn){
-      refreshBtn.classList.remove('loading');
-      refreshBtn.disabled = false;
+  Papa.parse(SHEET_CSV_URL, {
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete: function(results){
+      processData(results.data, results.meta.fields);
+      updateSyncTimestamp();
+      if(refreshBtn){
+        refreshBtn.classList.remove('loading');
+        refreshBtn.disabled = false;
+      }
+    },
+    error: function(err){
+      document.getElementById('statusText').textContent =
+        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
+      console.error(err);
+      if(refreshBtn){
+        refreshBtn.classList.remove('loading');
+        refreshBtn.disabled = false;
+      }
     }
-  }
-
-  // Se descarga el CSV como texto primero (para poder compararlo con la versión anterior)
-  // y luego se parsea con PapaParse a partir de ese mismo texto, sin pedirlo dos veces.
-  fetch(SHEET_CSV_URL, { cache: "no-store" })
-    .then(res => {
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      return res.text();
-    })
-    .then(csvText => {
-      Papa.parse(csvText, {
-        header:true,
-        skipEmptyLines:true,
-        complete: function(results){
-          processData(results.data, results.meta.fields);
-          checkAndUpdateSyncTimestamp(csvText);
-          if(refreshBtn){
-            refreshBtn.classList.remove('loading');
-            refreshBtn.disabled = false;
-          }
-        },
-        error: onError
-      });
-    })
-    .catch(onError);
+  });
 }
 
 // Convierte un precio en formato español (punto = miles, coma = decimales) a número real.
 function parsePrecio(raw){
-  const s = (raw || "").toString().trim();
-  if(!s || s === "-") return 0;
+  if (raw === undefined || raw === null) return null;
+  const s = raw.toString().trim();
+  if (!s || s === "-") return null;
+  
+  // Limpia miles con punto y normaliza coma a punto decimal
   const cleaned = s.replace(/\./g, "").replace(",", ".");
-  return parseFloat(cleaned) || 0;
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? null : num;
 }
 
 function processData(rows, fields){
@@ -717,12 +673,15 @@ function processData(rows, fields){
     const esEuro = rawMoneda.includes("EUR") || rawMoneda.includes("€");
     const simbolo = esEuro ? "€" : "$";
 
+    const rawPrecio = r["PRECIO"] !== undefined ? r["PRECIO"] : (r["Precio"] !== undefined ? r["Precio"] : (r["precio"] !== undefined ? r["precio"] : ""));
+    const parsedPrecio = parsePrecio(rawPrecio);
+
     const item = {
       item: r["ITEM"] || r["Item"] || "",
       proveedor: (r["PROVEEDOR"] || r["Proveedor"] || "").trim(),
       codigo: (r["CODIGO"] || r["CÓDIGO"] || r["Código"] || "").trim(),
       descripcion: (r["DESCRIPCION"] || r["DESCRIPCIÓN"] || r["Descripción"] || "").trim(),
-      precio: parsePrecio(r["PRECIO"] || r["Precio"]),
+      precio: parsedPrecio,
       simbolo: simbolo,
       years: {}
     };
@@ -834,19 +793,23 @@ function renderTable(){
     return;
   }
 
-// Render Filas Fijas (Con Símbolo Unificado y Decimales)
-bodyFixed.innerHTML = data.map(r => {
-  const precioTxt = r.precio ? `${r.simbolo} ${r.precio.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "-";
-  return `
-    <tr>
-      <td class="col-item">${r.item}</td>
-      <td class="col-prov">${r.proveedor}</td>
-      <td class="col-cod">${r.codigo}</td>
-      <td class="col-desc">${r.descripcion}</td>
-      <td class="col-precio num">${precioTxt}</td>
-    </tr>
-  `;
-}).join("");
+  // Render Filas Fijas (Con Símbolo Unificado)
+  bodyFixed.innerHTML = data.map(r => {
+    const tienePrecio = r.precio !== null && r.precio !== undefined;
+    const precioTxt = tienePrecio 
+      ? `${r.simbolo} ${r.precio.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+      : "-";
+
+    return `
+      <tr>
+        <td class="col-item">${r.item}</td>
+        <td class="col-prov">${r.proveedor}</td>
+        <td class="col-cod">${r.codigo}</td>
+        <td class="col-desc">${r.descripcion}</td>
+        <td class="col-precio num">${precioTxt}</td>
+      </tr>
+    `;
+  }).join("");
 
   // Render Filas Móviles
   const z = (v) => v ? v : `<span class="zero-val">0</span>`;
