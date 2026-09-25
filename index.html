@@ -146,8 +146,18 @@
   .sync-info{
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:8px;
     color:var(--gray);
+  }
+  .sync-status-tag {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--good);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .sync-status-tag.show {
+    opacity: 1;
   }
   .btn-refresh{
     background:var(--navy);
@@ -484,6 +494,7 @@
       <div class="sync-info">
         <span>Última sincronización de datos:</span>
         <strong id="lastSyncText">Pendiente...</strong>
+        <span id="syncTag" class="sync-status-tag">✓ Datos al día</span>
       </div>
       <button class="btn-refresh" id="refreshBtn">
         <span class="icon-spin">↻</span> Actualizar datos
@@ -601,20 +612,58 @@ let chartInstance = null;
 let selectedFamilies = new Set(); 
 let showOnlySelected = false; 
 
-/* ============ ACTUALIZACIÓN DE FECHA Y HORARIO DE FECHA DE SINCRONIZACIÓN ============ */
-function updateSyncTimestamp(){
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // Formato 12 horas
-  const hoursStr = hours.toString().padStart(2, '0');
+/* ============ GESTIÓN INTELIGENTE DE FECHA DE SINCRONIZACIÓN (OPCIÓN B) ============ */
+function generateDataHash(data) {
+  let str = JSON.stringify(data);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    let char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return hash.toString();
+}
+
+function handleSyncTimestamp(newData) {
+  const currentHash = generateDataHash(newData);
+  const savedHash = localStorage.getItem('piemca_data_hash');
+  const savedTimestamp = localStorage.getItem('piemca_last_sync_time');
   
-  const formattedStamp = `${dateStr} ${hoursStr}:${minutes} ${ampm}`;
   const el = document.getElementById('lastSyncText');
-  if(el) el.textContent = formattedStamp;
+  const tag = document.getElementById('syncTag');
+
+  // Si los datos cambiaron O es la primerísima vez que entra la app
+  if (currentHash !== savedHash || !savedTimestamp) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = hours.toString().padStart(2, '0');
+    
+    const formattedStamp = `${dateStr} ${hoursStr}:${minutes} ${ampm}`;
+    
+    localStorage.setItem('piemca_data_hash', currentHash);
+    localStorage.setItem('piemca_last_sync_time', formattedStamp);
+    
+    if (el) el.textContent = formattedStamp;
+    
+    if (savedHash && tag) {
+      tag.textContent = "¡Datos actualizados!";
+      tag.classList.add('show');
+      setTimeout(() => tag.classList.remove('show'), 3500);
+    }
+  } else {
+    // Si no hubo ningún cambio en Google Sheets, mantenemos la fecha anterior
+    if (el) el.textContent = savedTimestamp;
+    if (tag) {
+      tag.textContent = "✓ Sin cambios nuevos en Sheet";
+      tag.classList.add('show');
+      setTimeout(() => tag.classList.remove('show'), 3000);
+    }
+  }
 }
 
 /* ============ CARGA DE DATOS ============ */
@@ -633,7 +682,7 @@ function loadData(){
     skipEmptyLines:true,
     complete: function(results){
       processData(results.data, results.meta.fields);
-      updateSyncTimestamp();
+      handleSyncTimestamp(results.data);
       if(refreshBtn){
         refreshBtn.classList.remove('loading');
         refreshBtn.disabled = false;
