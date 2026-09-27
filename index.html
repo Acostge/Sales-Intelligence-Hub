@@ -30,6 +30,7 @@
     --text:#1E2A32;
     --good:#2E9E6D;
     --warn:#C9762E;
+    --bad:#B23A48;
   }
   *{box-sizing:border-box;}
   body{
@@ -272,20 +273,56 @@
     display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
   }
-  .kpi-list-panel .kpi-checklist{flex:1;max-height:600px;}
+  .kpi-list-panel .kpi-checklist{flex:1;max-height:300px;}
   .chart-card{
     flex:1;min-width:0;display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;
   }
   .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
   .chart-card p{margin:0 0 14px;color:var(--gray);font-size:12.5px;}
-  .chart-canvas-wrap{position:relative;flex:1;min-height:520px;}
+  .chart-canvas-wrap{position:relative;flex:1;min-height:300px;}
   #barChart{position:absolute;top:0;left:0;width:100% !important;height:100% !important;}
   @media (max-width:900px){
     .kpi-body{flex-direction:column;}
     .kpi-list-panel{flex:1 1 auto;}
   }
   .hidden{display:none !important;}
+
+  /* Cinta 1: KPIs generales de venta (USD) */
+  .dash-ribbon1{
+    display:flex;background:linear-gradient(120deg,var(--navy-deep),var(--navy) 70%);
+    border-radius:12px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap;
+  }
+  .dash-kpi{flex:1 1 0;min-width:170px;padding:14px 18px;color:var(--white);border-right:1px solid rgba(255,255,255,.15);}
+  .dash-kpi:last-child{border-right:none;}
+  .dash-kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;opacity:.85;margin-bottom:8px;white-space:nowrap;}
+  .dash-kpi-value{font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .dash-kpi-value.dash-good{color:#8CF0C4;}
+  .dash-kpi-value.dash-bad{color:#FFB4B4;}
+
+  /* Cinta 2: Top proveedores por venta */
+  .dash-ribbon2{
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;
+    padding:16px 20px 12px;margin-bottom:14px;
+  }
+  .dash-ribbon2-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .dash-ribbon2-title{font-weight:800;color:var(--navy);letter-spacing:.4px;text-transform:uppercase;font-size:13px;}
+  .dash-topn-select{padding:5px 8px;border:1px solid var(--gray-line);border-radius:6px;font-size:12px;font-weight:600;color:var(--navy);}
+  .dash-top-row{display:flex;align-items:flex-end;gap:14px;position:relative;min-height:150px;}
+  .dash-line-svg{position:absolute;top:0;left:0;pointer-events:none;z-index:0;}
+  .dash-top-bar{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;z-index:1;}
+  .dash-top-bar .dash-pct{color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;margin-bottom:6px;background:var(--gray);}
+  .dash-top-bar.good .dash-pct{background:var(--good);}
+  .dash-top-bar.bad .dash-pct{background:var(--bad);}
+  .dash-top-bar .dash-bar-visual{
+    width:100%;border-radius:6px 6px 0 0;display:flex;align-items:flex-start;justify-content:center;
+    padding-top:8px;background:var(--gray-line);
+  }
+  .dash-top-bar.good .dash-bar-visual{background:var(--good);}
+  .dash-top-bar.bad .dash-bar-visual{background:var(--bad);}
+  .dash-top-bar .dash-monto{background:rgba(255,255,255,.9);color:#1E2A32;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;}
+  .dash-top-bar .dash-name{margin-top:6px;font-size:11px;font-weight:700;color:var(--navy);text-align:center;text-transform:uppercase;line-height:1.25;}
+  .dash-hint{font-size:12.5px;color:var(--gray);padding:20px 0;text-align:center;width:100%;}
 
   /* Vista Inventario */
   .inv-controls{
@@ -595,6 +632,17 @@
 
   <!-- VISTA KPI -->
   <div id="viewKpi" class="hidden">
+    <div class="dash-ribbon1" id="dashRibbon1"></div>
+    <div class="dash-ribbon2">
+      <div class="dash-ribbon2-header">
+        <div class="dash-ribbon2-title">Ventas por proveedor</div>
+        <select id="dashTopN" class="dash-topn-select">
+          <option value="5">Top 5</option>
+          <option value="10">Top 10</option>
+        </select>
+      </div>
+      <div class="dash-top-row" id="dashTopRow"></div>
+    </div>
     <div class="kpi-controls">
       <div class="field">
         <label>Buscar</label>
@@ -1020,6 +1068,7 @@ function processData(rows, fields){
   buildPedidoSelectors();
   buildPedidosCodigos();
   renderTable();
+  renderDashboardRibbons();
 }
 
 function buildPedidosCodigos(){
@@ -1459,6 +1508,155 @@ function buildKpiChecklist(){
   applyKpiSearchFilter(); 
 }
 
+/* ============ DASHBOARD: TIPO DE CAMBIO Y CINTAS ============ */
+let eurToUsdRate = 1.08; // valor de respaldo si falla la consulta en vivo
+
+function cargarTipoCambio(){
+  fetch('https://open.er-api.com/v6/latest/EUR')
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.rates && d.rates.USD) eurToUsdRate = d.rates.USD;
+      renderDashboardRibbons();
+    })
+    .catch(err => { console.error("No se pudo obtener el tipo de cambio EUR/USD, usando valor de respaldo:", err); });
+}
+
+function montoUSD(r, anio){
+  const uds = r.years[anio];
+  if(uds === null || uds === undefined || !r.precio) return 0;
+  const monto = uds * r.precio;
+  return r.simbolo === "€" ? monto * eurToUsdRate : monto;
+}
+
+function totalVentasUSD(anio){
+  if(!anio) return 0;
+  return rawData.reduce((s,r) => s + montoUSD(r, anio), 0);
+}
+
+function fmtUsd(v){
+  return "$" + Math.round(v).toLocaleString('es-ES');
+}
+
+function renderDashboardRibbons(){
+  if(!activeYearCols || !activeYearCols.length) return;
+  renderDashboardRibbon1();
+  renderDashboardRibbon2();
+}
+
+function renderDashboardRibbon1(){
+  const years = activeYearCols;
+  const n = years.length;
+  const anioActual = years[n-1];
+  const anioAnterior = n >= 2 ? years[n-2] : null;
+  const anioBase2 = n >= 3 ? years[n-3] : null;
+
+  const actual = totalVentasUSD(anioActual);
+  const ventasAnterior = anioAnterior ? totalVentasUSD(anioAnterior) : 0;
+  const ventasBase2 = anioBase2 ? totalVentasUSD(anioBase2) : ventasAnterior;
+  // Objetivo/pronóstico: promedio de los últimos dos años ya cerrados
+  const objetivo = anioAnterior ? (ventasAnterior + ventasBase2) / 2 : actual;
+  const realizacion = objetivo ? (actual / objetivo * 100) : 0;
+  const crecimiento = ventasAnterior ? ((actual - ventasAnterior) / ventasAnterior * 100) : 0;
+
+  document.getElementById('dashRibbon1').innerHTML = `
+    <div class="dash-kpi">
+      <div class="dash-kpi-label">Objetivo de Ventas ${anioActual}</div>
+      <div class="dash-kpi-value">🎯 ${fmtUsd(objetivo)}</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dash-kpi-label">Ventas Actuales ${anioActual}</div>
+      <div class="dash-kpi-value">🛍️ ${fmtUsd(actual)}</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dash-kpi-label">Tasa de Realización</div>
+      <div class="dash-kpi-value">📊 ${realizacion.toFixed(1)}%</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dash-kpi-label">Ventas ${anioAnterior || "año anterior"}</div>
+      <div class="dash-kpi-value">📦 ${fmtUsd(ventasAnterior)}</div>
+    </div>
+    <div class="dash-kpi">
+      <div class="dash-kpi-label">Índice de Crecimiento</div>
+      <div class="dash-kpi-value ${crecimiento >= 0 ? 'dash-good' : 'dash-bad'}">📈 ${crecimiento >= 0 ? "+" : ""}${crecimiento.toFixed(1)}%</div>
+    </div>
+  `;
+}
+
+function renderDashboardRibbon2(){
+  const years = activeYearCols;
+  const n = years.length;
+  const anioActual = years[n-1];
+  const anioAnterior = n >= 2 ? years[n-2] : null;
+
+  const porProveedor = {};
+  rawData.forEach(r => {
+    if(!porProveedor[r.proveedor]) porProveedor[r.proveedor] = { actual:0, anterior:0, simbolos:{} };
+    const p = porProveedor[r.proveedor];
+    const udsActual = r.years[anioActual];
+    if(udsActual && r.precio) p.actual += udsActual * r.precio;
+    if(anioAnterior){
+      const udsAnt = r.years[anioAnterior];
+      if(udsAnt && r.precio) p.anterior += udsAnt * r.precio;
+    }
+    if(r.simbolo) p.simbolos[r.simbolo] = (p.simbolos[r.simbolo] || 0) + 1;
+  });
+
+  let lista = Object.keys(porProveedor).map(nombre => {
+    const d = porProveedor[nombre];
+    const simbolo = Object.keys(d.simbolos).sort((a,b) => d.simbolos[b]-d.simbolos[a])[0] || "$";
+    const crecimiento = d.anterior ? (d.actual / d.anterior * 100) : (d.actual > 0 ? 100 : 0);
+    return { nombre, monto: d.actual, simbolo, crecimiento };
+  }).filter(p => p.monto > 0);
+
+  lista.sort((a,b) => b.monto - a.monto);
+
+  const topN = parseInt(document.getElementById('dashTopN').value || "5", 10);
+  const top = lista.slice(0, topN);
+  const maxMonto = top.length ? top[0].monto : 1;
+
+  const row = document.getElementById('dashTopRow');
+  if(!top.length){
+    row.innerHTML = `<div class="dash-hint">Sin ventas registradas en ${anioActual} todavía.</div>`;
+    return;
+  }
+
+  row.innerHTML = top.map(p => {
+    const alto = Math.max(40, Math.round((p.monto / maxMonto) * 130));
+    const cls = p.crecimiento >= 100 ? "good" : "bad";
+    return `
+      <div class="dash-top-bar ${cls}">
+        <div class="dash-pct">${Math.round(p.crecimiento)}%</div>
+        <div class="dash-bar-visual" style="height:${alto}px;">
+          <div class="dash-monto">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES')}</div>
+        </div>
+        <div class="dash-name">${p.nombre}</div>
+      </div>
+    `;
+  }).join("");
+
+  requestAnimationFrame(drawDashLine);
+}
+
+// Línea que conecta los porcentajes de cada barra, solo decorativa
+function drawDashLine(){
+  const container = document.getElementById('dashTopRow');
+  const badges = container.querySelectorAll('.dash-pct');
+  if(badges.length < 2) return;
+  const containerRect = container.getBoundingClientRect();
+  const points = Array.from(badges).map(b => {
+    const r = b.getBoundingClientRect();
+    return `${r.left - containerRect.left + r.width/2},${r.top - containerRect.top + r.height/2}`;
+  }).join(" ");
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','dash-line-svg');
+  svg.setAttribute('width', containerRect.width);
+  svg.setAttribute('height', containerRect.height);
+  svg.innerHTML = `<polyline points="${points}" fill="none" stroke="#E08E2B" stroke-width="2"/>`;
+  container.appendChild(svg);
+}
+
+document.getElementById('dashTopN').addEventListener('change', renderDashboardRibbon2);
+
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
   const year = document.getElementById('kpiYear').value;
@@ -1636,7 +1834,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
 
-    if(view === 'kpi') renderChart();
+    if(view === 'kpi'){ renderChart(); renderDashboardRibbons(); }
     if(view === 'inventario') renderInventario();
     if(view === 'pedidos'){
       pedProximoNumero();
@@ -1772,6 +1970,7 @@ function checkDeviceBlock(){
     appStarted = true;
     loadData();
     loadProveedores();
+    cargarTipoCambio();
   }
 }
 window.addEventListener('resize', checkDeviceBlock);
