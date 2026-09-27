@@ -244,7 +244,7 @@
   /* KPI view */
   .kpi-controls{
     display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
-    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:10px 16px;margin-bottom:10px;
   }
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
@@ -273,14 +273,14 @@
     display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
   }
-  .kpi-list-panel .kpi-checklist{flex:1;max-height:300px;}
+  .kpi-list-panel .kpi-checklist{flex:1;max-height:190px;}
   .chart-card{
     flex:1;min-width:0;display:flex;flex-direction:column;
-    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px 20px;
   }
   .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
-  .chart-card p{margin:0 0 14px;color:var(--gray);font-size:12.5px;}
-  .chart-canvas-wrap{position:relative;flex:1;min-height:300px;}
+  .chart-card p{margin:0 0 8px;color:var(--gray);font-size:12.5px;}
+  .chart-canvas-wrap{position:relative;flex:1;min-height:190px;}
   #barChart{position:absolute;top:0;left:0;width:100% !important;height:100% !important;}
   @media (max-width:900px){
     .kpi-body{flex-direction:column;}
@@ -291,19 +291,19 @@
   /* Cinta 1: KPIs generales de venta (USD) */
   .dash-ribbon1{
     display:flex;background:linear-gradient(120deg,var(--navy-deep),var(--navy) 70%);
-    border-radius:12px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap;
+    border-radius:12px;overflow:hidden;margin-bottom:10px;flex-wrap:wrap;
   }
-  .dash-kpi{flex:1 1 0;min-width:170px;padding:14px 18px;color:var(--white);border-right:1px solid rgba(255,255,255,.15);}
+  .dash-kpi{flex:1 1 0;min-width:150px;padding:9px 16px;color:var(--white);border-right:1px solid rgba(255,255,255,.15);}
   .dash-kpi:last-child{border-right:none;}
-  .dash-kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;opacity:.85;margin-bottom:8px;white-space:nowrap;}
-  .dash-kpi-value{font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .dash-kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;opacity:.85;margin-bottom:5px;white-space:nowrap;}
+  .dash-kpi-value{font-size:17px;font-weight:800;display:flex;align-items:center;gap:6px;white-space:nowrap;}
   .dash-kpi-value.dash-good{color:#8CF0C4;}
   .dash-kpi-value.dash-bad{color:#FFB4B4;}
 
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;
-    padding:16px 20px 12px;margin-bottom:14px;position:relative;
+    padding:10px 18px 8px;margin-bottom:10px;position:relative;
   }
   .dash-risk-btn{
     background:var(--sky-soft);color:var(--navy);border:1px solid var(--gray-line);border-radius:6px;
@@ -336,10 +336,10 @@
   .dash-prod-val{white-space:nowrap;font-weight:700;color:var(--text);}
   .dash-prod-val.dash-bad{color:var(--bad);}
   .dash-prod-val small{display:block;font-weight:500;color:var(--gray);font-size:10px;}
-  .dash-ribbon2-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .dash-ribbon2-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
   .dash-ribbon2-title{font-weight:800;color:var(--navy);letter-spacing:.4px;text-transform:uppercase;font-size:13px;}
   .dash-topn-select{padding:5px 8px;border:1px solid var(--gray-line);border-radius:6px;font-size:12px;font-weight:600;color:var(--navy);}
-  .dash-top-row{display:flex;align-items:flex-end;gap:14px;position:relative;min-height:150px;}
+  .dash-top-row{display:flex;align-items:flex-end;gap:14px;position:relative;min-height:105px;}
   .dash-line-svg{position:absolute;top:0;left:0;pointer-events:none;z-index:0;}
   .dash-top-bar{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;z-index:1;}
   .dash-top-bar .dash-pct{color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;margin-bottom:6px;background:var(--gray);}
@@ -1205,7 +1205,7 @@ function renderTable(){
   bodyFixed.innerHTML = data.map(r => {
     const tienePrecio = r.precio !== null && r.precio !== undefined;
     const precioTxt = tienePrecio 
-      ? `${r.simbolo} ${r.precio.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+      ? `${r.simbolo} ${r.precio.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })}` 
       : "-";
 
     return `
@@ -1386,9 +1386,9 @@ function updatePedTotales(){
     total += t;
     if(l.simbolo) simbolo = l.simbolo;
     const cell = tr.querySelector('.ped-linea-total');
-    if(cell) cell.textContent = t.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if(cell) cell.textContent = t.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'});
   });
-  document.getElementById('pedTotalOut').textContent = `${simbolo} ${total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  document.getElementById('pedTotalOut').textContent = `${simbolo} ${total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'})}`;
   renderPedSheet(total, simbolo);
 }
 
@@ -1413,7 +1413,7 @@ function renderPedSheet(total, simbolo){
   document.getElementById('pedObservacionesOut').textContent = document.getElementById('pedObservaciones').value;
 
   document.getElementById('pedSimboloOut').textContent = simbolo;
-  document.getElementById('pedPrintTotalOut').textContent = total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('pedPrintTotalOut').textContent = total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'});
 
   // Filas reales + relleno vacío hasta un mínimo de filas, ajustado para que quepa en 1 sola página
   const filas = pedLineas.map(l => {
@@ -1421,9 +1421,9 @@ function renderPedSheet(total, simbolo){
     return `<tr>
       <td>${l.codigo}</td><td style="text-align:left;">${prod?prod.descripcion:""}</td>
       <td>${l.um || 'Unid.'}</td><td>${l.cantidad||""}</td>
-      <td class="num">${(l.precio||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num">${(l.precio||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'})}</td>
       <td class="num">${l.dto||""}</td>
-      <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'})}</td>
     </tr>`;
   });
   const relleno = Math.max(0, 20 - pedLineas.length);
@@ -1574,7 +1574,7 @@ function totalVentasUSD(anio){
 }
 
 function fmtUsd(v){
-  return "$" + Math.round(v).toLocaleString('es-ES');
+  return "$" + Math.round(v).toLocaleString('es-ES', { useGrouping: 'always' });
 }
 
 function renderDashboardRibbons(){
@@ -1670,15 +1670,15 @@ function renderDashboardRibbon2(){
   }
 
   row.innerHTML = top.map(p => {
-    const alto = Math.max(40, Math.round((p.monto / maxMonto) * 130));
+    const alto = Math.max(32, Math.round((p.monto / maxMonto) * 90));
     const cls = p.crecimiento >= 100 ? "good" : "bad";
     return `
       <div class="dash-top-bar ${cls}">
         <div class="dash-pct">${Math.round(p.crecimiento)}%</div>
         <div class="dash-bar-visual" style="height:${alto}px;">
-          <div class="dash-monto">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES')}</div>
+          <div class="dash-monto">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES', { useGrouping: 'always' })}</div>
         </div>
-        <div class="dash-unidades">${Math.round(p.unidades).toLocaleString('es-ES')} uds.</div>
+        <div class="dash-unidades">${Math.round(p.unidades).toLocaleString('es-ES', { useGrouping: 'always' })} uds.</div>
         <div class="dash-name">${p.nombre}</div>
       </div>
     `;
@@ -1834,7 +1834,7 @@ function renderDashProdPanel(){
   const filasTop = topProductos.map(p => `
     <div class="dash-prod-row">
       <div class="dash-prod-desc"><span class="cod">${p.codigo}</span><span class="desc">${p.descripcion}</span></div>
-      <div class="dash-prod-val">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES')}<small>${p.unidades} uds.</small></div>
+      <div class="dash-prod-val">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES', { useGrouping: 'always' })}<small>${p.unidades} uds.</small></div>
     </div>`).join("") || `<div class="dash-hint">Sin ventas en ${anioActual} para este filtro.</div>`;
 
   const filasDurm = durmientes.map(p => `
