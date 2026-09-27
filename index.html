@@ -321,7 +321,8 @@
   .dash-top-bar.good .dash-bar-visual{background:var(--good);}
   .dash-top-bar.bad .dash-bar-visual{background:var(--bad);}
   .dash-top-bar .dash-monto{background:rgba(255,255,255,.9);color:#1E2A32;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;}
-  .dash-top-bar .dash-name{margin-top:6px;font-size:11px;font-weight:700;color:var(--navy);text-align:center;text-transform:uppercase;line-height:1.25;}
+  .dash-top-bar .dash-unidades{margin-top:4px;font-size:10.5px;font-weight:600;color:var(--gray);white-space:nowrap;}
+  .dash-top-bar .dash-name{margin-top:4px;font-size:11px;font-weight:700;color:var(--navy);text-align:center;text-transform:uppercase;line-height:1.25;}
   .dash-hint{font-size:12.5px;color:var(--gray);padding:20px 0;text-align:center;width:100%;}
 
   /* Vista Inventario */
@@ -1590,10 +1591,10 @@ function renderDashboardRibbon2(){
 
   const porProveedor = {};
   rawData.forEach(r => {
-    if(!porProveedor[r.proveedor]) porProveedor[r.proveedor] = { actual:0, anterior:0, simbolos:{} };
+    if(!porProveedor[r.proveedor]) porProveedor[r.proveedor] = { actual:0, anterior:0, unidades:0, simbolos:{} };
     const p = porProveedor[r.proveedor];
     const udsActual = r.years[anioActual];
-    if(udsActual && r.precio) p.actual += udsActual * r.precio;
+    if(udsActual && r.precio){ p.actual += udsActual * r.precio; p.unidades += udsActual; }
     if(anioAnterior){
       const udsAnt = r.years[anioAnterior];
       if(udsAnt && r.precio) p.anterior += udsAnt * r.precio;
@@ -1605,7 +1606,7 @@ function renderDashboardRibbon2(){
     const d = porProveedor[nombre];
     const simbolo = Object.keys(d.simbolos).sort((a,b) => d.simbolos[b]-d.simbolos[a])[0] || "$";
     const crecimiento = d.anterior ? (d.actual / d.anterior * 100) : (d.actual > 0 ? 100 : 0);
-    return { nombre, monto: d.actual, simbolo, crecimiento };
+    return { nombre, monto: d.actual, unidades: d.unidades, simbolo, crecimiento };
   }).filter(p => p.monto > 0);
 
   lista.sort((a,b) => b.monto - a.monto);
@@ -1629,6 +1630,7 @@ function renderDashboardRibbon2(){
         <div class="dash-bar-visual" style="height:${alto}px;">
           <div class="dash-monto">${p.simbolo} ${Math.round(p.monto).toLocaleString('es-ES')}</div>
         </div>
+        <div class="dash-unidades">${Math.round(p.unidades).toLocaleString('es-ES')} uds.</div>
         <div class="dash-name">${p.nombre}</div>
       </div>
     `;
