@@ -303,8 +303,29 @@
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;
-    padding:16px 20px 12px;margin-bottom:14px;
+    padding:16px 20px 12px;margin-bottom:14px;position:relative;
   }
+  .dash-risk-btn{
+    background:var(--sky-soft);color:var(--navy);border:1px solid var(--gray-line);border-radius:6px;
+    padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .dash-risk-btn:hover{background:var(--sky);color:#fff;}
+  .dash-risk-panel{
+    display:none;position:absolute;top:44px;right:16px;width:300px;max-height:380px;overflow-y:auto;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);
+    padding:14px;z-index:30;text-align:left;
+  }
+  .dash-risk-panel.open{display:block;}
+  .dash-risk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12.5px;color:var(--navy);}
+  .dash-risk-close{background:none;border:none;font-size:13px;cursor:pointer;color:var(--gray);}
+  .dash-risk-concentracion{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px;}
+  .dash-risk-sub{font-size:11px;color:var(--gray);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+  .dash-risk-list{display:flex;flex-direction:column;gap:7px;}
+  .dash-risk-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;}
+  .dash-risk-name{flex:1;color:var(--navy);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dash-risk-arrow{width:16px;text-align:center;font-weight:800;}
+  .dash-risk-arrow.dash-good{color:var(--good);}
+  .dash-risk-arrow.dash-bad{color:var(--bad);}
   .dash-ribbon2-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
   .dash-ribbon2-title{font-weight:800;color:var(--navy);letter-spacing:.4px;text-transform:uppercase;font-size:13px;}
   .dash-topn-select{padding:5px 8px;border:1px solid var(--gray-line);border-radius:6px;font-size:12px;font-weight:600;color:var(--navy);}
@@ -638,6 +659,7 @@
       <div class="dash-ribbon2-header">
         <div class="dash-ribbon2-title">Ventas por proveedor</div>
         <div style="display:flex;gap:8px;">
+          <button type="button" id="dashRiskBtn" class="dash-risk-btn">📊 Riesgo</button>
           <select id="dashAnio" class="dash-topn-select"></select>
           <select id="dashTopN" class="dash-topn-select">
             <option value="5">Top 5</option>
@@ -646,6 +668,7 @@
         </div>
       </div>
       <div class="dash-top-row" id="dashTopRow"></div>
+      <div class="dash-risk-panel" id="dashRiskPanel"></div>
     </div>
     <div class="kpi-controls">
       <div class="field">
@@ -1671,7 +1694,85 @@ function drawDashLine(){
 }
 
 document.getElementById('dashTopN').addEventListener('change', renderDashboardRibbon2);
-document.getElementById('dashAnio').addEventListener('change', renderDashboardRibbon2);
+document.getElementById('dashAnio').addEventListener('change', () => {
+  renderDashboardRibbon2();
+  if(document.getElementById('dashRiskPanel').classList.contains('open')) renderDashRiskPanel();
+});
+
+/* ============ PANEL FLOTANTE: RIESGO Y TENDENCIA ============ */
+function computeProviderUsdForYear(anio){
+  const porProveedor = {};
+  rawData.forEach(r => {
+    const v = montoUSD(r, anio);
+    if(v) porProveedor[r.proveedor] = (porProveedor[r.proveedor] || 0) + v;
+  });
+  return Object.keys(porProveedor)
+    .map(nombre => ({ nombre, monto: porProveedor[nombre] }))
+    .sort((a,b) => b.monto - a.monto);
+}
+
+function renderDashRiskPanel(){
+  const years = activeYearCols;
+  const anioActual = document.getElementById('dashAnio').value || years[years.length-1];
+  const idxActual = years.indexOf(anioActual);
+
+  const listaUsd = computeProviderUsdForYear(anioActual);
+  const totalUsd = listaUsd.reduce((s,p) => s + p.monto, 0);
+  const top1 = listaUsd[0];
+  const top3Suma = listaUsd.slice(0,3).reduce((s,p) => s + p.monto, 0);
+  const pctTop1 = totalUsd ? (top1.monto / totalUsd * 100) : 0;
+  const pctTop3 = totalUsd ? (top3Suma / totalUsd * 100) : 0;
+
+  // Mini-tendencia: hasta los últimos 4 años que terminan en el año elegido
+  const rango = years.slice(Math.max(0, idxActual - 3), idxActual + 1);
+  const nombresTop = listaUsd.slice(0, 6).map(p => p.nombre);
+
+  const sparkHtml = nombresTop.map(nombre => {
+    const filas = rawData.filter(r => r.proveedor === nombre);
+    const puntos = rango.map(y => filas.reduce((s,r) => s + montoUSD(r, y), 0));
+    const max = Math.max(...puntos, 1);
+    const min = Math.min(...puntos, 0);
+    const w = 70, h = 24;
+    const stepX = puntos.length > 1 ? w / (puntos.length - 1) : 0;
+    const coords = puntos.map((v,i) => {
+      const x = i * stepX;
+      const y = h - ((v - min) / ((max - min) || 1)) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    const delta = puntos.length > 1 ? puntos[puntos.length-1] - puntos[0] : 0;
+    const flecha = delta > 0 ? "▲" : (delta < 0 ? "▼" : "▬");
+    const cls = delta > 0 ? "dash-good" : (delta < 0 ? "dash-bad" : "");
+    return `
+      <div class="dash-risk-row">
+        <span class="dash-risk-name">${nombre}</span>
+        <svg width="${w}" height="${h}" class="dash-spark"><polyline points="${coords}" fill="none" stroke="#3FA9D9" stroke-width="1.6"/></svg>
+        <span class="dash-risk-arrow ${cls}">${flecha}</span>
+      </div>`;
+  }).join("");
+
+  document.getElementById('dashRiskPanel').innerHTML = `
+    <div class="dash-risk-header">
+      <strong>Concentración y tendencia — ${anioActual}</strong>
+      <button type="button" class="dash-risk-close" id="dashRiskClose">✕</button>
+    </div>
+    <div class="dash-risk-concentracion">
+      ${top1 ? `<div><strong>${top1.nombre}</strong> representa el <strong>${pctTop1.toFixed(1)}%</strong> de tus ventas totales de ${anioActual}.</div>` : `<div>Sin ventas registradas en ${anioActual}.</div>`}
+      ${top1 ? `<div>Top 3 proveedores combinados: <strong>${pctTop3.toFixed(1)}%</strong> del total.</div>` : ``}
+    </div>
+    <div class="dash-risk-sub">Tendencia ${rango[0]}–${rango[rango.length-1]}</div>
+    <div class="dash-risk-list">${sparkHtml || `<div class="dash-hint">Sin datos suficientes.</div>`}</div>
+  `;
+  document.getElementById('dashRiskClose').addEventListener('click', () => {
+    document.getElementById('dashRiskPanel').classList.remove('open');
+  });
+}
+
+document.getElementById('dashRiskBtn').addEventListener('click', () => {
+  const panel = document.getElementById('dashRiskPanel');
+  const abriendo = !panel.classList.contains('open');
+  if(abriendo) renderDashRiskPanel();
+  panel.classList.toggle('open', abriendo);
+});
 
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
