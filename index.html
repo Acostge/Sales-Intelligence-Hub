@@ -267,15 +267,16 @@
   }
   .checklist-actions{display:flex;justify-content:space-between;margin-top:6px;}
   .kpi-selected-bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray);margin-bottom:8px;font-weight:600;}
-  .kpi-body{display:flex;gap:16px;align-items:stretch;}
+  #viewKpi{display:flex;flex-direction:column;}
+  .kpi-body{display:flex;gap:16px;align-items:stretch;flex:1;min-height:0;}
   .kpi-list-panel{
     flex:0 0 580px;
-    display:flex;flex-direction:column;
+    display:flex;flex-direction:column;min-height:0;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;
   }
-  .kpi-list-panel .kpi-checklist{flex:1;max-height:190px;}
+  .kpi-list-panel .kpi-checklist{flex:1;min-height:190px;max-height:none;}
   .chart-card{
-    flex:1;min-width:0;display:flex;flex-direction:column;
+    flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px 20px;
   }
   .chart-card h3{margin:0 0 4px;color:var(--navy);font-size:15px;}
@@ -1705,6 +1706,23 @@ function drawDashLine(){
   container.appendChild(svg);
 }
 
+// Hace que el Dashboard aproveche todo el alto disponible de la pantalla (sin scroll de página
+// en monitores grandes, y compacto igual que antes en ventanas chicas) — se recalcula solo.
+function ajustarAlturaDashboard(){
+  const view = document.getElementById('viewKpi');
+  if(view.classList.contains('hidden')) return;
+  const headerEl = document.querySelector('header');
+  const mainEl = document.querySelector('main');
+  const headerH = headerEl ? headerEl.offsetHeight : 0;
+  const mainStyles = getComputedStyle(mainEl);
+  const paddingV = (parseFloat(mainStyles.paddingTop) || 0) + (parseFloat(mainStyles.paddingBottom) || 0);
+  const disponible = window.innerHeight - headerH - paddingV;
+  view.style.minHeight = Math.max(disponible, 480) + "px"; // 480px = piso razonable en ventanas chicas
+}
+window.addEventListener('resize', () => {
+  if(!document.getElementById('viewKpi').classList.contains('hidden')) ajustarAlturaDashboard();
+});
+
 document.getElementById('dashTopN').addEventListener('change', renderDashboardRibbon2);
 document.getElementById('dashAnio').addEventListener('change', () => {
   renderDashboardRibbon2();
@@ -2048,7 +2066,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
 
-    if(view === 'kpi'){ renderChart(); renderDashboardRibbons(); }
+    if(view === 'kpi'){ renderChart(); renderDashboardRibbons(); ajustarAlturaDashboard(); }
     if(view === 'inventario') renderInventario();
     if(view === 'pedidos'){
       pedProximoNumero();
