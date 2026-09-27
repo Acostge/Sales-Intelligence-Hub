@@ -399,6 +399,9 @@
   .ped-print-table{width:100%;border-collapse:collapse;font-size:10px;}
   .ped-print-table th{background:#eee;border:0.5px solid #ccc;padding:3px 6px;text-align:center;}
   .ped-print-table td{border:0.5px solid #ccc;padding:1px 6px;height:13px;line-height:1.1;}
+  .ped-print-table td:nth-child(1),
+  .ped-print-table td:nth-child(3),
+  .ped-print-table td:nth-child(4) { text-align: center; }
   .ped-print-table td.num{text-align:right;}
   .ped-print-total{display:flex;justify-content:flex-end;margin-top:0;page-break-inside:avoid;}
   .ped-print-total table{border-collapse:collapse;font-size:12px;font-weight:700;}
@@ -1276,7 +1279,7 @@ function renderPedSheet(total, simbolo){
     const prod = rawData.find(r => r.codigo === l.codigo);
     return `<tr>
       <td>${l.codigo}</td><td style="text-align:left;">${prod?prod.descripcion:""}</td>
-      <td>Unid.</td><td class="num">${l.cantidad||""}</td>
+      <td>Unid.</td><td>${l.cantidad||""}</td>
       <td class="num">${(l.precio||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td class="num">${l.dto||""}</td>
       <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
@@ -1614,7 +1617,7 @@ document.getElementById('pedPrint').addEventListener('click', () => {
   if(!document.getElementById('pedProveedor').value){ alert("Selecciona un proveedor antes de generar el pedido."); return; }
   const numeroActual = document.getElementById('pedNumero').value;
   if(!numeroActual || numeroActual.indexOf("???") !== -1 || numeroActual.indexOf("...") !== -1){
-    alert("Todavía no se ha calculated el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
+    alert("Todavía no se ha calculado el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
     return;
   }
   pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
