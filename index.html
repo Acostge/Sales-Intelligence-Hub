@@ -407,10 +407,45 @@
   .ped-print-total table{border-collapse:collapse;font-size:12px;font-weight:700;}
   .ped-print-total td{border:0.5px solid #ccc;padding:4px 10px;}
   .ped-print-total td.tot-val{background:#e6e6e6;}
-  .ped-footer{margin-top:14px;font-size:11px;display:flex;justify-content:space-between;align-items:flex-end;page-break-inside:avoid;}
-  .ped-footer .ped-obs{max-width:60%;}
-  .ped-footer .ped-firma{text-align:center;font-size:10px;color:#555;width:160px;}
-  .ped-footer .ped-firma-linea{border-bottom:0.5px solid #999;height:40px;margin-bottom:4px;}
+.ped-footer {
+  margin-top: 18px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  page-break-inside: avoid;
+}
+
+.ped-footer-info {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 2px;
+}
+
+.ped-obs {
+  width: 100%;
+  border-top: 0.5px dashed #ccc;
+  padding-top: 8px;
+}
+
+.ped-firma-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.ped-footer .ped-firma {
+  text-align: center;
+  font-size: 10px;
+  color: #555;
+  width: 180px;
+}
+
+.ped-footer .ped-firma-linea {
+  border-bottom: 0.5px solid #999;
+  height: 45px;
+  margin-bottom: 4px;
+}
 
   /* Pantalla de bloqueo */
   #deviceBlock{
@@ -752,15 +787,21 @@
         <table><tr><td id="pedSimboloOut">$</td><td class="tot-val" id="pedPrintTotalOut">0,00</td></tr></table>
       </div>
       <div class="ped-footer">
-        <div>
-          <div><strong>Contacto:</strong> <span id="pedContactoOut"></span></div>
-          <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
-          <div class="ped-obs" style="margin-top:8px;"><strong>Observaciones:</strong><br><span id="pedObservacionesOut"></span></div>
-        </div>
-        <div class="ped-firma"><div class="ped-firma-linea"></div>Firma / Sello</div>
-      </div>
+  <div class="ped-footer-info">
+    <div><strong>Contacto:</strong> <span id="pedContactoOut"></span></div>
+    <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
+  </div>
+  <div class="ped-obs">
+    <strong>Observaciones:</strong><br>
+    <span id="pedObservacionesOut"></span>
+  </div>
+  <div class="ped-firma-container">
+    <div class="ped-firma">
+      <div class="ped-firma-linea"></div>
+      Firma / Sello
     </div>
   </div>
+</div>
 </main>
 
 <script>
