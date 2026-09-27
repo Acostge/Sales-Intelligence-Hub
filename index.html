@@ -382,7 +382,7 @@
   .ped-sheet{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:28px;color:#111;font-size:12px;}
   .ped-sheet.empresa-artrogen{ --emp-bar:#5C2A63; --emp-text:#5C2A63; }
   .ped-sheet.empresa-piemca{ --emp-bar:#0B3B5C; --emp-text:#0B3B5C; }
-  .ped-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--emp-bar);padding-bottom:10px;margin-bottom:6px;}
+  .ped-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--emp-bar);padding-bottom:8px;margin-bottom:5px;}
   .ped-top-left img{height:60px;display:block;margin-bottom:6px;}
   .ped-top-left .ped-dir{font-size:10.5px;font-style:italic;line-height:1.4;}
   .ped-top-right{text-align:right;}
@@ -393,18 +393,18 @@
   .ped-meta-tbl .ped-no{color:var(--emp-bar);font-weight:800;}
   .ped-bar{background:var(--emp-bar);color:#fff;display:flex;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:8px;}
   .ped-bar div{flex:1;padding:6px 10px;}
-  .ped-parties{display:flex;border:1px solid #e0e0e0;border-top:none;font-size:11px;line-height:1.5;margin-bottom:10px;}
-  .ped-parties div{flex:1;padding:8px 10px;}
-  .ped-parties div + div{border-left:1px solid #e0e0e0;}
-  .ped-print-table{width:100%;border-collapse:collapse;font-size:10.5px;}
-  .ped-print-table th{background:#eee;border:1px solid #ccc;padding:4px 6px;text-align:center;}
-  .ped-print-table td{border:1px solid #ccc;padding:3px 6px;height:16px;}
+  .ped-parties{display:flex;border:0.5px solid #ccc;border-top:none;font-size:11px;line-height:1.4;margin-bottom:8px;}
+  .ped-parties div{flex:1;padding:6px 10px;}
+  .ped-parties div + div{border-left:0.5px solid #ccc;}
+  .ped-print-table{width:100%;border-collapse:collapse;font-size:10px;}
+  .ped-print-table th{background:#eee;border:0.5px solid #ccc;padding:3px 6px;text-align:center;}
+  .ped-print-table td{border:0.5px solid #ccc;padding:1px 6px;height:13px;line-height:1.1;}
   .ped-print-table td.num{text-align:right;}
-  .ped-print-total{display:flex;justify-content:flex-end;margin-top:0;}
+  .ped-print-total{display:flex;justify-content:flex-end;margin-top:0;page-break-inside:avoid;}
   .ped-print-total table{border-collapse:collapse;font-size:12px;font-weight:700;}
-  .ped-print-total td{border:1px solid #ccc;padding:5px 10px;}
+  .ped-print-total td{border:0.5px solid #ccc;padding:4px 10px;}
   .ped-print-total td.tot-val{background:#e6e6e6;}
-  .ped-footer{margin-top:24px;font-size:11px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .ped-footer{margin-top:14px;font-size:11px;display:flex;justify-content:space-between;align-items:flex-end;page-break-inside:avoid;}
   .ped-footer .ped-obs{max-width:60%;}
   .ped-footer .ped-firma{text-align:center;}
   .ped-footer .ped-firma img{height:50px;display:block;margin:0 auto 4px;}
@@ -963,6 +963,7 @@ function processData(rows, fields){
   buildKpiSelectors();
   buildYearToggleBar();
   buildInventarioSelectors();
+  buildPedidoSelectors();
   buildPedidosCodigos();
   renderTable();
 }
@@ -1271,7 +1272,7 @@ function renderPedSheet(total, simbolo){
   document.getElementById('pedSimboloOut').textContent = simbolo;
   document.getElementById('pedPrintTotalOut').textContent = total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-  // Filas reales + relleno vacío hasta un mínimo de 30 filas, como en tus PDFs de ejemplo
+  // Filas reales + relleno vacío hasta un mínimo de filas, ajustado para que quepa en 1 sola página
   const filas = pedLineas.map(l => {
     const prod = rawData.find(r => r.codigo === l.codigo);
     return `<tr>
@@ -1282,7 +1283,7 @@ function renderPedSheet(total, simbolo){
       <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     </tr>`;
   });
-  const relleno = Math.max(0, 30 - pedLineas.length);
+  const relleno = Math.max(0, 20 - pedLineas.length);
   for(let i=0;i<relleno;i++){
     filas.push(`<tr><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">-</td></tr>`);
   }
@@ -1293,6 +1294,8 @@ function renderPedSheet(total, simbolo){
 function pedProximoNumero(){
   const emp = empresaActual();
   const anio = new Date().getFullYear().toString().slice(-2);
+  document.getElementById('pedNumero').value = "Cargando...";
+  if(pedLineas.length) updatePedTotales(); // refleja "Cargando..." en el documento mientras llega la respuesta
   const url = `${APPS_SCRIPT_URL}?action=contadores`;
   fetch(url).then(r=>r.json()).then(data => {
     const fila = (data.contadores||[]).find(c => c.prefijo === emp.prefijo && c.anio === anio);
@@ -1609,6 +1612,12 @@ document.getElementById('pedProveedor').addEventListener('change', e => {
   .forEach(id => document.getElementById(id).addEventListener('input', updatePedTotales));
 document.getElementById('pedPrint').addEventListener('click', () => {
   if(!pedLineas.length){ alert("Agrega al menos una línea de producto antes de generar el pedido."); return; }
+  if(!document.getElementById('pedProveedor').value){ alert("Selecciona un proveedor antes de generar el pedido."); return; }
+  const numeroActual = document.getElementById('pedNumero').value;
+  if(!numeroActual || numeroActual.indexOf("???") !== -1 || numeroActual.indexOf("...") !== -1){
+    alert("Todavía no se ha calculado el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
+    return;
+  }
   pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
   window.print();
   setTimeout(pedProximoNumero, 800); // recalcula el próximo número disponible para el siguiente pedido
