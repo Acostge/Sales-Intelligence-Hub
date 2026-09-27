@@ -637,10 +637,13 @@
     <div class="dash-ribbon2">
       <div class="dash-ribbon2-header">
         <div class="dash-ribbon2-title">Ventas por proveedor</div>
-        <select id="dashTopN" class="dash-topn-select">
-          <option value="5">Top 5</option>
-          <option value="10">Top 10</option>
-        </select>
+        <div style="display:flex;gap:8px;">
+          <select id="dashAnio" class="dash-topn-select"></select>
+          <select id="dashTopN" class="dash-topn-select">
+            <option value="5">Top 5</option>
+            <option value="10">Top 10</option>
+          </select>
+        </div>
       </div>
       <div class="dash-top-row" id="dashTopRow"></div>
     </div>
@@ -1058,6 +1061,7 @@ function processData(rows, fields){
 
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
   visibleYearCols = new Set(); // Años deshabilitados por defecto al iniciar
+  buildDashAnioSelector();
 
   document.getElementById('statusText').textContent =
     `${rawData.length} productos cargados · ${providers.length} proveedores · años disponibles ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
@@ -1583,18 +1587,27 @@ function renderDashboardRibbon1(){
   `;
 }
 
+function buildDashAnioSelector(){
+  const sel = document.getElementById('dashAnio');
+  const anioPrevio = sel.value; // conserva la selección si ya había una
+  sel.innerHTML = activeYearCols.slice().reverse()
+    .map(y => `<option value="${y}">${y}</option>`).join("");
+  sel.value = activeYearCols.includes(anioPrevio) ? anioPrevio : activeYearCols[activeYearCols.length-1];
+}
+
 function renderDashboardRibbon2(){
   const years = activeYearCols;
-  const n = years.length;
-  const anioActual = years[n-1];
-  const anioAnterior = n >= 2 ? years[n-2] : null;
+  const anioActual = document.getElementById('dashAnio').value || years[years.length-1];
+  const idx = years.indexOf(anioActual);
+  const anioAnterior = idx > 0 ? years[idx-1] : null;
 
   const porProveedor = {};
   rawData.forEach(r => {
     if(!porProveedor[r.proveedor]) porProveedor[r.proveedor] = { actual:0, anterior:0, unidades:0, simbolos:{} };
     const p = porProveedor[r.proveedor];
     const udsActual = r.years[anioActual];
-    if(udsActual && r.precio){ p.actual += udsActual * r.precio; p.unidades += udsActual; }
+    if(udsActual) p.unidades += udsActual;               // unidades: cuentan aunque el producto no tenga precio cargado
+    if(udsActual && r.precio) p.actual += udsActual * r.precio; // monto: solo si además tiene precio
     if(anioAnterior){
       const udsAnt = r.years[anioAnterior];
       if(udsAnt && r.precio) p.anterior += udsAnt * r.precio;
@@ -1658,6 +1671,7 @@ function drawDashLine(){
 }
 
 document.getElementById('dashTopN').addEventListener('change', renderDashboardRibbon2);
+document.getElementById('dashAnio').addEventListener('change', renderDashboardRibbon2);
 
 /* ============ GRAFICO KPI ============ */
 function renderChart(){
