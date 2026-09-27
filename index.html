@@ -406,8 +406,8 @@
   .ped-print-total td.tot-val{background:#e6e6e6;}
   .ped-footer{margin-top:14px;font-size:11px;display:flex;justify-content:space-between;align-items:flex-end;page-break-inside:avoid;}
   .ped-footer .ped-obs{max-width:60%;}
-  .ped-footer .ped-firma{text-align:center;}
-  .ped-footer .ped-firma img{height:50px;display:block;margin:0 auto 4px;}
+  .ped-footer .ped-firma{text-align:center;font-size:10px;color:#555;width:160px;}
+  .ped-footer .ped-firma-linea{border-bottom:0.5px solid #999;height:40px;margin-bottom:4px;}
 
   /* Pantalla de bloqueo */
   #deviceBlock{
@@ -754,7 +754,7 @@
           <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
           <div class="ped-obs" style="margin-top:8px;"><strong>Observaciones:</strong><br><span id="pedObservacionesOut"></span></div>
         </div>
-        <div class="ped-firma"><img id="pedLogoFirmaOut" src="logo-piemca.png" alt=""></div>
+        <div class="ped-firma"><div class="ped-firma-linea"></div>Firma / Sello</div>
       </div>
     </div>
   </div>
@@ -1254,7 +1254,6 @@ function renderPedSheet(total, simbolo){
   sheet.className = "ped-sheet " + emp.claseColor;
 
   document.getElementById('pedLogoOut').src = emp.logo;
-  document.getElementById('pedLogoFirmaOut').src = emp.logo;
   document.getElementById('pedDirEmisorOut').innerHTML = emp.direccionEmisor;
   document.getElementById('pedDirEntregaOut').innerHTML = emp.direccionEntrega;
   document.getElementById('pedFechaOut').textContent = new Date().toLocaleDateString('es-ES');
@@ -1619,9 +1618,26 @@ document.getElementById('pedPrint').addEventListener('click', () => {
     return;
   }
   pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
+
+  // Pone el nombre "NUMERO OC - PROVEEDOR DD-MM-AAAA" como sugerencia al Guardar como PDF
+  const tituloOriginal = document.title;
+  document.title = pedNombreArchivo();
   window.print();
+  setTimeout(() => { document.title = tituloOriginal; }, 1000);
+
   setTimeout(pedProximoNumero, 800); // recalcula el próximo número disponible para el siguiente pedido
 });
+
+function pedNombreArchivo(){
+  const numero = document.getElementById('pedNumero').value;
+  const proveedor = document.getElementById('pedProveedor').value;
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const fecha = `${dd}-${mm}-${d.getFullYear()}`;
+  const limpio = s => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
+  return `${limpio(numero)} OC - ${limpio(proveedor)} ${fecha}`;
+}
 
 document.getElementById('kpiProveedor').addEventListener('change', () => {
   buildKpiChecklist();
