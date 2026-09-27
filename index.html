@@ -1259,7 +1259,7 @@ function renderPedSheet(total, simbolo){
   document.getElementById('pedLogoOut').src = emp.logo;
   document.getElementById('pedDirEmisorOut').innerHTML = emp.direccionEmisor;
   document.getElementById('pedDirEntregaOut').innerHTML = emp.direccionEntrega;
-  document.getElementById('pedFechaOut').textContent = new Date().toLocaleDateString('es-ES');
+  document.getElementById('pedFechaOut').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   document.getElementById('pedNumeroOut').textContent = document.getElementById('pedNumero').value;
 
   const provNombre = document.getElementById('pedProveedor').value;
