@@ -954,10 +954,10 @@ function processData(rows, fields){
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
 
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
-  visibleYearCols = new Set(activeYearCols); 
+  visibleYearCols = new Set(); // Años deshabilitados por defecto al iniciar
 
   document.getElementById('statusText').textContent =
-    `${rawData.length} productos cargados · ${providers.length} proveedores · años con datos ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
+    `${rawData.length} productos cargados · ${providers.length} proveedores · años disponibles ${activeYearCols[0]}–${activeYearCols[activeYearCols.length-1]}`;
 
   buildProviderPanel();
   buildKpiSelectors();
@@ -1614,7 +1614,7 @@ document.getElementById('pedPrint').addEventListener('click', () => {
   if(!document.getElementById('pedProveedor').value){ alert("Selecciona un proveedor antes de generar el pedido."); return; }
   const numeroActual = document.getElementById('pedNumero').value;
   if(!numeroActual || numeroActual.indexOf("???") !== -1 || numeroActual.indexOf("...") !== -1){
-    alert("Todavía no se ha calculado el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
+    alert("Todavía no se ha calculated el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
     return;
   }
   pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
