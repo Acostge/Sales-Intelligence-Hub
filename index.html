@@ -407,45 +407,48 @@
   .ped-print-total table{border-collapse:collapse;font-size:12px;font-weight:700;}
   .ped-print-total td{border:0.5px solid #ccc;padding:4px 10px;}
   .ped-print-total td.tot-val{background:#e6e6e6;}
-.ped-footer {
-  margin-top: 18px;
-  font-size: 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  page-break-inside: avoid;
-}
 
-.ped-footer-info {
-  display: flex;
-  gap: 40px;
-  margin-bottom: 2px;
-}
+  /* Pie de página ajustado */
+  .ped-footer {
+    margin-top: 18px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    page-break-inside: avoid;
+  }
 
-.ped-obs {
-  width: 100%;
-  border-top: 0.5px dashed #ccc;
-  padding-top: 8px;
-}
+  .ped-footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
 
-.ped-firma-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 15px;
-}
+  .ped-obs {
+    width: 100%;
+    border-top: 0.5px dashed #ccc;
+    padding-top: 8px;
+  }
 
-.ped-footer .ped-firma {
-  text-align: center;
-  font-size: 10px;
-  color: #555;
-  width: 180px;
-}
+  .ped-firma-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+  }
 
-.ped-footer .ped-firma-linea {
-  border-bottom: 0.5px solid #999;
-  height: 45px;
-  margin-bottom: 4px;
-}
+  .ped-footer .ped-firma {
+    text-align: center;
+    font-size: 10px;
+    color: #555;
+    width: 180px;
+  }
+
+  .ped-footer .ped-firma-linea {
+    border-bottom: 0.5px solid #999;
+    height: 45px;
+    margin-bottom: 4px;
+  }
 
   /* Pantalla de bloqueo */
   #deviceBlock{
@@ -729,7 +732,7 @@
           <tr>
             <th style="width:16%;">Código</th>
             <th>Descripción</th>
-            <th style="width:8%;">U/M</th>
+            <th style="width:10%;">U/M</th>
             <th style="width:8%;">Cant.</th>
             <th style="width:10%;">Precio</th>
             <th style="width:8%;">%Dto.</th>
@@ -740,6 +743,11 @@
         <tbody id="pedLineasBody"></tbody>
       </table>
       <datalist id="pedCodigos"></datalist>
+      <datalist id="pedUnidadesMedida">
+        <option value="Unid.">
+        <option value="Box">
+        <option value="Pack">
+      </datalist>
       <button class="btn-solid" id="pedAddLinea" style="margin-top:10px;">+ Agregar línea</button>
       <div class="ped-total-row">TOTAL: <span id="pedTotalOut">0,00</span></div>
     </div>
@@ -787,21 +795,23 @@
         <table><tr><td id="pedSimboloOut">$</td><td class="tot-val" id="pedPrintTotalOut">0,00</td></tr></table>
       </div>
       <div class="ped-footer">
-  <div class="ped-footer-info">
-    <div><strong>Contacto:</strong> <span id="pedContactoOut"></span></div>
-    <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
-  </div>
-  <div class="ped-obs">
-    <strong>Observaciones:</strong><br>
-    <span id="pedObservacionesOut"></span>
-  </div>
-  <div class="ped-firma-container">
-    <div class="ped-firma">
-      <div class="ped-firma-linea"></div>
-      Firma / Sello
+        <div class="ped-footer-info">
+          <div><strong>Contacto:</strong> <span id="pedContactoOut"></span></div>
+          <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
+        </div>
+        <div class="ped-obs">
+          <strong>Observaciones:</strong><br>
+          <span id="pedObservacionesOut"></span>
+        </div>
+        <div class="ped-firma-container">
+          <div class="ped-firma">
+            <div class="ped-firma-linea"></div>
+            Firma / Sello
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 </main>
 
 <script>
@@ -835,7 +845,7 @@ const EMPRESAS = {
 
 let providerInfo = {};   // { "NOMBRE PROVEEDOR": {direccion, telefono, email, contacto} }
 let pedLineas = [];       // líneas del pedido actual
-let pedSeq = 1;           // consecutivo calculado (candidato, aún no confirmado)
+let pedSeq = 1;           // consecutivo calculado (candidato, aún no confirmed)
 
 Chart.register(ChartDataLabels);
 
@@ -1230,7 +1240,7 @@ function empresaActual(){
 }
 
 function pedAddLinea(codigoInicial){
-  pedLineas.push({ codigo: codigoInicial || "", cantidad: 1, precio: null, dto: 0, simbolo: "$" });
+  pedLineas.push({ codigo: codigoInicial || "", um: "Unid.", cantidad: 1, precio: null, dto: 0, simbolo: "$" });
   renderPedLineas();
 }
 
@@ -1243,7 +1253,7 @@ function renderPedLineas(){
     <tr data-i="${i}">
       <td><input list="pedCodigos" class="ped-codigo" value="${l.codigo}"></td>
       <td class="ped-desc">${desc}</td>
-      <td><input type="text" class="ped-um" value="Unid."></td>
+      <td><input list="pedUnidadesMedida" class="ped-um" value="${l.um || 'Unid.'}"></td>
       <td><input type="number" min="0" step="1" class="ped-cant" value="${l.cantidad}"></td>
       <td><input type="number" min="0" step="0.01" class="ped-precio" value="${l.precio ?? ''}"></td>
       <td><input type="number" min="0" step="0.01" class="ped-dto" value="${l.dto}"></td>
@@ -1263,6 +1273,7 @@ function renderPedLineas(){
       }
       renderPedLineas();
     });
+    tr.querySelector('.ped-um').addEventListener('input', e => { pedLineas[i].um = e.target.value; updatePedTotales(); });
     tr.querySelector('.ped-cant').addEventListener('input', e => { pedLineas[i].cantidad = parseFloat(e.target.value)||0; updatePedTotales(); });
     tr.querySelector('.ped-precio').addEventListener('input', e => { pedLineas[i].precio = parseFloat(e.target.value)||0; updatePedTotales(); });
     tr.querySelector('.ped-dto').addEventListener('input', e => { pedLineas[i].dto = parseFloat(e.target.value)||0; updatePedTotales(); });
@@ -1320,7 +1331,7 @@ function renderPedSheet(total, simbolo){
     const prod = rawData.find(r => r.codigo === l.codigo);
     return `<tr>
       <td>${l.codigo}</td><td style="text-align:left;">${prod?prod.descripcion:""}</td>
-      <td>Unid.</td><td>${l.cantidad||""}</td>
+      <td>${l.um || 'Unid.'}</td><td>${l.cantidad||""}</td>
       <td class="num">${(l.precio||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td class="num">${l.dto||""}</td>
       <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
@@ -1658,7 +1669,7 @@ document.getElementById('pedPrint').addEventListener('click', () => {
   if(!document.getElementById('pedProveedor').value){ alert("Selecciona un proveedor antes de generar el pedido."); return; }
   const numeroActual = document.getElementById('pedNumero').value;
   if(!numeroActual || numeroActual.indexOf("???") !== -1 || numeroActual.indexOf("...") !== -1){
-    alert("Todavía no se ha calculado el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
+    alert("Todavía no se ha calculated el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
     return;
   }
   pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
