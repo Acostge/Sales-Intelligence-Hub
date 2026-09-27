@@ -1130,7 +1130,7 @@ function buildProviderPanel(){
 function buildInventarioSelectors(){
   const provSel = document.getElementById('invProveedor');
   provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
-  document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES');
+  document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function renderInventario(){
