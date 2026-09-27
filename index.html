@@ -348,8 +348,8 @@
     @page { margin: 12mm; }
     html, body, main { background: #ffffff !important; background-color: #ffffff !important; }
     body * { visibility: hidden; }
-    .inv-sheet, .inv-sheet * { visibility: visible; }
-    .inv-sheet {
+    .inv-sheet, .inv-sheet *, .ped-sheet, .ped-sheet * { visibility: visible; }
+    .inv-sheet, .ped-sheet {
       position: absolute; top: 0; left: 0; width: 100%;
       border: none !important; padding: 0 !important; border-radius: 0 !important;
       box-shadow: none !important; background: #ffffff !important;
@@ -359,6 +359,55 @@
     thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
   }
+
+  /* Vista Pedidos */
+  .ped-controls{
+    display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
+  }
+  .ped-form{
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:20px;margin-bottom:16px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+  }
+  .ped-form .field-wide{grid-column:span 2;}
+  .ped-lineas-wrap{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .ped-lineas-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .ped-lineas-table th{background:var(--sky-soft);color:var(--navy);padding:7px 8px;text-align:left;font-size:11.5px;text-transform:uppercase;}
+  .ped-lineas-table td{padding:5px 6px;border-bottom:1px solid var(--gray-line);}
+  .ped-lineas-table input,.ped-lineas-table select{width:100%;border:1px solid var(--gray-line);border-radius:6px;padding:5px 6px;font-size:12px;}
+  .ped-lineas-table td.num{text-align:right;white-space:nowrap;}
+  .ped-rm{background:none;border:none;color:#B23A48;font-size:15px;cursor:pointer;}
+  .ped-total-row{display:flex;justify-content:flex-end;gap:14px;align-items:center;margin-top:10px;font-size:15px;font-weight:700;color:var(--navy);}
+
+  .ped-sheet{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:28px;color:#111;font-size:12px;}
+  .ped-sheet.empresa-artrogen{ --emp-bar:#5C2A63; --emp-text:#5C2A63; }
+  .ped-sheet.empresa-piemca{ --emp-bar:#0B3B5C; --emp-text:#0B3B5C; }
+  .ped-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--emp-bar);padding-bottom:10px;margin-bottom:6px;}
+  .ped-top-left img{height:60px;display:block;margin-bottom:6px;}
+  .ped-top-left .ped-dir{font-size:10.5px;font-style:italic;line-height:1.4;}
+  .ped-top-right{text-align:right;}
+  .ped-top-right h2{margin:0;color:var(--emp-text);font-size:20px;letter-spacing:.5px;}
+  .ped-top-right h3{margin:0 0 8px;color:var(--emp-text);font-size:12px;font-weight:700;}
+  .ped-meta-tbl{font-size:11.5px;}
+  .ped-meta-tbl td{padding:1px 4px;}
+  .ped-meta-tbl .ped-no{color:var(--emp-bar);font-weight:800;}
+  .ped-bar{background:var(--emp-bar);color:#fff;display:flex;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:8px;}
+  .ped-bar div{flex:1;padding:6px 10px;}
+  .ped-parties{display:flex;border:1px solid #e0e0e0;border-top:none;font-size:11px;line-height:1.5;margin-bottom:10px;}
+  .ped-parties div{flex:1;padding:8px 10px;}
+  .ped-parties div + div{border-left:1px solid #e0e0e0;}
+  .ped-print-table{width:100%;border-collapse:collapse;font-size:10.5px;}
+  .ped-print-table th{background:#eee;border:1px solid #ccc;padding:4px 6px;text-align:center;}
+  .ped-print-table td{border:1px solid #ccc;padding:3px 6px;height:16px;}
+  .ped-print-table td.num{text-align:right;}
+  .ped-print-total{display:flex;justify-content:flex-end;margin-top:0;}
+  .ped-print-total table{border-collapse:collapse;font-size:12px;font-weight:700;}
+  .ped-print-total td{border:1px solid #ccc;padding:5px 10px;}
+  .ped-print-total td.tot-val{background:#e6e6e6;}
+  .ped-footer{margin-top:24px;font-size:11px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .ped-footer .ped-obs{max-width:60%;}
+  .ped-footer .ped-firma{text-align:center;}
+  .ped-footer .ped-firma img{height:50px;display:block;margin:0 auto 4px;}
 
   /* Pantalla de bloqueo */
   #deviceBlock{
@@ -392,6 +441,7 @@
     <div class="tab active" data-view="TABLA">Tabla</div>
     <div class="tab" data-view="kpi">DASHBOARD</div>
     <div class="tab" data-view="inventario">INVENTARIO</div>
+    <div class="tab" data-view="pedidos">PEDIDOS</div>
   </div>
 
   <div class="toolbar">
@@ -585,11 +635,163 @@
       </table>
     </div>
   </div>
+
+  <!-- VISTA PEDIDOS -->
+  <div id="viewPedidos" class="hidden">
+    <div class="ped-controls no-print">
+      <div class="field">
+        <label>Empresa</label>
+        <select id="pedEmpresa">
+          <option value="PIEMCA">PIEMCA</option>
+          <option value="ARTROGEN">ARTROGEN</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>No. de pedido (próximo)</label>
+        <input type="text" id="pedNumero" readonly style="font-weight:700;">
+      </div>
+      <button class="btn btn-solid" id="pedRefreshNum">🔄 Actualizar N°</button>
+      <button class="btn btn-solid" id="pedPrint">🖨️ Generar / Imprimir Pedido</button>
+    </div>
+
+    <div class="ped-form no-print">
+      <div class="field">
+        <label>Proveedor</label>
+        <select id="pedProveedor"><option value="">Selecciona...</option></select>
+      </div>
+      <div class="field field-wide">
+        <label>Dirección proveedor</label>
+        <input type="text" id="pedProvDireccion">
+      </div>
+      <div class="field">
+        <label>Teléfono / Fax</label>
+        <input type="text" id="pedProvTelefono">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="pedProvEmail">
+      </div>
+      <div class="field">
+        <label>Contacto</label>
+        <input type="text" id="pedContacto">
+      </div>
+      <div class="field">
+        <label>Autorizado por</label>
+        <input type="text" id="pedAutorizado">
+      </div>
+      <div class="field field-wide">
+        <label>Observaciones</label>
+        <input type="text" id="pedObservaciones" value="Quedamos a la espera de la Proforma para su aprobación y despacho.">
+      </div>
+    </div>
+
+    <div class="ped-lineas-wrap no-print">
+      <table class="ped-lineas-table">
+        <thead>
+          <tr>
+            <th style="width:16%;">Código</th>
+            <th>Descripción</th>
+            <th style="width:8%;">U/M</th>
+            <th style="width:8%;">Cant.</th>
+            <th style="width:10%;">Precio</th>
+            <th style="width:8%;">%Dto.</th>
+            <th style="width:10%;">Total</th>
+            <th style="width:4%;"></th>
+          </tr>
+        </thead>
+        <tbody id="pedLineasBody"></tbody>
+      </table>
+      <datalist id="pedCodigos"></datalist>
+      <button class="btn-solid" id="pedAddLinea" style="margin-top:10px;">+ Agregar línea</button>
+      <div class="ped-total-row">TOTAL: <span id="pedTotalOut">0,00</span></div>
+    </div>
+
+    <div class="ped-sheet" id="pedSheet">
+      <div class="ped-top">
+        <div class="ped-top-left">
+          <img id="pedLogoOut" src="logo-piemca.png" alt="logo">
+          <div class="ped-dir" id="pedDirEmisorOut"></div>
+        </div>
+        <div class="ped-top-right">
+          <h2>ORDEN DE COMPRA</h2>
+          <h3>PURCHASE ORDER</h3>
+          <table class="ped-meta-tbl" align="right">
+            <tr><td><strong>Fecha:</strong></td><td id="pedFechaOut"></td></tr>
+            <tr><td><strong>No.</strong></td><td class="ped-no" id="pedNumeroOut"></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="ped-bar"><div>PROVEEDOR / PROVIDER</div><div>DIRECCIÓN DE ENTREGA / DELIVERY ADDRESS</div></div>
+      <div class="ped-parties">
+        <div>
+          <strong id="pedProvNombreOut"></strong><br>
+          <span id="pedProvDireccionOut"></span><br>
+          <span id="pedProvTelefonoOut"></span><br>
+          <span id="pedProvEmailOut"></span>
+        </div>
+        <div id="pedDirEntregaOut"></div>
+      </div>
+      <table class="ped-print-table">
+        <thead>
+          <tr>
+            <th style="width:12%;">Código / Code</th>
+            <th>Descripción / Description</th>
+            <th style="width:7%;">U/M</th>
+            <th style="width:8%;">Cant. / QTY</th>
+            <th style="width:10%;">Unit Price</th>
+            <th style="width:7%;">%Dto.</th>
+            <th style="width:10%;">Total</th>
+          </tr>
+        </thead>
+        <tbody id="pedPrintBody"></tbody>
+      </table>
+      <div class="ped-print-total">
+        <table><tr><td id="pedSimboloOut">$</td><td class="tot-val" id="pedPrintTotalOut">0,00</td></tr></table>
+      </div>
+      <div class="ped-footer">
+        <div>
+          <div><strong>Contacto:</strong> <span id="pedContactoOut"></span></div>
+          <div><strong>Autorizado por:</strong> <span id="pedAutorizadoOut"></span></div>
+          <div class="ped-obs" style="margin-top:8px;"><strong>Observaciones:</strong><br><span id="pedObservacionesOut"></span></div>
+        </div>
+        <div class="ped-firma"><img id="pedLogoFirmaOut" src="logo-piemca.png" alt=""></div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
 /* ============ CONFIG ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
+
+// TODO: publica la pestaña "Proveedores" (Archivo > Compartir > Publicar en la web > esa pestaña > CSV)
+// y pega aquí el link que te da Google (cambia el gid, el resto de la URL es igual al de arriba).
+const PROVEEDORES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=1064159766&single=true&output=csv";
+
+// Mismo enlace /exec que ya usa la macro de Excel (Sincronizador Apps Script).
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTp_po4-RfWdqs45rBGb1wejmcnoBPmpLKknaKxj_tTcP_HIGqK_3oTEcvZe8IuVLySg/exec";
+const APPS_SCRIPT_SECRET = "*Ga1591*"; // la misma clave del Apps Script
+
+const EMPRESAS = {
+  PIEMCA: {
+    prefijo: "PIV",
+    logo: "logo-piemca.png",
+    direccionEmisor: "CR 21 con calle 24 Edif Drolara piso 1 of 3 Sector Centro,<br>Barquisimeto, Lara - Zona postal 3001.",
+    direccionEntrega: "PIEMCA<br>Avenida Principal de Los Chorros con 7ma. Avenida.<br>Quinta Villa García Nro. 57-A. Urb.<br>Los Chorros. Municipio Sucre – Edo. Miranda.<br>Telf.: +58 414 5460188 / piemca@me.com",
+    claseColor: "empresa-piemca"
+  },
+  ARTROGEN: {
+    prefijo: "ARV",
+    logo: "logo-artrogen.png",
+    direccionEmisor: "Calle 5 Edif Residencias Avila Suite Piso 2 Apt 202 Urb<br>Terrazas Del Avila Caracas (Petare) Miranda Zona Postal 1073",
+    direccionEntrega: "ARTROGEN<br>Avenida Principal de Los Chorros con 7ma. Avenida.<br>Quinta Villa García Nro. 57-A. Urb.<br>Los Chorros. Municipio Sucre – Edo. Miranda.<br>Telf.: +58 414 5460188 / piemca@me.com",
+    claseColor: "empresa-artrogen"
+  }
+};
+
+let providerInfo = {};   // { "NOMBRE PROVEEDOR": {direccion, telefono, email, contacto} }
+let pedLineas = [];       // líneas del pedido actual
+let pedSeq = 1;           // consecutivo calculado (candidato, aún no confirmado)
 
 Chart.register(ChartDataLabels);
 
@@ -761,7 +963,13 @@ function processData(rows, fields){
   buildKpiSelectors();
   buildYearToggleBar();
   buildInventarioSelectors();
+  buildPedidosCodigos();
   renderTable();
+}
+
+function buildPedidosCodigos(){
+  const dl = document.getElementById('pedCodigos');
+  if(dl) dl.innerHTML = rawData.map(r=>`<option value="${r.codigo}">${r.descripcion}</option>`).join("");
 }
 
 function buildYearToggleBar(){
@@ -937,6 +1145,174 @@ function renderInventario(){
       <td class="inv-check"></td>
     </tr>
   `).join("");
+}
+
+/* ============ PROVEEDORES (direcciones para Pedidos) ============ */
+function loadProveedores(){
+  if(!PROVEEDORES_CSV_URL || PROVEEDORES_CSV_URL.indexOf("PEGA_AQUI") === 0){
+    return; // el usuario aún no publicó/pegó el link de la pestaña Proveedores
+  }
+  Papa.parse(PROVEEDORES_CSV_URL, {
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete: function(results){
+      providerInfo = {};
+      results.data.forEach(r => {
+        const nombre = (getRowValue(r,"PROVEEDOR") || "").trim();
+        if(!nombre) return;
+        providerInfo[nombre] = {
+          direccion: (getRowValue(r,"DIRECCION") || getRowValue(r,"DIRECCIÓN") || "").trim(),
+          telefono: (getRowValue(r,"TELEFONO") || getRowValue(r,"TELÉFONO") || getRowValue(r,"FAX") || "").trim(),
+          email: (getRowValue(r,"EMAIL") || getRowValue(r,"CORREO") || "").trim(),
+          contacto: (getRowValue(r,"CONTACTO PROVEEDOR") || getRowValue(r,"CONTACTO") || "").trim()
+        };
+      });
+      buildPedidoSelectors();
+    },
+    error: function(err){ console.error("No se pudo cargar Proveedores:", err); }
+  });
+}
+
+/* ============ PEDIDOS ============ */
+function buildPedidoSelectors(){
+  const sel = document.getElementById('pedProveedor');
+  sel.innerHTML = `<option value="">Selecciona...</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
+}
+
+function empresaActual(){
+  return EMPRESAS[document.getElementById('pedEmpresa').value];
+}
+
+function pedAddLinea(codigoInicial){
+  pedLineas.push({ codigo: codigoInicial || "", cantidad: 1, precio: null, dto: 0, simbolo: "$" });
+  renderPedLineas();
+}
+
+function renderPedLineas(){
+  const body = document.getElementById('pedLineasBody');
+  body.innerHTML = pedLineas.map((l,i) => {
+    const prod = rawData.find(r => r.codigo === l.codigo);
+    const desc = prod ? prod.descripcion : "";
+    return `
+    <tr data-i="${i}">
+      <td><input list="pedCodigos" class="ped-codigo" value="${l.codigo}"></td>
+      <td class="ped-desc">${desc}</td>
+      <td><input type="text" class="ped-um" value="Unid."></td>
+      <td><input type="number" min="0" step="1" class="ped-cant" value="${l.cantidad}"></td>
+      <td><input type="number" min="0" step="0.01" class="ped-precio" value="${l.precio ?? ''}"></td>
+      <td><input type="number" min="0" step="0.01" class="ped-dto" value="${l.dto}"></td>
+      <td class="num ped-linea-total">0,00</td>
+      <td><button type="button" class="ped-rm">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  body.querySelectorAll('tr').forEach(tr => {
+    const i = +tr.dataset.i;
+    tr.querySelector('.ped-codigo').addEventListener('change', e => {
+      const prod = rawData.find(r => r.codigo === e.target.value.trim());
+      pedLineas[i].codigo = e.target.value.trim();
+      if(prod){
+        pedLineas[i].precio = prod.precio;
+        pedLineas[i].simbolo = prod.simbolo;
+      }
+      renderPedLineas();
+    });
+    tr.querySelector('.ped-cant').addEventListener('input', e => { pedLineas[i].cantidad = parseFloat(e.target.value)||0; updatePedTotales(); });
+    tr.querySelector('.ped-precio').addEventListener('input', e => { pedLineas[i].precio = parseFloat(e.target.value)||0; updatePedTotales(); });
+    tr.querySelector('.ped-dto').addEventListener('input', e => { pedLineas[i].dto = parseFloat(e.target.value)||0; updatePedTotales(); });
+    tr.querySelector('.ped-rm').addEventListener('click', () => { pedLineas.splice(i,1); renderPedLineas(); });
+  });
+  updatePedTotales();
+}
+
+function lineaTotal(l){
+  const precio = l.precio || 0;
+  const bruto = precio * (l.cantidad || 0);
+  return bruto - (bruto * (l.dto||0) / 100);
+}
+
+function updatePedTotales(){
+  let total = 0;
+  let simbolo = "$";
+  document.querySelectorAll('#pedLineasBody tr').forEach((tr,i) => {
+    const l = pedLineas[i];
+    const t = lineaTotal(l);
+    total += t;
+    if(l.simbolo) simbolo = l.simbolo;
+    const cell = tr.querySelector('.ped-linea-total');
+    if(cell) cell.textContent = t.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  });
+  document.getElementById('pedTotalOut').textContent = `${simbolo} ${total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  renderPedSheet(total, simbolo);
+}
+
+function renderPedSheet(total, simbolo){
+  const emp = empresaActual();
+  const sheet = document.getElementById('pedSheet');
+  sheet.className = "ped-sheet " + emp.claseColor;
+
+  document.getElementById('pedLogoOut').src = emp.logo;
+  document.getElementById('pedLogoFirmaOut').src = emp.logo;
+  document.getElementById('pedDirEmisorOut').innerHTML = emp.direccionEmisor;
+  document.getElementById('pedDirEntregaOut').innerHTML = emp.direccionEntrega;
+  document.getElementById('pedFechaOut').textContent = new Date().toLocaleDateString('es-ES');
+  document.getElementById('pedNumeroOut').textContent = document.getElementById('pedNumero').value;
+
+  const provNombre = document.getElementById('pedProveedor').value;
+  document.getElementById('pedProvNombreOut').textContent = provNombre;
+  document.getElementById('pedProvDireccionOut').textContent = document.getElementById('pedProvDireccion').value;
+  document.getElementById('pedProvTelefonoOut').textContent = document.getElementById('pedProvTelefono').value;
+  document.getElementById('pedProvEmailOut').textContent = document.getElementById('pedProvEmail').value;
+  document.getElementById('pedContactoOut').textContent = document.getElementById('pedContacto').value;
+  document.getElementById('pedAutorizadoOut').textContent = document.getElementById('pedAutorizado').value;
+  document.getElementById('pedObservacionesOut').textContent = document.getElementById('pedObservaciones').value;
+
+  document.getElementById('pedSimboloOut').textContent = simbolo;
+  document.getElementById('pedPrintTotalOut').textContent = total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Filas reales + relleno vacío hasta un mínimo de 30 filas, como en tus PDFs de ejemplo
+  const filas = pedLineas.map(l => {
+    const prod = rawData.find(r => r.codigo === l.codigo);
+    return `<tr>
+      <td>${l.codigo}</td><td style="text-align:left;">${prod?prod.descripcion:""}</td>
+      <td>Unid.</td><td class="num">${l.cantidad||""}</td>
+      <td class="num">${(l.precio||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="num">${l.dto||""}</td>
+      <td class="num">${lineaTotal(l).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>`;
+  });
+  const relleno = Math.max(0, 30 - pedLineas.length);
+  for(let i=0;i<relleno;i++){
+    filas.push(`<tr><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">-</td></tr>`);
+  }
+  document.getElementById('pedPrintBody').innerHTML = filas.join("");
+}
+
+/* --- Numeración automática vía Apps Script (Contadores) --- */
+function pedProximoNumero(){
+  const emp = empresaActual();
+  const anio = new Date().getFullYear().toString().slice(-2);
+  const url = `${APPS_SCRIPT_URL}?action=contadores`;
+  fetch(url).then(r=>r.json()).then(data => {
+    const fila = (data.contadores||[]).find(c => c.prefijo === emp.prefijo && c.anio === anio);
+    pedSeq = fila ? (parseInt(fila.ultimo,10) + 1) : 1;
+    document.getElementById('pedNumero').value = `${emp.prefijo}${anio}-${String(pedSeq).padStart(3,'0')}`;
+    updatePedTotales();
+  }).catch(err => {
+    console.error("No se pudo leer el contador de pedidos:", err);
+    document.getElementById('pedNumero').value = `${emp.prefijo}${anio}-???`;
+  });
+}
+
+function pedConfirmarNumero(){
+  const emp = empresaActual();
+  const anio = new Date().getFullYear().toString().slice(-2);
+  fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    headers: {"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({ secret: APPS_SCRIPT_SECRET, action: "incrementarContador", prefijo: emp.prefijo, anio: anio })
+  }).catch(err => console.error("No se pudo confirmar el número de pedido:", err));
 }
 
 /* ============ SELECTORES KPI ============ */
@@ -1196,6 +1572,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewTabla').classList.toggle('hidden', view !== 'tabla');
     document.getElementById('viewKpi').classList.toggle('hidden', view !== 'kpi');
     document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
+    document.getElementById('viewPedidos').classList.toggle('hidden', view !== 'pedidos');
 
     ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
       document.getElementById(id).classList.toggle('hidden', view !== 'tabla');
@@ -1204,6 +1581,10 @@ document.querySelectorAll('.tab').forEach(tab => {
 
     if(view === 'kpi') renderChart();
     if(view === 'inventario') renderInventario();
+    if(view === 'pedidos'){
+      pedProximoNumero();
+      if(!pedLineas.length) pedAddLinea();
+    }
   };
 });
 
@@ -1211,6 +1592,27 @@ document.getElementById('invProveedor').addEventListener('change', renderInventa
 document.getElementById('invAlmacen').addEventListener('input', renderInventario);
 document.getElementById('invResponsable').addEventListener('input', renderInventario);
 document.getElementById('invPrint').addEventListener('click', () => window.print());
+
+/* ---- Eventos vista Pedidos ---- */
+document.getElementById('pedEmpresa').addEventListener('change', () => { pedProximoNumero(); });
+document.getElementById('pedRefreshNum').addEventListener('click', pedProximoNumero);
+document.getElementById('pedAddLinea').addEventListener('click', () => pedAddLinea());
+document.getElementById('pedProveedor').addEventListener('change', e => {
+  const info = providerInfo[e.target.value] || {};
+  document.getElementById('pedProvDireccion').value = info.direccion || "";
+  document.getElementById('pedProvTelefono').value = info.telefono || "";
+  document.getElementById('pedProvEmail').value = info.email || "";
+  document.getElementById('pedContacto').value = info.contacto || "";
+  updatePedTotales();
+});
+['pedProvDireccion','pedProvTelefono','pedProvEmail','pedContacto','pedAutorizado','pedObservaciones']
+  .forEach(id => document.getElementById(id).addEventListener('input', updatePedTotales));
+document.getElementById('pedPrint').addEventListener('click', () => {
+  if(!pedLineas.length){ alert("Agrega al menos una línea de producto antes de generar el pedido."); return; }
+  pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
+  window.print();
+  setTimeout(pedProximoNumero, 800); // recalcula el próximo número disponible para el siguiente pedido
+});
 
 document.getElementById('kpiProveedor').addEventListener('change', () => {
   buildKpiChecklist();
@@ -1288,7 +1690,8 @@ function checkDeviceBlock(){
   document.getElementById('deviceBlock').classList.toggle('hidden', !blocked);
   if(!blocked && !appStarted){
     appStarted = true;
-    loadData(); 
+    loadData();
+    loadProveedores();
   }
 }
 window.addEventListener('resize', checkDeviceBlock);
