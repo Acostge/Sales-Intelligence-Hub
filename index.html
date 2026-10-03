@@ -264,7 +264,7 @@
   }
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
-  .field input,.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
+  .field input:not([type=checkbox]),.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
   .search-field{position:relative;}
   .search-field input[type=text]{width:100%;padding-right:28px;margin-bottom:0;}
   .search-clear{
@@ -745,7 +745,7 @@
           <button type="button" class="inv-prov-multi-btn" id="invProvMultiBtn">Todos</button>
           <div class="inv-prov-multi-panel" id="invProvMultiPanel">
             <input type="text" id="invProvSearch" placeholder="Buscar proveedor...">
-            <div class="prov-list" id="invProvList"></div>
+            <div class="prov-list kpi-checklist" id="invProvList"></div>
             <div class="panel-actions">
               <button class="link-btn" id="invProvAll">Seleccionar todos</button>
               <button class="link-btn" id="invProvNone">Limpiar</button>
