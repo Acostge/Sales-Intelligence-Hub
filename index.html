@@ -109,29 +109,13 @@
   }
   .panel.open{display:block;}
   .panel.panel-wide{width:340px;}
-  #panelCobertura{top:132px;}
+  #panelAnios,#panelProv,#panelBuscar,#panelCobertura{top:132px;}
   .panel h3{margin:0 0 10px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;}
   .panel input[type=text]{
     width:100%;padding:8px 10px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
   }
   .prov-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
   .prov-list label{font-size:13px;display:flex;gap:8px;align-items:center;cursor:pointer;}
-
-  .inv-prov-multi{position:relative;}
-  .inv-prov-multi-btn{
-    width:200px;height:36px;padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;
-    font-size:13px;text-align:left;background:var(--white);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .inv-prov-multi-btn:hover{border-color:var(--sky);}
-  .inv-prov-multi-panel{
-    position:absolute;top:42px;left:0;z-index:60;
-    background:var(--white);border:1px solid var(--gray-line);border-radius:10px;
-    box-shadow:0 10px 30px rgba(8,43,68,.25);padding:14px;width:280px;display:none;
-  }
-  .inv-prov-multi-panel.open{display:block;}
-  .inv-prov-multi-panel input[type=text]{
-    width:100%;padding:8px 10px;border:1px solid var(--gray-line);border-radius:6px;font-size:13px;margin-bottom:10px;
-  }
   .panel-actions{display:flex;justify-content:space-between;margin-top:10px;}
   .link-btn{background:none;border:none;color:var(--sky);font-size:12px;cursor:pointer;font-weight:600;}
   .coverage-row{display:flex;align-items:center;gap:10px;}
@@ -149,6 +133,7 @@
     font-size:13.5px;color:var(--gray);margin-bottom:12px;flex-wrap:wrap;gap:8px;
   }
   .section-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-left:11px;}
+  .status-bar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   
   /* ESTILOS DE BARRA INFERIOR DE TABLA Y BOTON DE REFRESCAR */
   .table-bottom-bar{
@@ -264,7 +249,7 @@
   }
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
-  .field input:not([type=checkbox]),.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
+  .field input,.field select{padding:8px 10px;border:1px solid var(--gray-line);border-radius:7px;font-size:13px;width:200px;height:36px;box-sizing:border-box;}
   .search-field{position:relative;}
   .search-field input[type=text]{width:100%;padding-right:28px;margin-bottom:0;}
   .search-clear{
@@ -569,12 +554,6 @@
     <div class="tab" data-view="inventario">INVENTARIO</div>
     <div class="tab" data-view="pedidos">PEDIDOS</div>
   </div>
-
-  <div class="toolbar">
-    <button class="btn" id="btnAnios">🗓️ AÑOS</button>
-    <button class="btn" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
-    <button class="btn" id="btnBuscar">🔍 BUSCAR</button>
-  </div>
 </header>
 
 <!-- Panels -->
@@ -632,7 +611,12 @@
         <span class="section-title">GESTIÓN DE VENTAS</span>
         <span id="statusText">Cargando Historial de Ventas...</span>
       </div>
-      <button class="btn btn-solid" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
+      <div class="status-bar-actions">
+        <button class="btn btn-solid" id="btnAnios">🗓️ AÑOS</button>
+        <button class="btn btn-solid" id="btnProv">🏷️ LISTA DE PROVEEDORES</button>
+        <button class="btn btn-solid" id="btnBuscar">🔍 BUSCAR</button>
+        <button class="btn btn-solid" id="btnCobertura">📦 COBERTURA <span class="cov-badge"><span id="covLabel">3</span> MESES</span></button>
+      </div>
     </div>
     
     <div class="table-wrap">
@@ -740,18 +724,8 @@
   <div id="viewInventario" class="hidden">
     <div class="inv-controls no-print">
       <div class="field">
-        <label>Proveedor(es)</label>
-        <div class="inv-prov-multi" id="invProvMulti">
-          <button type="button" class="inv-prov-multi-btn" id="invProvMultiBtn">Todos</button>
-          <div class="inv-prov-multi-panel" id="invProvMultiPanel">
-            <input type="text" id="invProvSearch" placeholder="Buscar proveedor...">
-            <div class="prov-list kpi-checklist" id="invProvList"></div>
-            <div class="panel-actions">
-              <button class="link-btn" id="invProvAll">Seleccionar todos</button>
-              <button class="link-btn" id="invProvNone">Limpiar</button>
-            </div>
-          </div>
-        </div>
+        <label>Proveedor</label>
+        <select id="invProveedor"><option value="">Todos</option></select>
       </div>
       <div class="field">
         <label>Almacén</label>
@@ -1293,40 +1267,15 @@ function buildProviderPanel(){
 }
 
 /* ============ INVENTARIO ============ */
-let invSelectedProviders = new Set(); // vacío = Todos
-
 function buildInventarioSelectors(){
-  const list = document.getElementById('invProvList');
-  list.innerHTML = providers.map(p => `
-    <label><input type="checkbox" value="${p}" class="inv-prov-check" ${invSelectedProviders.has(p) ? "checked" : ""}> ${p}</label>
-  `).join("");
-  list.querySelectorAll('.inv-prov-check').forEach(cb => {
-    cb.addEventListener('change', () => {
-      if(cb.checked) invSelectedProviders.add(cb.value);
-      else invSelectedProviders.delete(cb.value);
-      updateInvProvButtonLabel();
-      renderInventario();
-    });
-  });
-  updateInvProvButtonLabel();
+  const provSel = document.getElementById('invProveedor');
+  provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
   document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function updateInvProvButtonLabel(){
-  const btn = document.getElementById('invProvMultiBtn');
-  if(!invSelectedProviders.size){
-    btn.textContent = "Todos";
-  } else if(invSelectedProviders.size === 1){
-    btn.textContent = [...invSelectedProviders][0];
-  } else {
-    btn.textContent = `${invSelectedProviders.size} proveedores seleccionados`;
-  }
-}
-
 function renderInventario(){
-  const rows = invSelectedProviders.size
-    ? rawData.filter(r => invSelectedProviders.has(r.proveedor))
-    : rawData;
+  const provFilter = document.getElementById('invProveedor').value;
+  const rows = provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
 
   document.getElementById('invAlmacenOut').textContent = document.getElementById('invAlmacen').value;
   document.getElementById('invResponsableOut').textContent = document.getElementById('invResponsable').value;
@@ -2025,16 +1974,24 @@ function renderChart(){
 }
 
 /* ============ EVENTOS UI ============ */
-function togglePanel(id){
+function togglePanel(id, btn){
+  const wasOpen = document.getElementById(id).classList.contains('open');
   ['panelAnios','panelProv','panelBuscar','panelCobertura'].forEach(p => {
-    document.getElementById(p).classList.toggle('open', p === id ? !document.getElementById(id).classList.contains('open') : false);
+    document.getElementById(p).classList.toggle('open', p === id ? !wasOpen : false);
   });
+  if(!wasOpen && btn){
+    // Posiciona el panel justo debajo del botón que lo abrió, sin depender de un alto fijo de header
+    const panel = document.getElementById(id);
+    const rect = btn.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 8) + "px";
+    panel.style.right = (window.innerWidth - rect.right) + "px";
+  }
 }
 
-document.getElementById('btnAnios').onclick = () => togglePanel('panelAnios');
-document.getElementById('btnProv').onclick = () => togglePanel('panelProv');
-document.getElementById('btnBuscar').onclick = () => togglePanel('panelBuscar');
-document.getElementById('btnCobertura').onclick = () => togglePanel('panelCobertura');
+document.getElementById('btnAnios').onclick = (e) => togglePanel('panelAnios', e.currentTarget);
+document.getElementById('btnProv').onclick = (e) => togglePanel('panelProv', e.currentTarget);
+document.getElementById('btnBuscar').onclick = (e) => togglePanel('panelBuscar', e.currentTarget);
+document.getElementById('btnCobertura').onclick = (e) => togglePanel('panelCobertura', e.currentTarget);
 
 document.getElementById('anioAll').onclick = () => {
   visibleYearCols = new Set(activeYearCols);
@@ -2094,9 +2051,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('viewInventario').classList.toggle('hidden', view !== 'inventario');
     document.getElementById('viewPedidos').classList.toggle('hidden', view !== 'pedidos');
 
-    ['btnAnios','btnProv','btnBuscar','btnCobertura'].forEach(id => {
-      document.getElementById(id).classList.toggle('hidden', view !== 'tabla');
-    });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
 
     if(view === 'kpi'){ renderChart(); renderDashboardRibbons(); }
@@ -2108,38 +2062,9 @@ document.querySelectorAll('.tab').forEach(tab => {
   };
 });
 
+document.getElementById('invProveedor').addEventListener('change', renderInventario);
 document.getElementById('invAlmacen').addEventListener('input', renderInventario);
 document.getElementById('invResponsable').addEventListener('input', renderInventario);
-
-/* ---- Dropdown multi-selección de proveedores en Inventario ---- */
-document.getElementById('invProvMultiBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('invProvMultiPanel').classList.toggle('open');
-});
-document.addEventListener('click', (e) => {
-  const multi = document.getElementById('invProvMulti');
-  if(multi && !multi.contains(e.target)){
-    document.getElementById('invProvMultiPanel').classList.remove('open');
-  }
-});
-document.getElementById('invProvSearch').addEventListener('input', e => {
-  const t = e.target.value.toLowerCase();
-  document.getElementById('invProvList').querySelectorAll('label').forEach(l => {
-    l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none";
-  });
-});
-document.getElementById('invProvAll').addEventListener('click', () => {
-  invSelectedProviders = new Set(providers);
-  document.getElementById('invProvList').querySelectorAll('.inv-prov-check').forEach(cb => cb.checked = true);
-  updateInvProvButtonLabel();
-  renderInventario();
-});
-document.getElementById('invProvNone').addEventListener('click', () => {
-  invSelectedProviders.clear();
-  document.getElementById('invProvList').querySelectorAll('.inv-prov-check').forEach(cb => cb.checked = false);
-  updateInvProvButtonLabel();
-  renderInventario();
-});
 document.getElementById('invPrint').addEventListener('click', () => window.print());
 
 /* ---- Eventos vista Pedidos ---- */
