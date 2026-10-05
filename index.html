@@ -17,6 +17,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --navy:#0B3B5C;
@@ -364,6 +365,60 @@
   .rv-pending ol{display:inline-block;text-align:left;margin:10px 0 16px;padding-left:20px;font-size:13px;line-height:1.7;color:var(--text);}
   .rv-pending code{background:var(--bg);border:1px solid var(--gray-line);border-radius:4px;padding:1px 5px;font-size:12px;}
   .rv-msg{padding:30px;text-align:center;color:var(--gray);font-size:13.5px;}
+
+  /* Biobrace: controles, gráficos, cuadro y reporte PDF */
+  .rv-controls{
+    background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:10px 16px;margin-bottom:10px;
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;
+  }
+  .rv-controls label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);}
+  .rv-controls select{
+    border:1px solid var(--gray-line);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;
+    font-weight:600;color:var(--navy);background:var(--white);min-height:38px;text-transform:none;letter-spacing:0;
+  }
+  .rv-spacer{flex:1 1 20px;}
+  .rv-asof{font-size:12px;color:var(--gray);align-self:center;}
+  .rv-btn{
+    background:var(--white);color:var(--navy);border:2px solid var(--navy);border-radius:8px;padding:8px 14px;min-height:38px;
+    font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;
+  }
+  .rv-btn:hover,.rv-btn:focus-visible{background:var(--sky-soft);outline:none;}
+  .rv-btn.solid{background:var(--navy);color:var(--white);}
+  .rv-btn.solid:hover,.rv-btn.solid:focus-visible{background:var(--sky);border-color:var(--sky);}
+  .rv-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;}
+  .rv-chart-box{position:relative;min-width:0;}
+  .rv-scroll{max-height:440px;overflow:auto;}
+  .rv-table th{position:sticky;top:0;z-index:1;}
+  .rv-table tfoot td{font-weight:800;color:var(--navy);border-top:2px solid var(--navy);background:var(--sky-soft) !important;}
+  .rv-table td.rv-l,.rv-table th.rv-l{text-align:left;}
+  #rvReport{display:none;}
+  #rvReport{font-family:"Segoe UI",Roboto,Arial,sans-serif;color:#1E2A32;}
+  .rvp-head{background:#0B3B5C;color:#fff;padding:14px 18px;border-radius:10px;display:flex;align-items:center;gap:16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rvp-head img{height:44px;background:#fff;border-radius:6px;padding:4px;}
+  .rvp-head h1{margin:0;font-size:20px;line-height:1.15;}
+  .rvp-head p{margin:2px 0 0;font-size:11px;opacity:.85;}
+  .rvp-sec{break-inside:avoid;page-break-inside:avoid;margin:14px 0 0;}
+  .rvp-sec h2{margin:0;font-size:14px;color:#0B3B5C;border-bottom:2px solid #3FA9D9;padding-bottom:3px;}
+  .rvp-sec .rvp-sub{margin:3px 0 8px;font-size:10.5px;color:#5B6B78;}
+  .rvp-kpis{display:flex;gap:8px;margin-bottom:8px;}
+  .rvp-kpi{flex:1 1 0;border:1px solid #DCE3E8;border-radius:8px;padding:5px 8px;}
+  .rvp-kpi b{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;color:#5B6B78;}
+  .rvp-kpi span{font-size:13px;font-weight:800;color:#0B3B5C;}
+  .rvp-charts{display:flex;gap:10px;margin-bottom:8px;}
+  .rvp-charts img{display:block;min-width:0;}
+  .rvp-sec table{border-collapse:collapse;width:100%;font-size:9px;}
+  .rvp-sec th{background:#0B3B5C;color:#fff;padding:4px 5px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rvp-sec td{padding:3px 5px;text-align:center;border-top:1px solid #DCE3E8;}
+  .rvp-sec .rv-l{text-align:left;}
+  .rvp-sec tfoot td{font-weight:800;border-top:2px solid #0B3B5C;}
+  .rvp-foot{margin-top:12px;font-size:9px;color:#5B6B78;text-align:center;}
+  @media print{
+    @page{size:A4;margin:12mm;}
+    body.rv-printing > *:not(#rvReport){display:none !important;}
+    body.rv-printing #rvReport{display:block !important;}
+    body.rv-printing #rvReport, body.rv-printing #rvReport *{visibility:visible !important;}
+    body.rv-printing{background:#fff;}
+  }
 
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
@@ -1009,20 +1064,19 @@ const APPS_SCRIPT_SECRET = "*Ga1591*"; // la misma clave del Apps Script
 // Mientras 'gid' esté vacío, la línea aparece como "pendiente de conectar".
 // 'opciones' = la cinta de gráficos de esa línea. Cada opción tiene su propia función 'render',
 // así cada cierre se desarrolla por separado (por ahora todas usan la vista general automática).
-const RV_EJEMPLO_BIOBRACE = [
-  ['Medida','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC','TOTAL'],
-  ['BIOBRACE 5 x 250 mm',3,3,8,6,12,6,7,11,9,'','','',65],
-  ['BIOBRACE 23 x 30 mm','',1,3,1,1,1,1,2,2,'','','',12],
-  ['BIOBRACE RC 23 x 25 mm','','','',1,'',2,1,2,'','','','',6],
-  ['BIOBRACE 40 x 60 mm','','','',1,'',1,1,1,'','','','',4]
-];
 const RV_EJEMPLO_LIPOGEMS = [
   ['Concepto','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC','TOTAL'],
   ['Ortho Kits vendidos',0,5,6,7,3,7,11,15,11,'','','',65]
 ];
 const RESUMEN_LINEAS = [
-  { id:'biobrace', nombre:'BIOBRACE', gid:'', ejemplo:RV_EJEMPLO_BIOBRACE,
-    opciones:[ { id:'general', label:'Vista general', render:rvRenderGeneral } ] },
+  { id:'biobrace', nombre:'BIOBRACE', gid:'1962243658',
+    opciones:[
+      { id:'cierre',    label:'Cierre del mes',    render:bioRender('cierre') },
+      { id:'modelos',   label:'Modelos del año',   render:bioRender('modelos') },
+      { id:'doctores',  label:'Doctores',          render:bioRender('doctores') },
+      { id:'genero',    label:'Género',            render:bioRender('genero') },
+      { id:'general',   label:'General (histórico)', render:bioRender('general') }
+    ] },
   { id:'lipogems', nombre:'LIPOGEMS', gid:'', ejemplo:RV_EJEMPLO_LIPOGEMS,
     opciones:[ { id:'general', label:'Vista general', render:rvRenderGeneral } ] }
 ];
@@ -1056,7 +1110,7 @@ function abrirResumenVentas(){
 function cerrarResumenVentas(){
   document.getElementById('rvOverlay').classList.add('hidden');
   document.body.style.overflow = '';
-  if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
+  rvDestruirGraficos();
 }
 
 function rvSeleccionarLinea(id){
@@ -1091,7 +1145,7 @@ function rvBuildOpciones(){
 function rvCargar(){
   const l = rvState.linea;
   const box = document.getElementById('rvContenido');
-  if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
+  rvDestruirGraficos();
 
   if(rvState.demo){ rvPintar(l.ejemplo, true); return; }
 
@@ -1242,6 +1296,491 @@ document.getElementById('rvOverlay').addEventListener('click', e => { if(e.targe
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && !document.getElementById('rvOverlay').classList.contains('hidden')) cerrarResumenVentas();
 });
+
+/* ============ BIOBRACE: cierre mensual desde la pestaña "Biobrace" ============ */
+// Columnas esperadas: Ítem, Año, Fecha, Doctor, Clínica, Tipo de Cirugía, Paciente, Género, Edad, Talla, Cant.
+// Modelo = columna Talla. El nombre del paciente no se muestra ni se exporta.
+const BV = {
+  ink:'#1E2A32', ink2:'#5B6B78', grid:'#E3E9ED', surface:'#FFFFFF', muted:'#C3CDD5',
+  cat:['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948']
+};
+const BV_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const BV_MES3 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const BV_FIJOS = { '5x250':0, '23x30':1, 'rc23x25':2, '40x60':3 }; // cada modelo conserva siempre su color
+const BV_FONT = '"Segoe UI",Roboto,Arial,sans-serif';
+
+function bvNorm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+function bvPad(n){ return String(n).padStart(2, '0'); }
+function bvFechaTxt(f){ return f ? bvPad(f.getDate()) + '/' + bvPad(f.getMonth() + 1) + '/' + f.getFullYear() : ''; }
+function bvFecha(v){
+  const s = String(v == null ? '' : v).trim();
+  let m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(m){ const y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return new Date(y, +m[2] - 1, +m[1]); }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+}
+function bvModelo(talla){
+  const raw = String(talla || '').trim();
+  const m = raw.replace(/\s+/g, '').toLowerCase().match(/^(rc)?(\d+)x(\d+)(mm)?$/);
+  if(!m) return { key: raw ? raw.toLowerCase() : 'sin talla', label: raw || 'Sin talla' };
+  return { key: (m[1] || '') + m[2] + 'x' + m[3], label: (m[1] ? 'RC ' : '') + m[2] + ' x ' + m[3] + ' mm' };
+}
+const bvSum = a => a.reduce((s, r) => s + r.cant, 0);
+const bvPctTxt = p => p === null || p === undefined ? '—' : (p >= 0 ? '+' : '') + p.toFixed(1).replace('.', ',') + '%';
+const bvShare = (a, b) => b ? (a / b * 100).toFixed(1).replace('.', ',') + '%' : '—';
+const bvVar = (a, b) => b ? (a - b) / b * 100 : null;
+
+function bvParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
+  const ix = { anio:col('ano'), fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), tipo:col('tipo'),
+               genero:col('genero'), edad:col('edad'), talla:col('talla'), cant:col('cant') };
+  const faltan = ['fecha', 'doctor', 'genero', 'talla', 'cant'].filter(k => ix[k] < 0);
+  if(faltan.length) return { error:'La pestaña Biobrace no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  rows.slice(1).forEach(r => {
+    const doctor = String(r[ix.doctor] || '').trim();
+    const talla = String(r[ix.talla] || '').trim();
+    if(!doctor && !talla) return;
+    const f = bvFecha(r[ix.fecha]);
+    let anio = ix.anio >= 0 ? parseInt(String(r[ix.anio]).replace(/\D/g, ''), 10) : NaN;
+    if(isNaN(anio) && f) anio = f.getFullYear();
+    if(isNaN(anio)) return;
+    const cant = rvNum(r[ix.cant]);
+    const g = bvNorm(r[ix.genero]).charAt(0);
+    regs.push({
+      anio, fecha:f, mes:f ? f.getMonth() : null, doctor:doctor || 'Sin doctor',
+      clinica:ix.clinica >= 0 ? String(r[ix.clinica] || '').trim() : '',
+      tipo:ix.tipo >= 0 ? String(r[ix.tipo] || '').trim() : '',
+      genero:g === 'f' ? 'F' : (g === 'm' ? 'M' : '?'),
+      edad:ix.edad >= 0 ? rvNum(r[ix.edad]) : null,
+      modelo:bvModelo(talla), cant:cant === null ? 1 : cant
+    });
+  });
+  const info = {}, keys = [];
+  regs.forEach(r => { if(!info[r.modelo.key]){ info[r.modelo.key] = r.modelo; keys.push(r.modelo.key); } });
+  const fijos = Object.keys(BV_FIJOS).filter(k => info[k]);
+  const otros = keys.filter(k => !(k in BV_FIJOS));
+  const modelos = fijos.concat(otros).map(k => ({
+    key:k, label:info[k].label,
+    color:BV.cat[(k in BV_FIJOS ? BV_FIJOS[k] : 4 + otros.indexOf(k)) % 8]
+  }));
+  const anios = [...new Set(regs.map(r => r.anio))].sort((a, b) => a - b);
+  const fechas = regs.filter(r => r.fecha).map(r => r.fecha.getTime());
+  return { regs, modelos, anios, ultima:fechas.length ? new Date(Math.max(...fechas)) : null };
+}
+
+/* ---------- opciones de gráfico (estilo común) ---------- */
+function bvOpts(o){
+  o = o || {};
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
+  return {
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:700, easing:'easeOutQuart' },
+    layout:{ padding:{ top:o.top !== undefined ? o.top : 22, right:8 } },
+    interaction:{ mode:'index', intersect:false },
+    plugins:{
+      legend:{ display:!!o.legend, position:'bottom', labels:{
+        usePointStyle:true, pointStyle:'circle', boxWidth:8, boxHeight:8, padding:16, color:BV.ink2,
+        font:{ family:BV_FONT, size:12 }, filter:it => !String(it.text).startsWith('__') } },
+      tooltip:{ backgroundColor:'#082B44', titleColor:'#FFFFFF', bodyColor:'#DCEFF9', footerColor:'#8CF0C4', padding:10,
+        cornerRadius:8, boxPadding:4, usePointStyle:true, titleFont:{ family:BV_FONT, weight:'700' }, bodyFont:{ family:BV_FONT },
+        filter:it => !String(it.dataset.label).startsWith('__'),
+        callbacks:o.stacked ? { footer:items => 'Total: ' + rvFmt(items.reduce((s, i) => s + (i.parsed.y || 0), 0)) } : {} },
+      datalabels:{ display:false }
+    },
+    scales:{
+      x:{ stacked:!!o.stacked, grid:{ display:false }, border:{ display:false }, ticks:tick },
+      y:{ stacked:!!o.stacked, beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false },
+          ticks:Object.assign({ precision:0, padding:8 }, tick) }
+    }
+  };
+}
+const bvLabelEnd = { display:true, anchor:'end', align:'end', color:BV.ink, font:{ family:BV_FONT, weight:'700', size:12 }, formatter:v => v ? rvFmt(v) : '' };
+
+function bvStackedCfg(labels, modelos, matriz){
+  const totales = labels.map((_, j) => matriz.reduce((s, fila) => s + (fila[j] || 0), 0));
+  return {
+    type:'bar',
+    data:{ labels, datasets:modelos.map((m, i) => ({
+      label:m.label, data:matriz[i], backgroundColor:m.color, borderColor:BV.surface, borderWidth:2,
+      borderRadius:3, borderSkipped:false, maxBarThickness:36, stack:'s', order:1
+    })).concat([{
+      type:'line', label:'__total', data:totales, borderWidth:0, pointRadius:0, pointHoverRadius:0, fill:false, order:0,
+      datalabels:Object.assign({}, bvLabelEnd, { align:'top', anchor:'end' })
+    }]) },
+    options:bvOpts({ legend:true, stacked:true })
+  };
+}
+
+const bvCenterPlugin = {
+  id:'bvCenter',
+  afterDraw(chart){
+    const o = chart.options.plugins.bvCenter;
+    if(!o) return;
+    const a = chart.chartArea, ctx = chart.ctx, cx = (a.left + a.right) / 2, cy = (a.top + a.bottom) / 2;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = BV.ink; ctx.font = '800 32px "Baloo 2",' + BV_FONT; ctx.fillText(o.valor, cx, cy - 8);
+    ctx.fillStyle = BV.ink2; ctx.font = '12px ' + BV_FONT; ctx.fillText(o.texto, cx, cy + 18);
+    ctx.restore();
+  }
+};
+
+/* ---------- las 5 vistas: devuelven título, KPIs, gráficos y cuadro ---------- */
+function bvPrev(anio, mes){ return mes === 0 ? { anio:anio - 1, mes:11 } : { anio, mes:mes - 1 }; }
+
+function bvVistaCierre(d, s){
+  const mod = d.modelos, prev = bvPrev(s.anio, s.mes);
+  const cur = d.regs.filter(r => r.anio === s.anio && r.mes === s.mes);
+  const pre = d.regs.filter(r => r.anio === prev.anio && r.mes === prev.mes);
+  const acu = d.regs.filter(r => r.anio === s.anio && r.mes !== null && r.mes <= s.mes);
+  const por = (regs, k) => bvSum(regs.filter(r => r.modelo.key === k));
+  const vC = mod.map(m => por(cur, m.key)), vP = mod.map(m => por(pre, m.key)), vA = mod.map(m => por(acu, m.key));
+  const tC = bvSum(cur), tP = bvSum(pre), tA = bvSum(acu);
+  const nC = BV_MESES[s.mes] + ' ' + s.anio, nP = BV_MESES[prev.mes] + ' ' + prev.anio;
+  const li = tC ? vC.indexOf(Math.max(...vC)) : -1;
+  const v = bvVar(tC, tP);
+  return {
+    id:'cierre', file:'Biobrace_cierre_' + s.anio + '-' + bvPad(s.mes + 1),
+    title:'Ventas por modelo · Cierre de ' + BV_MESES[s.mes] + ' ' + s.anio,
+    sub:nC + ' contra ' + nP + ', y acumulado del año',
+    kpis:[
+      { l:'Ventas de ' + BV_MESES[s.mes].toLowerCase(), v:rvFmt(tC) },
+      { l:'Mes anterior', v:rvFmt(tP) },
+      { l:'Variación', v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') },
+      { l:'Acumulado ' + s.anio, v:rvFmt(tA) },
+      { l:'Modelo líder del mes', v:li >= 0 ? mod[li].label + ' · ' + rvFmt(vC[li]) : '—' }
+    ],
+    charts:[{ h:320, cfg:{
+      type:'bar',
+      data:{ labels:mod.map(m => m.label), datasets:[
+        { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:vP, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:24 },
+        { label:BV_MES3[s.mes] + ' ' + s.anio, data:vC, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:24, datalabels:bvLabelEnd }
+      ] },
+      options:bvOpts({ legend:true })
+    } }],
+    table:{
+      head:['Modelo', nP, nC, 'Variación', 'Acumulado ' + s.anio],
+      rows:mod.map((m, i) => [m.label, vP[i], vC[i], vP[i] ? bvPctTxt(bvVar(vC[i], vP[i])) : (vC[i] ? 'nuevo' : '—'), vA[i]]),
+      foot:['Total', tP, tC, bvPctTxt(v), tA]
+    },
+    detail:cur
+  };
+}
+
+function bvVistaModelosAnio(d, s){
+  const mod = d.modelos, regs = d.regs.filter(r => r.anio === s.anio);
+  const matriz = mod.map(m => BV_MES3.map((_, j) => bvSum(regs.filter(r => r.modelo.key === m.key && r.mes === j))));
+  const totM = BV_MES3.map((_, j) => matriz.reduce((a, f) => a + f[j], 0));
+  const total = bvSum(regs), totMod = matriz.map(f => f.reduce((a, b) => a + b, 0));
+  const mejor = totM.indexOf(Math.max(...totM)), activos = totM.filter(x => x > 0).length || 1;
+  const ultM = totM.reduce((u, x, j) => x > 0 ? j : u, -1);
+  const ant = d.regs.filter(r => r.anio === s.anio - 1 && r.mes !== null && r.mes <= ultM);
+  const v = ant.length && ultM >= 0 ? bvVar(bvSum(regs.filter(r => r.mes !== null && r.mes <= ultM)), bvSum(ant)) : null;
+  const li = total ? totMod.indexOf(Math.max(...totMod)) : -1;
+  return {
+    id:'modelos', file:'Biobrace_modelos_' + s.anio,
+    title:'Ventas por modelo · Año ' + s.anio, sub:'Unidades por mes, apiladas por modelo',
+    kpis:[
+      { l:'Total ' + s.anio, v:rvFmt(total) },
+      { l:'Mejor mes', v:total ? BV_MESES[mejor] + ' · ' + rvFmt(totM[mejor]) : '—' },
+      { l:'Promedio mensual', v:rvFmt(total / activos) },
+      { l:'Modelo líder', v:li >= 0 ? mod[li].label + ' · ' + bvShare(totMod[li], total) : '—' },
+      { l:'Vs mismo tramo ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[{ h:340, cfg:bvStackedCfg(BV_MES3, mod, matriz) }],
+    table:{
+      head:['Modelo'].concat(BV_MES3, ['Total', '% del año']),
+      rows:mod.map((m, i) => [m.label].concat(matriz[i].map(x => x || ''), [totMod[i], bvShare(totMod[i], total)])),
+      foot:['Total'].concat(totM.map(x => x || ''), [total, total ? '100%' : '—'])
+    },
+    detail:regs
+  };
+}
+
+function bvVistaDoctores(d, s){
+  const regs = d.regs.filter(r => r.anio === s.anio), total = bvSum(regs), mapa = {};
+  regs.forEach(r => {
+    const x = mapa[r.doctor] || (mapa[r.doctor] = { nombre:r.doctor, n:0, cli:{} });
+    x.n += r.cant; if(r.clinica) x.cli[r.clinica] = (x.cli[r.clinica] || 0) + r.cant;
+  });
+  const lista = Object.values(mapa).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+  lista.forEach(x => { x.cl = Object.keys(x.cli).sort((a, b) => x.cli[b] - x.cli[a])[0] || '—'; });
+  const top = lista.slice(0, 10), top3 = bvSum(lista.slice(0, 3).map(x => ({ cant:x.n })));
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
+  const o = bvOpts({ top:4 });
+  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
+  o.layout.padding = { top:4, right:34 };
+  o.scales = {
+    x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
+    y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+  };
+  return {
+    id:'doctores', file:'Biobrace_doctores_' + s.anio,
+    title:'Ventas por doctor · Año ' + s.anio, sub:'Top 10 de ' + lista.length + ' doctores',
+    kpis:[
+      { l:'Total ' + s.anio, v:rvFmt(total) },
+      { l:'Doctores activos', v:rvFmt(lista.length) },
+      { l:'Doctor líder', v:lista.length ? lista[0].nombre + ' · ' + rvFmt(lista[0].n) : '—' },
+      { l:'Top 3 del año', v:bvShare(top3, total) },
+      { l:'Promedio por doctor', v:lista.length ? rvFmt(total / lista.length) : '—' }
+    ],
+    charts:[{ h:Math.max(200, 46 + top.length * 34), cfg:{
+      type:'bar',
+      data:{ labels:top.map(x => x.nombre), datasets:[{
+        label:'Ventas', data:top.map(x => x.n), backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'start',
+        maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) }] },
+      options:o
+    } }],
+    table:{
+      head:['#', 'Doctor', 'Clínica principal', 'Ventas', '% del año'], left:[1, 2],
+      rows:lista.map((x, i) => [i + 1, x.nombre, x.cl, x.n, bvShare(x.n, total)]),
+      foot:['', 'Total', '', total, total ? '100%' : '—']
+    },
+    detail:regs
+  };
+}
+
+function bvVistaGenero(d, s){
+  const mod = d.modelos, regs = d.regs.filter(r => r.anio === s.anio), total = bvSum(regs);
+  const g = k => regs.filter(r => r.genero === k);
+  const nF = bvSum(g('F')), nM = bvSum(g('M')), nX = bvSum(g('?'));
+  const edad = list => { const e = list.filter(r => r.edad !== null); return e.length ? bvSum(e.map(r => ({ cant:r.edad * r.cant }))) / bvSum(e) : null; };
+  const eF = edad(g('F')), eM = edad(g('M'));
+  const COL = { F:BV.cat[1], M:BV.cat[0], X:BV.muted };
+  const labels = ['Femenino · ' + rvFmt(nF) + ' (' + bvShare(nF, total) + ')', 'Masculino · ' + rvFmt(nM) + ' (' + bvShare(nM, total) + ')'];
+  const vals = [nF, nM], cols = [COL.F, COL.M];
+  if(nX){ labels.push('Sin dato · ' + rvFmt(nX)); vals.push(nX); cols.push(COL.X); }
+  const po = bvOpts({ legend:true, top:4 });
+  po.cutout = '66%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {};
+  po.layout.padding = { top:4, right:4 };
+  po.plugins.bvCenter = { valor:rvFmt(total), texto:'ventas ' + s.anio };
+  po.plugins.tooltip.callbacks = { label:c => ' ' + c.label.split(' · ')[0] + ': ' + rvFmt(c.parsed) };
+  const mF = mod.map(m => bvSum(g('F').filter(r => r.modelo.key === m.key)));
+  const mM = mod.map(m => bvSum(g('M').filter(r => r.modelo.key === m.key)));
+  const gcfg = {
+    type:'bar',
+    data:{ labels:mod.map(m => m.label), datasets:[
+      { label:'Femenino', data:mF, backgroundColor:COL.F, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:bvLabelEnd },
+      { label:'Masculino', data:mM, backgroundColor:COL.M, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:bvLabelEnd }
+    ] },
+    options:bvOpts({ legend:true })
+  };
+  return {
+    id:'genero', file:'Biobrace_genero_' + s.anio,
+    title:'Ventas por género · Año ' + s.anio, sub:'Distribución general y por modelo',
+    kpis:[
+      { l:'Total ' + s.anio, v:rvFmt(total) },
+      { l:'Femenino', v:rvFmt(nF) + ' · ' + bvShare(nF, total) },
+      { l:'Masculino', v:rvFmt(nM) + ' · ' + bvShare(nM, total) },
+      { l:'Edad promedio F', v:eF === null ? '—' : rvFmt(eF) + ' años' },
+      { l:'Edad promedio M', v:eM === null ? '—' : rvFmt(eM) + ' años' }
+    ],
+    charts:[
+      { h:320, half:true, cfg:{ type:'doughnut', plugins:[bvCenterPlugin],
+        data:{ labels, datasets:[{ data:vals, backgroundColor:cols, borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } },
+      { h:320, half:true, cfg:gcfg }
+    ],
+    table:{
+      head:['Modelo', 'Femenino', 'Masculino', 'Total', '% Femenino'],
+      rows:mod.map((m, i) => [m.label, mF[i], mM[i], mF[i] + mM[i], bvShare(mF[i], mF[i] + mM[i])]),
+      foot:['Total', nF, nM, nF + nM, bvShare(nF, nF + nM)]
+    },
+    detail:regs
+  };
+}
+
+function bvVistaGeneral(d, s){
+  const mod = d.modelos, an = d.anios, total = bvSum(d.regs);
+  const matriz = mod.map(m => an.map(a => bvSum(d.regs.filter(r => r.modelo.key === m.key && r.anio === a))));
+  const totA = an.map((_, j) => matriz.reduce((x, f) => x + f[j], 0));
+  const totMod = matriz.map(f => f.reduce((x, y) => x + y, 0));
+  const mejor = totA.indexOf(Math.max(...totA)), li = total ? totMod.indexOf(Math.max(...totMod)) : -1;
+  return {
+    id:'general', file:'Biobrace_modelos_historico',
+    title:'Ventas por modelo · Histórico general',
+    sub:'Desde ' + an[0] + ' hasta la última carga' + (d.ultima ? ' (' + bvFechaTxt(d.ultima) + ')' : ''),
+    kpis:[
+      { l:'Total histórico', v:rvFmt(total) },
+      { l:'Años con datos', v:an.length > 1 ? an[0] + ' – ' + an[an.length - 1] : String(an[0]) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(totA[mejor]) },
+      { l:'Modelo líder', v:li >= 0 ? mod[li].label + ' · ' + bvShare(totMod[li], total) : '—' },
+      { l:'Última carga', v:d.ultima ? bvFechaTxt(d.ultima) : '—' }
+    ],
+    charts:[{ h:340, cfg:bvStackedCfg(an.map(String), mod, matriz) }],
+    table:{
+      head:['Modelo'].concat(an.map(String), ['Total', '% del total']),
+      rows:mod.map((m, i) => [m.label].concat(matriz[i].map(x => x || ''), [totMod[i], bvShare(totMod[i], total)])),
+      foot:['Total'].concat(totA.map(x => x || ''), [total, total ? '100%' : '—'])
+    },
+    detail:d.regs
+  };
+}
+const BV_VISTAS = { cierre:bvVistaCierre, modelos:bvVistaModelosAnio, doctores:bvVistaDoctores, genero:bvVistaGenero, general:bvVistaGeneral };
+
+/* ---------- selección (año y mes) ---------- */
+function bvMesesConDatos(d, anio){
+  return [...new Set(d.regs.filter(r => r.anio === anio && r.mes !== null).map(r => r.mes))].sort((a, b) => a - b);
+}
+function bvSel(d){
+  const st = rvState.bio || (rvState.bio = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  const ms = bvMesesConDatos(d, st.anio);
+  if(!ms.length) st.mes = 0;
+  else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
+  return st;
+}
+
+/* ---------- pantalla ---------- */
+function bvTablaHtml(t){
+  const left = t.left || [0];
+  const cell = (c, i, tag) => `<${tag}${left.includes(i) ? ' class="rv-l"' : ''}>${typeof c === 'number' ? rvFmt(c) : rvEsc(c)}</${tag}>`;
+  return `<table class="rv-table"><thead><tr>${t.head.map((h, i) => cell(h, i, 'th')).join('')}</tr></thead>` +
+    `<tbody>${t.rows.map(r => '<tr>' + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>').join('')}</tbody>` +
+    (t.foot ? `<tfoot><tr>${t.foot.map((c, i) => cell(c, i, 'td')).join('')}</tr></tfoot>` : '') + '</table>';
+}
+function bvKpiHtml(kpis){
+  return '<div class="dash-ribbon1">' + kpis.map(k =>
+    `<div class="dash-kpi"><div class="dash-kpi-label">${rvEsc(k.l)}</div><div class="dash-kpi-value ${k.cls || ''}">${rvEsc(k.v)}</div></div>`).join('') + '</div>';
+}
+function rvDestruirGraficos(){
+  if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
+  (rvState.bioCharts || []).forEach(c => c.destroy());
+  rvState.bioCharts = [];
+}
+
+function bioRender(id){
+  return function(rows, el, linea){
+    const d = bvParse(rows);
+    if(d.error){ el.innerHTML = `<div class="rv-card rv-msg">${rvEsc(d.error)}</div>`; return; }
+    if(!d.regs.length){ el.innerHTML = '<div class="rv-card rv-msg">La pestaña Biobrace no tiene registros todavía.</div>'; return; }
+
+    const pintar = () => {
+      rvDestruirGraficos();
+      const s = bvSel(d), v = BV_VISTAS[id](d, s);
+      const aniosOpt = d.anios.slice().reverse().map(a => `<option value="${a}" ${a === s.anio ? 'selected' : ''}>${a}</option>`).join('');
+      const ms = bvMesesConDatos(d, s.anio), msList = ms.length ? ms : [0];
+      const mesesOpt = msList.map(m => `<option value="${m}" ${m === s.mes ? 'selected' : ''}>${BV_MESES[m]}</option>`).join('');
+      const esGeneral = id === 'general';
+      el.innerHTML = `
+        <div class="rv-controls">
+          ${esGeneral ? '' : `<label>Año fiscal<select id="bvAnio">${aniosOpt}</select></label>`}
+          ${id === 'cierre' ? `<label>Mes de cierre<select id="bvMes">${mesesOpt}</select></label>` : ''}
+          <span class="rv-spacer"></span>
+          <span class="rv-asof">${d.ultima ? 'Datos hasta ' + bvFechaTxt(d.ultima) : ''}</span>
+          <button type="button" class="rv-btn" id="bvRefresh" title="Vuelve a leer la pestaña de Sheets">↻ Actualizar</button>
+          <button type="button" class="rv-btn" id="bvExcel">⬇ Cuadro en Excel</button>
+          <button type="button" class="rv-btn solid" id="bvPdf">⬇ Cierre en PDF</button>
+        </div>
+        ${bvKpiHtml(v.kpis)}
+        <div class="rv-card">
+          <div class="rv-card-top"><div><h3>${rvEsc(v.title)}</h3><p>${rvEsc(v.sub)}</p></div></div>
+          <div class="rv-chart-grid">${v.charts.map((c, i) => `<div class="rv-chart-box" style="height:${c.h}px"><canvas id="bvCv${i}" role="img" aria-label="${rvEsc(v.title)}"></canvas></div>`).join('')}</div>
+        </div>
+        <div class="rv-card">
+          <div class="rv-card-top"><div><h3>Cuadro de datos</h3><p>Los números de arriba salen de esta tabla.</p></div></div>
+          <div class="rv-table-wrap rv-scroll">${bvTablaHtml(v.table)}</div>
+        </div>`;
+      v.charts.forEach((c, i) => rvState.bioCharts.push(new Chart(document.getElementById('bvCv' + i), c.cfg)));
+
+      const sa = document.getElementById('bvAnio'), sm = document.getElementById('bvMes');
+      if(sa) sa.onchange = () => { rvState.bio.anio = parseInt(sa.value, 10); pintar(); };
+      if(sm) sm.onchange = () => { rvState.bio.mes = parseInt(sm.value, 10); pintar(); };
+      document.getElementById('bvRefresh').onclick = () => { delete rvState.cache[linea.id]; rvCargar(); };
+      document.getElementById('bvExcel').onclick = () => bvExcel(v);
+      document.getElementById('bvPdf').onclick = () => bvPdf(d, s);
+    };
+    pintar();
+  };
+}
+
+/* ---------- exportar cuadro a Excel ---------- */
+function bvDescargar(blob, nombre){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function bvExcel(v){
+  const cuadro = [v.table.head].concat(v.table.rows, v.table.foot ? [v.table.foot] : []);
+  const detalle = [['Fecha', 'Doctor', 'Clínica', 'Tipo de cirugía', 'Género', 'Edad', 'Modelo', 'Cantidad']].concat(
+    v.detail.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.tipo, r.genero === 'F' ? 'F' : (r.genero === 'M' ? 'M' : ''), r.edad === null ? '' : r.edad, r.modelo.label, r.cant]));
+  if(typeof XLSX !== 'undefined'){
+    const wb = XLSX.utils.book_new();
+    const w1 = XLSX.utils.aoa_to_sheet(cuadro), w2 = XLSX.utils.aoa_to_sheet(detalle);
+    w1['!cols'] = cuadro[0].map((_, i) => ({ wch:i === 0 ? 24 : 13 }));
+    w2['!cols'] = [{ wch:12 }, { wch:24 }, { wch:26 }, { wch:26 }, { wch:8 }, { wch:7 }, { wch:16 }, { wch:9 }];
+    XLSX.utils.book_append_sheet(wb, w1, 'Cuadro');
+    XLSX.utils.book_append_sheet(wb, w2, 'Detalle');
+    XLSX.writeFile(wb, v.file + '.xlsx');
+    return;
+  }
+  const csv = '﻿' + cuadro.map(f => f.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  bvDescargar(new Blob([csv], { type:'text/csv;charset=utf-8' }), v.file + '.csv');
+}
+
+/* ---------- exportar el cierre completo a PDF (imprimir > guardar como PDF) ---------- */
+function bvChartImg(cfg, w, h){
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ch = new Chart(cv, Object.assign({}, cfg, { options:Object.assign({}, cfg.options, { animation:false, responsive:false, devicePixelRatio:2 }) }));
+  ch.update('none');
+  const url = cv.toDataURL('image/png');
+  ch.destroy();
+  return url;
+}
+function bvReporteHtml(d, s){
+  const hoy = new Date();
+  const ids = ['cierre', 'modelos', 'doctores', 'genero', 'general'];
+  const secs = ids.map((id, i) => {
+    const v = BV_VISTAS[id](d, s);
+    const imgs = v.charts.map(c => {
+      const w = c.half ? 440 : 900;
+      return `<img src="${bvChartImg(c.cfg, w, c.h > 340 ? 340 : (id === 'doctores' ? c.h : 300))}" style="width:${c.half ? '49%' : '100%'}" alt="">`;
+    }).join('');
+    const t = Object.assign({}, v.table);
+    if(t.rows.length > 15){
+      const resto = t.rows.length - 15;
+      t.rows = t.rows.slice(0, 15).concat([t.head.map((_, k) => k === 1 ? '… y ' + resto + ' más (ver Excel)' : '')]);
+    }
+    return `<section class="rvp-sec"><h2>${i + 1}. ${rvEsc(v.title)}</h2><p class="rvp-sub">${rvEsc(v.sub)}</p>
+      <div class="rvp-kpis">${v.kpis.map(k => `<div class="rvp-kpi"><b>${rvEsc(k.l)}</b><span>${rvEsc(k.v)}</span></div>`).join('')}</div>
+      <div class="rvp-charts">${imgs}</div>${bvTablaHtml(t)}</section>`;
+  }).join('');
+  return `<div class="rvp-head"><img src="logo-piemca.png" alt="PIEMCA"><div><h1>BIOBRACE · Cierre de ${BV_MESES[s.mes]} ${s.anio}</h1>
+    <p>Estadística de ventas · Año fiscal ${s.anio} · Generado el ${bvFechaTxt(hoy)}${d.ultima ? ' · Datos hasta ' + bvFechaTxt(d.ultima) : ''}</p></div></div>${secs}
+    <div class="rvp-foot">PIEMCA · Innovación sin fronteras</div>`;
+}
+function bvPdf(d, s){
+  const btn = document.getElementById('bvPdf');
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparando PDF…'; }
+  setTimeout(() => {
+    let box;
+    try{
+      box = document.createElement('div');
+      box.id = 'rvReport';
+      box.innerHTML = bvReporteHtml(d, s);
+      document.body.appendChild(box);
+    }catch(err){
+      console.error('No se pudo armar el PDF del cierre:', err);
+      if(box) box.remove();
+      if(btn){ btn.disabled = false; btn.textContent = '⬇ Cierre en PDF'; }
+      return;
+    }
+    document.body.classList.add('rv-printing');
+    const fin = () => {
+      document.body.classList.remove('rv-printing');
+      box.remove();
+      window.removeEventListener('afterprint', fin);
+      const b = document.getElementById('bvPdf');
+      if(b){ b.disabled = false; b.textContent = '⬇ Cierre en PDF'; }
+    };
+    window.addEventListener('afterprint', fin);
+    const imgs = Array.from(box.querySelectorAll('img'));
+    Promise.all(imgs.map(i => i.decode ? i.decode().catch(() => null) : null)).then(() => window.print());
+  }, 60);
+}
 
 const EMPRESAS = {
   PIEMCA: {
