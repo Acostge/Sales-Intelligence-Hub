@@ -301,6 +301,70 @@
   .dash-kpi-value.dash-good{color:#8CF0C4;}
   .dash-kpi-value.dash-bad{color:#FFB4B4;}
 
+  /* Botón RESUMEN DE VENTAS dentro de la cinta 1 del Dashboard */
+  .dash-kpi-btn{
+    flex:1.5 1 0;min-width:240px;border:none;border-left:1px solid rgba(255,255,255,.15);
+    background:rgba(63,169,217,.22);font-family:inherit;text-align:left;cursor:pointer;transition:background .15s;
+  }
+  .dash-kpi-btn:hover,.dash-kpi-btn:focus-visible{background:var(--sky);outline:none;}
+  .dash-new{
+    background:var(--white);color:var(--navy);font-size:9.5px;font-weight:800;letter-spacing:.5px;
+    padding:2px 7px;border-radius:10px;
+  }
+
+  /* Ventana RESUMEN DE VENTAS (cierres de mes) */
+  .rv-overlay{
+    position:fixed;inset:0;background:rgba(8,43,68,.6);z-index:200;
+    display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
+  }
+  .rv-window{background:var(--bg);border-radius:14px;width:100%;max-width:1180px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;}
+  .rv-head{
+    background:linear-gradient(120deg,var(--navy-deep),var(--navy) 70%);color:var(--white);
+    padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;
+    font-family:'Baloo 2',"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  .rv-title{font-size:21px;font-weight:800;line-height:1.1;}
+  .rv-sub{font-size:12px;opacity:.8;font-family:"Segoe UI",Roboto,Arial,sans-serif;}
+  .rv-close{
+    flex:none;background:rgba(255,255,255,.12);border:none;color:var(--white);
+    width:38px;height:38px;border-radius:8px;font-size:16px;cursor:pointer;
+  }
+  .rv-close:hover,.rv-close:focus-visible{background:var(--sky);outline:none;}
+  .rv-body{padding:16px 22px 22px;}
+  .rv-band{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:10px 16px 12px;margin-bottom:10px;}
+  .rv-band-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px;}
+  .rv-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .rv-chip{
+    background:var(--white);color:var(--navy);border:2px solid var(--gray-line);border-radius:10px;
+    padding:8px 20px;min-height:40px;font-family:inherit;font-weight:800;font-size:13.5px;letter-spacing:.4px;cursor:pointer;
+  }
+  .rv-chip:hover{border-color:var(--sky);}
+  .rv-chip.active{background:var(--navy);color:var(--white);border-color:var(--navy);}
+  .rv-opt{border-radius:20px;border-width:1px;padding:7px 16px;font-weight:700;font-size:12.5px;letter-spacing:0;}
+  .rv-opt.active{background:var(--sky-soft);color:var(--navy);border-color:var(--sky);}
+  .rv-banner{
+    background:var(--sky-soft);border:1px solid var(--sky);color:var(--navy);border-radius:10px;
+    padding:8px 14px;font-size:12.5px;margin-bottom:10px;line-height:1.45;
+  }
+  .rv-card{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px 18px;margin-bottom:10px;}
+  .rv-card h3{margin:0 0 2px;color:var(--navy);font-size:15px;}
+  .rv-card p{margin:0 0 10px;color:var(--gray);font-size:12.5px;}
+  .rv-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .rv-toggle{display:flex;gap:6px;}
+  .rv-chart-wrap{position:relative;height:300px;}
+  .rv-table-wrap{overflow-x:auto;border:1px solid var(--gray-line);border-radius:8px;}
+  .rv-table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:560px;}
+  .rv-table th{background:var(--navy);color:var(--white);padding:7px 8px;text-align:center;font-weight:700;white-space:nowrap;}
+  .rv-table th:first-child,.rv-table td:first-child{text-align:left;}
+  .rv-table td{padding:7px 8px;text-align:center;border-top:1px solid var(--gray-line);}
+  .rv-table tr:nth-child(even) td{background:var(--bg);}
+  .rv-table td.rv-tot{font-weight:800;color:var(--navy);}
+  .rv-pending{text-align:center;padding:30px 20px;}
+  .rv-pending h3{margin:0 0 6px;color:var(--navy);font-size:17px;}
+  .rv-pending ol{display:inline-block;text-align:left;margin:10px 0 16px;padding-left:20px;font-size:13px;line-height:1.7;color:var(--text);}
+  .rv-pending code{background:var(--bg);border:1px solid var(--gray-line);border-radius:4px;padding:1px 5px;font-size:12px;}
+  .rv-msg{padding:30px;text-align:center;color:var(--gray);font-size:13.5px;}
+
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;
@@ -901,6 +965,30 @@
   </div>
 </main>
 
+<!-- VENTANA: RESUMEN DE VENTAS (cierres de mes) -->
+<div id="rvOverlay" class="rv-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rvTitle">
+  <div class="rv-window">
+    <div class="rv-head">
+      <div>
+        <div class="rv-title" id="rvTitle">Resumen de Ventas</div>
+        <div class="rv-sub">Cierres de mes por línea de producto</div>
+      </div>
+      <button type="button" class="rv-close" id="rvClose" aria-label="Cerrar Resumen de Ventas">✕</button>
+    </div>
+    <div class="rv-body">
+      <div class="rv-band">
+        <div class="rv-band-label">Línea de producto</div>
+        <div class="rv-chips" id="rvLineas"></div>
+      </div>
+      <div class="rv-band">
+        <div class="rv-band-label">Qué quieres ver</div>
+        <div class="rv-chips" id="rvOpciones"></div>
+      </div>
+      <div id="rvContenido"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============ CONFIG ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
@@ -912,6 +1000,248 @@ const PROVEEDORES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs
 // Mismo enlace /exec que ya usa la macro de Excel (Sincronizador Apps Script).
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTp_po4-RfWdqs45rBGb1wejmcnoBPmpLKknaKxj_tTcP_HIGqK_3oTEcvZe8IuVLySg/exec";
 const APPS_SCRIPT_SECRET = "*Ga1591*"; // la misma clave del Apps Script
+
+/* ============ RESUMEN DE VENTAS (cierres de mes) ============ */
+// Cada pestaña de cierre que subas a Sheets = una línea en esta lista.
+//  1) Sube la pestaña al Sheets.
+//  2) Archivo > Compartir > Publicar en la web > esa pestaña > CSV.
+//  3) Copia el número que sale después de "gid=" y pégalo en 'gid' (mismo libro de siempre, solo cambia el gid).
+// Mientras 'gid' esté vacío, la línea aparece como "pendiente de conectar".
+// 'opciones' = la cinta de gráficos de esa línea. Cada opción tiene su propia función 'render',
+// así cada cierre se desarrolla por separado (por ahora todas usan la vista general automática).
+const RV_EJEMPLO_BIOBRACE = [
+  ['Medida','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC','TOTAL'],
+  ['BIOBRACE 5 x 250 mm',3,3,8,6,12,6,7,11,9,'','','',65],
+  ['BIOBRACE 23 x 30 mm','',1,3,1,1,1,1,2,2,'','','',12],
+  ['BIOBRACE RC 23 x 25 mm','','','',1,'',2,1,2,'','','','',6],
+  ['BIOBRACE 40 x 60 mm','','','',1,'',1,1,1,'','','','',4]
+];
+const RV_EJEMPLO_LIPOGEMS = [
+  ['Concepto','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC','TOTAL'],
+  ['Ortho Kits vendidos',0,5,6,7,3,7,11,15,11,'','','',65]
+];
+const RESUMEN_LINEAS = [
+  { id:'biobrace', nombre:'BIOBRACE', gid:'', ejemplo:RV_EJEMPLO_BIOBRACE,
+    opciones:[ { id:'general', label:'Vista general', render:rvRenderGeneral } ] },
+  { id:'lipogems', nombre:'LIPOGEMS', gid:'', ejemplo:RV_EJEMPLO_LIPOGEMS,
+    opciones:[ { id:'general', label:'Vista general', render:rvRenderGeneral } ] }
+];
+
+const rvState = { linea:null, opcion:null, cache:{}, demo:false, chart:null, tipo:'bar', last:null };
+const RV_PALETA = ['#0B3B5C','#3FA9D9','#C9762E','#5B6B78','#2E9E6D','#B23A48'];
+
+function rvEsc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function rvUrl(gid){ return SHEET_CSV_URL.replace(/gid=\d+/, 'gid=' + gid); }
+function rvNum(v){
+  if(v === null || v === undefined) return null;
+  let s = String(v).replace(/[$€\s%]/g, '');
+  if(s === '') return null;
+  if(s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g, '').replace(',', '.');
+  else if(s.indexOf(',') > -1) s = s.replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function rvFmt(n){
+  return n === null || n === undefined ? '' : Number(n).toLocaleString('es-ES', { useGrouping:'always', maximumFractionDigits:1 });
+}
+
+function abrirResumenVentas(){
+  document.getElementById('rvOverlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  rvSeleccionarLinea(rvState.linea ? rvState.linea.id : RESUMEN_LINEAS[0].id);
+  document.getElementById('rvClose').focus();
+}
+function cerrarResumenVentas(){
+  document.getElementById('rvOverlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
+}
+
+function rvSeleccionarLinea(id){
+  rvState.linea = RESUMEN_LINEAS.find(l => l.id === id) || RESUMEN_LINEAS[0];
+  rvState.opcion = rvState.linea.opciones[0];
+  rvState.demo = false;
+  rvBuildLineas();
+  rvBuildOpciones();
+  rvCargar();
+}
+
+function rvBuildLineas(){
+  const box = document.getElementById('rvLineas');
+  box.innerHTML = RESUMEN_LINEAS.map(l =>
+    `<button type="button" class="rv-chip ${rvState.linea && rvState.linea.id === l.id ? 'active' : ''}" data-id="${rvEsc(l.id)}">${rvEsc(l.nombre)}</button>`
+  ).join('');
+  box.querySelectorAll('.rv-chip').forEach(b => b.onclick = () => rvSeleccionarLinea(b.dataset.id));
+}
+
+function rvBuildOpciones(){
+  const box = document.getElementById('rvOpciones');
+  box.innerHTML = rvState.linea.opciones.map(o =>
+    `<button type="button" class="rv-chip rv-opt ${rvState.opcion && rvState.opcion.id === o.id ? 'active' : ''}" data-id="${rvEsc(o.id)}">${rvEsc(o.label)}</button>`
+  ).join('');
+  box.querySelectorAll('.rv-chip').forEach(b => b.onclick = () => {
+    rvState.opcion = rvState.linea.opciones.find(o => o.id === b.dataset.id);
+    rvBuildOpciones();
+    rvCargar();
+  });
+}
+
+function rvCargar(){
+  const l = rvState.linea;
+  const box = document.getElementById('rvContenido');
+  if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
+
+  if(rvState.demo){ rvPintar(l.ejemplo, true); return; }
+
+  if(!l.gid){
+    box.innerHTML = `
+      <div class="rv-card rv-pending">
+        <div style="font-size:34px;">📑</div>
+        <h3>Pestaña ${rvEsc(l.nombre)} pendiente de conectar</h3>
+        <div>
+          <ol>
+            <li>Sube la pestaña del cierre a tu Google Sheets.</li>
+            <li>Archivo › Compartir › Publicar en la web › esa pestaña › CSV.</li>
+            <li>Copia el número que sale después de <code>gid=</code> y pégalo en <code>RESUMEN_LINEAS</code>.</li>
+          </ol>
+        </div>
+        <div style="display:flex;justify-content:center;"><button type="button" class="btn btn-solid" id="rvVerEjemplo">Ver ejemplo con datos de septiembre 2026</button></div>
+      </div>`;
+    document.getElementById('rvVerEjemplo').onclick = () => { rvState.demo = true; rvCargar(); };
+    return;
+  }
+
+  if(rvState.cache[l.id]){ rvPintar(rvState.cache[l.id], false); return; }
+
+  box.innerHTML = `<div class="rv-card rv-msg">Cargando cierre de ${rvEsc(l.nombre)}…</div>`;
+  Papa.parse(rvUrl(l.gid), {
+    download: true,
+    skipEmptyLines: true,
+    complete: res => {
+      rvState.cache[l.id] = res.data;
+      if(rvState.linea === l && !rvState.demo) rvPintar(res.data, false);
+    },
+    error: err => {
+      console.error('No se pudo cargar el cierre', l.nombre, err);
+      if(rvState.linea !== l) return;
+      box.innerHTML = `<div class="rv-card rv-msg">No se pudo cargar la pestaña ${rvEsc(l.nombre)}. Revisa que esté publicada en la web (CSV) y que el gid sea correcto.<br><br><button type="button" class="btn btn-solid" id="rvReintentar">Reintentar</button></div>`;
+      document.getElementById('rvReintentar').onclick = rvCargar;
+    }
+  });
+}
+
+function rvPintar(rows, esDemo){
+  const box = document.getElementById('rvContenido');
+  box.innerHTML = (esDemo
+    ? `<div class="rv-banner"><strong>Ejemplo:</strong> datos del cierre de septiembre 2026 tomados de tu PDF, solo para ver cómo quedaría. <button type="button" class="link-btn" id="rvSalirEjemplo">Salir del ejemplo</button></div>`
+    : '') + '<div id="rvOpcionBox"></div>';
+  if(esDemo) document.getElementById('rvSalirEjemplo').onclick = () => { rvState.demo = false; rvCargar(); };
+  rvState.opcion.render(rows, document.getElementById('rvOpcionBox'), rvState.linea);
+}
+
+/* Vista general automática: columna A = nombre, fila 1 = periodos (meses o años). Una columna TOTAL se recalcula sola. */
+function rvRenderGeneral(rows, el, linea){
+  const head = rows[0] || [];
+  let cols = head.slice(1).map((h, i) => ({ label:String(h).trim(), idx:i + 1 })).filter(c => c.label !== '');
+  cols = cols.filter(c => c.label.toUpperCase() !== 'TOTAL');
+  const filas = rows.slice(1)
+    .filter(r => r[0] && String(r[0]).trim() && String(r[0]).trim().toUpperCase() !== 'TOTAL')
+    .map(r => ({ nombre:String(r[0]).trim(), vals:cols.map(c => rvNum(r[c.idx])) }));
+  if(!filas.length || !cols.length){
+    el.innerHTML = '<div class="rv-card rv-msg">La pestaña no tiene filas con datos todavía.</div>';
+    return;
+  }
+  const sum = a => a.reduce((s, v) => s + (v || 0), 0);
+  filas.forEach(f => f.total = sum(f.vals));
+  const colTot = cols.map((c, i) => sum(filas.map(f => f.vals[i])));
+  const total = sum(colTot);
+  let mejor = 0; colTot.forEach((v, i) => { if(v > colTot[mejor]) mejor = i; });
+  let ult = -1; colTot.forEach((v, i) => { if(v > 0) ult = i; });
+  const activos = colTot.filter(v => v > 0).length || 1;
+  const prom = total / activos;
+  let varTxt = '—', varCls = '';
+  if(ult > 0 && colTot[ult - 1] > 0){
+    const p = (colTot[ult] - colTot[ult - 1]) / colTot[ult - 1] * 100;
+    varTxt = (p >= 0 ? '+' : '') + p.toFixed(1) + '%';
+    varCls = p >= 0 ? 'dash-good' : 'dash-bad';
+  }
+
+  el.innerHTML = `
+    <div class="dash-ribbon1">
+      <div class="dash-kpi"><div class="dash-kpi-label">Total del período</div><div class="dash-kpi-value">🛍️ ${rvFmt(total)}</div></div>
+      <div class="dash-kpi"><div class="dash-kpi-label">Mejor ${rvEsc(head[0] && /año/i.test(head[0]) ? 'año' : 'período')}</div><div class="dash-kpi-value">🏆 ${rvEsc(cols[mejor].label)} · ${rvFmt(colTot[mejor])}</div></div>
+      <div class="dash-kpi"><div class="dash-kpi-label">Promedio por período</div><div class="dash-kpi-value">📊 ${rvFmt(prom)}</div></div>
+      <div class="dash-kpi"><div class="dash-kpi-label">Último con datos</div><div class="dash-kpi-value">📦 ${ult >= 0 ? rvEsc(cols[ult].label) + ' · ' + rvFmt(colTot[ult]) : '—'}</div></div>
+      <div class="dash-kpi"><div class="dash-kpi-label">Vs período anterior</div><div class="dash-kpi-value ${varCls}">📈 ${varTxt}</div></div>
+    </div>
+    <div class="rv-card">
+      <div class="rv-card-top">
+        <div><h3>${rvEsc(linea.nombre)} · Vista general</h3><p>${filas.length} ${filas.length === 1 ? 'fila' : 'filas'} · ${cols.length} períodos</p></div>
+        <div class="rv-toggle">
+          <button type="button" class="rv-chip rv-opt ${rvState.tipo === 'bar' ? 'active' : ''}" data-tipo="bar">Barras</button>
+          <button type="button" class="rv-chip rv-opt ${rvState.tipo === 'line' ? 'active' : ''}" data-tipo="line">Líneas</button>
+        </div>
+      </div>
+      <div class="rv-chart-wrap"><canvas id="rvCanvas" role="img" aria-label="Gráfico de ${rvEsc(linea.nombre)}"></canvas></div>
+    </div>
+    <div class="rv-card">
+      <div class="rv-table-wrap">
+        <table class="rv-table">
+          <thead><tr><th>${rvEsc(head[0] || '')}</th>${cols.map(c => `<th>${rvEsc(c.label)}</th>`).join('')}<th>TOTAL</th></tr></thead>
+          <tbody>${filas.map(f => `<tr><td>${rvEsc(f.nombre)}</td>${f.vals.map(v => `<td>${rvFmt(v)}</td>`).join('')}<td class="rv-tot">${rvFmt(f.total)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  rvState.last = { cols, filas };
+  el.querySelectorAll('[data-tipo]').forEach(b => b.onclick = () => {
+    rvState.tipo = b.dataset.tipo;
+    el.querySelectorAll('[data-tipo]').forEach(x => x.classList.toggle('active', x === b));
+    rvDibujar();
+  });
+  rvDibujar();
+}
+
+function rvDibujar(){
+  const d = rvState.last;
+  const cv = document.getElementById('rvCanvas');
+  if(!d || !cv) return;
+  if(rvState.chart) rvState.chart.destroy();
+  const tipo = rvState.tipo;
+  const filas = d.filas.slice(0, 6);
+  rvState.chart = new Chart(cv, {
+    type: tipo,
+    data: {
+      labels: d.cols.map(c => c.label),
+      datasets: filas.map((f, i) => ({
+        label: f.nombre, data: f.vals,
+        backgroundColor: RV_PALETA[i % 6], borderColor: RV_PALETA[i % 6],
+        borderWidth: tipo === 'line' ? 3 : 0, borderRadius: tipo === 'bar' ? 4 : 0,
+        tension: .25, spanGaps: false, pointRadius: tipo === 'line' ? 3 : 0
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: filas.length > 1, position: 'bottom' },
+        datalabels: {
+          display: filas.length === 1, anchor: 'end', align: 'end', color: '#0B3B5C',
+          font: { weight: 'bold' }, formatter: v => v === null ? '' : rvFmt(v)
+        }
+      },
+      layout: { padding: { top: 18 } },
+      scales: { y: { beginAtZero: true, grid: { color: '#DCE3E8' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+document.getElementById('rvClose').onclick = cerrarResumenVentas;
+document.getElementById('rvOverlay').addEventListener('click', e => { if(e.target.id === 'rvOverlay') cerrarResumenVentas(); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !document.getElementById('rvOverlay').classList.contains('hidden')) cerrarResumenVentas();
+});
 
 const EMPRESAS = {
   PIEMCA: {
@@ -1619,6 +1949,10 @@ function renderDashboardRibbon1(){
       <div class="dash-kpi-label">Índice de Crecimiento</div>
       <div class="dash-kpi-value ${crecimiento >= 0 ? 'dash-good' : 'dash-bad'}">📈 ${crecimiento >= 0 ? "+" : ""}${crecimiento.toFixed(1)}%</div>
     </div>
+    <button type="button" class="dash-kpi dash-kpi-btn" onclick="abrirResumenVentas()">
+      <div class="dash-kpi-label">Cierres de mes</div>
+      <div class="dash-kpi-value">📑 Resumen de Ventas <span class="dash-new">NUEVO</span></div>
+    </button>
   `;
 }
 
