@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
@@ -419,6 +420,12 @@
     body.rv-printing #rvReport, body.rv-printing #rvReport *{visibility:visible !important;}
     body.rv-printing{background:#fff;}
   }
+
+  /* Tipografía redondeada y sin negritas (Arial Rounded MT Bold si el equipo la tiene; si no, Varela Round) */
+  .rv-overlay, #rvReport{--rv-font:"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif;}
+  .rv-overlay *, #rvReport *{font-family:var(--rv-font) !important;font-weight:400 !important;}
+  .rv-overlay code{font-family:Consolas,monospace !important;}
+  .rv-overlay .dash-kpi-label, .rv-overlay .rv-band-label, .rv-controls label{letter-spacing:.6px;}
 
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
@@ -1279,14 +1286,14 @@ function rvDibujar(){
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { display: filas.length > 1, position: 'bottom' },
+        legend: { display: filas.length > 1, position: 'bottom', labels: { font: { family: BV_FONT } } },
         datalabels: {
           display: filas.length === 1, anchor: 'end', align: 'end', color: '#0B3B5C',
-          font: { weight: 'bold' }, formatter: v => v === null ? '' : rvFmt(v)
+          font: { family: BV_FONT, weight: 'normal' }, formatter: v => v === null ? '' : rvFmt(v)
         }
       },
       layout: { padding: { top: 18 } },
-      scales: { y: { beginAtZero: true, grid: { color: '#DCE3E8' } }, x: { grid: { display: false } } }
+      scales: { y: { beginAtZero: true, grid: { color: '#DCE3E8' }, ticks: { font: { family: BV_FONT } } }, x: { grid: { display: false }, ticks: { font: { family: BV_FONT } } } }
     }
   });
 }
@@ -1307,7 +1314,8 @@ const BV = {
 const BV_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const BV_MES3 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const BV_FIJOS = { '5x250':0, '23x30':1, 'rc23x25':2, '40x60':3 }; // cada modelo conserva siempre su color
-const BV_FONT = '"Segoe UI",Roboto,Arial,sans-serif';
+const BV_FONT = '"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif';
+if(document.fonts && document.fonts.load){ document.fonts.load('16px "Varela Round"').catch(() => {}); } // precarga para que los gráficos salgan con la misma letra
 
 function bvNorm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
 function bvPad(n){ return String(n).padStart(2, '0'); }
@@ -1384,7 +1392,7 @@ function bvOpts(o){
         usePointStyle:true, pointStyle:'circle', boxWidth:8, boxHeight:8, padding:16, color:BV.ink2,
         font:{ family:BV_FONT, size:12 }, filter:it => !String(it.text).startsWith('__') } },
       tooltip:{ backgroundColor:'#082B44', titleColor:'#FFFFFF', bodyColor:'#DCEFF9', footerColor:'#8CF0C4', padding:10,
-        cornerRadius:8, boxPadding:4, usePointStyle:true, titleFont:{ family:BV_FONT, weight:'700' }, bodyFont:{ family:BV_FONT },
+        cornerRadius:8, boxPadding:4, usePointStyle:true, titleFont:{ family:BV_FONT, weight:'normal' }, bodyFont:{ family:BV_FONT },
         filter:it => !String(it.dataset.label).startsWith('__'),
         callbacks:o.stacked ? { footer:items => 'Total: ' + rvFmt(items.reduce((s, i) => s + (i.parsed.y || 0), 0)) } : {} },
       datalabels:{ display:false }
@@ -1396,7 +1404,7 @@ function bvOpts(o){
     }
   };
 }
-const bvLabelEnd = { display:true, anchor:'end', align:'end', color:BV.ink, font:{ family:BV_FONT, weight:'700', size:12 }, formatter:v => v ? rvFmt(v) : '' };
+const bvLabelEnd = { display:true, anchor:'end', align:'end', color:BV.ink, font:{ family:BV_FONT, weight:'normal', size:12 }, formatter:v => v ? rvFmt(v) : '' };
 
 function bvStackedCfg(labels, modelos, matriz){
   const totales = labels.map((_, j) => matriz.reduce((s, fila) => s + (fila[j] || 0), 0));
@@ -1421,7 +1429,7 @@ const bvCenterPlugin = {
     const a = chart.chartArea, ctx = chart.ctx, cx = (a.left + a.right) / 2, cy = (a.top + a.bottom) / 2;
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = BV.ink; ctx.font = '800 32px "Baloo 2",' + BV_FONT; ctx.fillText(o.valor, cx, cy - 8);
+    ctx.fillStyle = BV.ink; ctx.font = '32px ' + BV_FONT; ctx.fillText(o.valor, cx, cy - 8);
     ctx.fillStyle = BV.ink2; ctx.font = '12px ' + BV_FONT; ctx.fillText(o.texto, cx, cy + 18);
     ctx.restore();
   }
