@@ -386,7 +386,7 @@
   .rv-btn:hover,.rv-btn:focus-visible{background:var(--sky-soft);outline:none;}
   .rv-btn.solid{background:var(--navy);color:var(--white);}
   .rv-btn.solid:hover,.rv-btn.solid:focus-visible{background:var(--sky);border-color:var(--sky);}
-  .rv-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;}
+  .rv-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:18px;}
   .rv-chart-box{position:relative;min-width:0;}
   .rv-scroll{max-height:440px;overflow:auto;}
   .rv-table th{position:sticky;top:0;z-index:1;}
@@ -398,23 +398,24 @@
   .rvp-head img{height:44px;background:#fff;border-radius:6px;padding:4px;}
   .rvp-head h1{margin:0;font-size:20px;line-height:1.15;}
   .rvp-head p{margin:2px 0 0;font-size:11px;opacity:.85;}
-  .rvp-sec{break-inside:avoid;page-break-inside:avoid;margin:14px 0 0;}
+  .rvp-sec{break-inside:avoid;page-break-inside:avoid;break-before:page;page-break-before:always;margin:0;}
+  .rvp-head + .rvp-sec{break-before:auto;page-break-before:auto;margin-top:12px;}
   .rvp-sec h2{margin:0;font-size:14px;color:#0B3B5C;border-bottom:2px solid #3FA9D9;padding-bottom:3px;}
   .rvp-sec .rvp-sub{margin:3px 0 8px;font-size:10.5px;color:#5B6B78;}
   .rvp-kpis{display:flex;gap:8px;margin-bottom:8px;}
   .rvp-kpi{flex:1 1 0;border:1px solid #DCE3E8;border-radius:8px;padding:5px 8px;}
   .rvp-kpi b{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;color:#5B6B78;}
   .rvp-kpi span{font-size:13px;font-weight:800;color:#0B3B5C;}
-  .rvp-charts{display:flex;gap:10px;margin-bottom:8px;}
+  .rvp-charts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;}
   .rvp-charts img{display:block;min-width:0;}
-  .rvp-sec table{border-collapse:collapse;width:100%;font-size:9px;}
+  .rvp-sec table{border-collapse:collapse;width:100%;font-size:9.5px;}
   .rvp-sec th{background:#0B3B5C;color:#fff;padding:4px 5px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .rvp-sec td{padding:3px 5px;text-align:center;border-top:1px solid #DCE3E8;}
   .rvp-sec .rv-l{text-align:left;}
   .rvp-sec tfoot td{font-weight:800;border-top:2px solid #0B3B5C;}
   .rvp-foot{margin-top:12px;font-size:9px;color:#5B6B78;text-align:center;}
   @media print{
-    @page{size:A4;margin:12mm;}
+    @page{size:letter landscape;margin:10mm;}
     body.rv-printing > *:not(#rvReport){display:none !important;}
     body.rv-printing #rvReport{display:block !important;}
     body.rv-printing #rvReport, body.rv-printing #rvReport *{visibility:visible !important;}
@@ -1071,10 +1072,6 @@ const APPS_SCRIPT_SECRET = "*Ga1591*"; // la misma clave del Apps Script
 // Mientras 'gid' esté vacío, la línea aparece como "pendiente de conectar".
 // 'opciones' = la cinta de gráficos de esa línea. Cada opción tiene su propia función 'render',
 // así cada cierre se desarrolla por separado (por ahora todas usan la vista general automática).
-const RV_EJEMPLO_LIPOGEMS = [
-  ['Concepto','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC','TOTAL'],
-  ['Ortho Kits vendidos',0,5,6,7,3,7,11,15,11,'','','',65]
-];
 const RESUMEN_LINEAS = [
   { id:'biobrace', nombre:'BIOBRACE', gid:'1962243658',
     opciones:[
@@ -1084,8 +1081,14 @@ const RESUMEN_LINEAS = [
       { id:'genero',    label:'Género',            render:bioRender('genero') },
       { id:'general',   label:'General (histórico)', render:bioRender('general') }
     ] },
-  { id:'lipogems', nombre:'LIPOGEMS', gid:'', ejemplo:RV_EJEMPLO_LIPOGEMS,
-    opciones:[ { id:'general', label:'Vista general', render:rvRenderGeneral } ] }
+  { id:'lipogems', nombre:'LIPOGEMS', gid:'1715187529',
+    opciones:[
+      { id:'mensual',    label:'Ventas por mes',  render:lipoRender('mensual') },
+      { id:'anios',      label:'Ventas por año',  render:lipoRender('anios') },
+      { id:'inventario', label:'Inventario',      render:lipoRender('inventario') },
+      { id:'doctores',   label:'Doctores',        render:lipoRender('doctores') },
+      { id:'clinicas',   label:'Clínicas',        render:lipoRender('clinicas') }
+    ] }
 ];
 
 const rvState = { linea:null, opcion:null, cache:{}, demo:false, chart:null, tipo:'bar', last:null };
@@ -1534,7 +1537,7 @@ function bvVistaDoctores(d, s){
       { l:'Top 3 del año', v:bvShare(top3, total) },
       { l:'Promedio por doctor', v:lista.length ? rvFmt(total / lista.length) : '—' }
     ],
-    charts:[{ h:Math.max(200, 46 + top.length * 34), cfg:{
+    charts:[{ h:Math.max(200, 46 + top.length * 34), pdfH:290, cfg:{
       type:'bar',
       data:{ labels:top.map(x => x.nombre), datasets:[{
         label:'Ventas', data:top.map(x => x.n), backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'start',
@@ -1658,49 +1661,62 @@ function rvDestruirGraficos(){
   rvState.bioCharts = [];
 }
 
-function bioRender(id){
-  return function(rows, el, linea){
-    const d = bvParse(rows);
-    if(d.error){ el.innerHTML = `<div class="rv-card rv-msg">${rvEsc(d.error)}</div>`; return; }
-    if(!d.regs.length){ el.innerHTML = '<div class="rv-card rv-msg">La pestaña Biobrace no tiene registros todavía.</div>'; return; }
+/* ---------- motor común de vistas (Biobrace y Lipogems) ---------- */
+function bioRender(id){ return (rows, el, linea) => vizRender(VIZ_BIO, id, rows, el, linea); }
+function lipoRender(id){ return (rows, el, linea) => vizRender(VIZ_LG, id, rows, el, linea); }
 
-    const pintar = () => {
-      rvDestruirGraficos();
-      const s = bvSel(d), v = BV_VISTAS[id](d, s);
-      const aniosOpt = d.anios.slice().reverse().map(a => `<option value="${a}" ${a === s.anio ? 'selected' : ''}>${a}</option>`).join('');
-      const ms = bvMesesConDatos(d, s.anio), msList = ms.length ? ms : [0];
-      const mesesOpt = msList.map(m => `<option value="${m}" ${m === s.mes ? 'selected' : ''}>${BV_MESES[m]}</option>`).join('');
-      const esGeneral = id === 'general';
-      el.innerHTML = `
-        <div class="rv-controls">
-          ${esGeneral ? '' : `<label>Año fiscal<select id="bvAnio">${aniosOpt}</select></label>`}
-          ${id === 'cierre' ? `<label>Mes de cierre<select id="bvMes">${mesesOpt}</select></label>` : ''}
-          <span class="rv-spacer"></span>
-          <span class="rv-asof">${d.ultima ? 'Datos hasta ' + bvFechaTxt(d.ultima) : ''}</span>
-          <button type="button" class="rv-btn" id="bvRefresh" title="Vuelve a leer la pestaña de Sheets">↻ Actualizar</button>
-          <button type="button" class="rv-btn" id="bvExcel">⬇ Cuadro en Excel</button>
-          <button type="button" class="rv-btn solid" id="bvPdf">⬇ Cierre en PDF</button>
-        </div>
-        ${bvKpiHtml(v.kpis)}
-        <div class="rv-card">
-          <div class="rv-card-top"><div><h3>${rvEsc(v.title)}</h3><p>${rvEsc(v.sub)}</p></div></div>
-          <div class="rv-chart-grid">${v.charts.map((c, i) => `<div class="rv-chart-box" style="height:${c.h}px"><canvas id="bvCv${i}" role="img" aria-label="${rvEsc(v.title)}"></canvas></div>`).join('')}</div>
-        </div>
-        <div class="rv-card">
-          <div class="rv-card-top"><div><h3>Cuadro de datos</h3><p>Los números de arriba salen de esta tabla.</p></div></div>
-          <div class="rv-table-wrap rv-scroll">${bvTablaHtml(v.table)}</div>
-        </div>`;
-      v.charts.forEach((c, i) => rvState.bioCharts.push(new Chart(document.getElementById('bvCv' + i), c.cfg)));
+function vizRender(cfg, id, rows, el, linea){
+  const d = cfg.parse(rows);
+  if(d.error){ el.innerHTML = `<div class="rv-card rv-msg">${rvEsc(d.error)}</div>`; return; }
+  if(!d.regs.length){ el.innerHTML = `<div class="rv-card rv-msg">${rvEsc(cfg.vacio)}</div>`; return; }
+  const ctrl = cfg.ctrl[id] || [];
 
-      const sa = document.getElementById('bvAnio'), sm = document.getElementById('bvMes');
-      if(sa) sa.onchange = () => { rvState.bio.anio = parseInt(sa.value, 10); pintar(); };
-      if(sm) sm.onchange = () => { rvState.bio.mes = parseInt(sm.value, 10); pintar(); };
-      document.getElementById('bvRefresh').onclick = () => { delete rvState.cache[linea.id]; rvCargar(); };
-      document.getElementById('bvExcel').onclick = () => bvExcel(v);
-      document.getElementById('bvPdf').onclick = () => bvPdf(d, s);
-    };
-    pintar();
+  const pintar = () => {
+    rvDestruirGraficos();
+    const s = cfg.sel(d), v = cfg.vistas[id](d, s);
+    let controles = '';
+    if(ctrl.includes('anio')){
+      controles += `<label>Año fiscal<select id="bvAnio">${d.anios.slice().reverse().map(a => `<option value="${a}" ${a === s.anio ? 'selected' : ''}>${a}</option>`).join('')}</select></label>`;
+    }
+    if(ctrl.includes('mes')){
+      const ms = bvMesesConDatos(d, s.anio), lista = ms.length ? ms : [0];
+      controles += `<label>Mes de cierre<select id="bvMes">${lista.map(m => `<option value="${m}" ${m === s.mes ? 'selected' : ''}>${BV_MESES[m]}</option>`).join('')}</select></label>`;
+    }
+    if(ctrl.includes('periodo')){
+      controles += `<label>Período<select id="bvPeriodo"><option value="todo" ${s.periodo === 'todo' ? 'selected' : ''}>Histórico general</option>${
+        d.anios.slice().reverse().map(a => `<option value="${a}" ${a === s.periodo ? 'selected' : ''}>Año ${a}</option>`).join('')}</select></label>`;
+    }
+    el.innerHTML = `
+      <div class="rv-controls">
+        ${controles}
+        <span class="rv-spacer"></span>
+        <span class="rv-asof">${d.ultima ? 'Datos hasta ' + bvFechaTxt(d.ultima) : ''}</span>
+        <button type="button" class="rv-btn" id="bvRefresh" title="Vuelve a leer la pestaña de Sheets">↻ Actualizar</button>
+        <button type="button" class="rv-btn" id="bvExcel">⬇ Cuadro en Excel</button>
+        <button type="button" class="rv-btn solid" id="bvPdf">⬇ Cierre en PDF</button>
+      </div>
+      ${bvKpiHtml(v.kpis)}
+      <div class="rv-card">
+        <div class="rv-card-top"><div><h3>${rvEsc(v.title)}</h3><p>${rvEsc(v.sub)}</p></div></div>
+        ${v.nota ? `<div class="rv-banner">${rvEsc(v.nota)}</div>` : ''}
+        <div class="rv-chart-grid">${v.charts.map((c, i) => `<div class="rv-chart-box" style="height:${c.h}px${c.full ? ';grid-column:1/-1' : ''}"><canvas id="bvCv${i}" role="img" aria-label="${rvEsc(v.title)}"></canvas></div>`).join('')}</div>
+      </div>
+      <div class="rv-card">
+        <div class="rv-card-top"><div><h3>Cuadro de datos</h3><p>Los números de arriba salen de esta tabla.</p></div></div>
+        <div class="rv-table-wrap rv-scroll">${bvTablaHtml(v.table)}</div>
+      </div>`;
+    v.charts.forEach((c, i) => rvState.bioCharts.push(new Chart(document.getElementById('bvCv' + i), c.cfg)));
+
+    const st = cfg.estado();
+    const sa = document.getElementById('bvAnio'), sm = document.getElementById('bvMes'), sp = document.getElementById('bvPeriodo');
+    if(sa) sa.onchange = () => { st.anio = parseInt(sa.value, 10); pintar(); };
+    if(sm) sm.onchange = () => { st.mes = parseInt(sm.value, 10); pintar(); };
+    if(sp) sp.onchange = () => { st.periodo = sp.value === 'todo' ? 'todo' : parseInt(sp.value, 10); pintar(); };
+    document.getElementById('bvRefresh').onclick = () => { delete rvState.cache[linea.id]; rvCargar(); };
+    document.getElementById('bvExcel').onclick = () => vizExcel(cfg, v);
+    document.getElementById('bvPdf').onclick = () => vizPdf(cfg, d, s);
   };
+  pintar();
 }
 
 /* ---------- exportar cuadro a Excel ---------- */
@@ -1710,15 +1726,15 @@ function bvDescargar(blob, nombre){
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
-function bvExcel(v){
+function vizExcel(cfg, v){
   const cuadro = [v.table.head].concat(v.table.rows, v.table.foot ? [v.table.foot] : []);
-  const detalle = [['Fecha', 'Doctor', 'Clínica', 'Tipo de cirugía', 'Género', 'Edad', 'Modelo', 'Cantidad']].concat(
-    v.detail.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.tipo, r.genero === 'F' ? 'F' : (r.genero === 'M' ? 'M' : ''), r.edad === null ? '' : r.edad, r.modelo.label, r.cant]));
+  const det = cfg.detalle(v.detail);
+  const detalle = [det.head].concat(det.rows);
   if(typeof XLSX !== 'undefined'){
     const wb = XLSX.utils.book_new();
     const w1 = XLSX.utils.aoa_to_sheet(cuadro), w2 = XLSX.utils.aoa_to_sheet(detalle);
     w1['!cols'] = cuadro[0].map((_, i) => ({ wch:i === 0 ? 24 : 13 }));
-    w2['!cols'] = [{ wch:12 }, { wch:24 }, { wch:26 }, { wch:26 }, { wch:8 }, { wch:7 }, { wch:16 }, { wch:9 }];
+    w2['!cols'] = det.head.map((_, i) => ({ wch:i === 1 || i === 2 ? 26 : 14 }));
     XLSX.utils.book_append_sheet(wb, w1, 'Cuadro');
     XLSX.utils.book_append_sheet(wb, w2, 'Detalle');
     XLSX.writeFile(wb, v.file + '.xlsx');
@@ -1738,29 +1754,29 @@ function bvChartImg(cfg, w, h){
   ch.destroy();
   return url;
 }
-function bvReporteHtml(d, s){
-  const hoy = new Date();
-  const ids = ['cierre', 'modelos', 'doctores', 'genero', 'general'];
-  const secs = ids.map((id, i) => {
-    const v = BV_VISTAS[id](d, s);
+function vizReporteHtml(cfg, d, s){
+  const hoy = new Date(), s2 = cfg.pdfSel(s);
+  const secs = cfg.pdf.map((id, i) => {
+    const v = cfg.vistas[id](d, s2);
     const imgs = v.charts.map(c => {
-      const w = c.half ? 440 : 900;
-      return `<img src="${bvChartImg(c.cfg, w, c.h > 340 ? 340 : (id === 'doctores' ? c.h : 300))}" style="width:${c.half ? '49%' : '100%'}" alt="">`;
+      const w = c.half ? 480 : 980, h = c.pdfH || 240;
+      return `<img src="${bvChartImg(c.cfg, w, h)}" style="width:${c.half ? 'calc(50% - 5px)' : '100%'}" alt="">`;
     }).join('');
     const t = Object.assign({}, v.table);
-    if(t.rows.length > 15){
-      const resto = t.rows.length - 15;
-      t.rows = t.rows.slice(0, 15).concat([t.head.map((_, k) => k === 1 ? '… y ' + resto + ' más (ver Excel)' : '')]);
+    if(t.rows.length > 12){
+      const resto = t.rows.length - 12;
+      t.rows = t.rows.slice(0, 12).concat([t.head.map((_, k) => k === 1 ? '… y ' + resto + ' más (ver Excel)' : '')]);
     }
     return `<section class="rvp-sec"><h2>${i + 1}. ${rvEsc(v.title)}</h2><p class="rvp-sub">${rvEsc(v.sub)}</p>
       <div class="rvp-kpis">${v.kpis.map(k => `<div class="rvp-kpi"><b>${rvEsc(k.l)}</b><span>${rvEsc(k.v)}</span></div>`).join('')}</div>
+      ${v.nota ? `<p class="rvp-sub">${rvEsc(v.nota)}</p>` : ''}
       <div class="rvp-charts">${imgs}</div>${bvTablaHtml(t)}</section>`;
   }).join('');
-  return `<div class="rvp-head"><img src="logo-piemca.png" alt="PIEMCA"><div><h1>BIOBRACE · Cierre de ${BV_MESES[s.mes]} ${s.anio}</h1>
-    <p>Estadística de ventas · Año fiscal ${s.anio} · Generado el ${bvFechaTxt(hoy)}${d.ultima ? ' · Datos hasta ' + bvFechaTxt(d.ultima) : ''}</p></div></div>${secs}
+  return `<div class="rvp-head"><img src="logo-piemca.png" alt="PIEMCA"><div><h1>${rvEsc(cfg.nombre)} · Cierre de ${rvEsc(cfg.cierreTxt(d, s))}</h1>
+    <p>Estadística de ventas · ${rvEsc(cfg.anioTxt(s))} · Generado el ${bvFechaTxt(hoy)}${d.ultima ? ' · Datos hasta ' + bvFechaTxt(d.ultima) : ''}</p></div></div>${secs}
     <div class="rvp-foot">PIEMCA · Innovación sin fronteras</div>`;
 }
-function bvPdf(d, s){
+function vizPdf(cfg, d, s){
   const btn = document.getElementById('bvPdf');
   if(btn){ btn.disabled = true; btn.textContent = 'Preparando PDF…'; }
   setTimeout(() => {
@@ -1768,7 +1784,7 @@ function bvPdf(d, s){
     try{
       box = document.createElement('div');
       box.id = 'rvReport';
-      box.innerHTML = bvReporteHtml(d, s);
+      box.innerHTML = vizReporteHtml(cfg, d, s);
       document.body.appendChild(box);
     }catch(err){
       console.error('No se pudo armar el PDF del cierre:', err);
@@ -1789,6 +1805,288 @@ function bvPdf(d, s){
     Promise.all(imgs.map(i => i.decode ? i.decode().catch(() => null) : null)).then(() => window.print());
   }, 60);
 }
+
+const VIZ_BIO = {
+  clave:'bio', nombre:'BIOBRACE', parse:bvParse, vistas:BV_VISTAS, sel:bvSel,
+  estado:() => rvState.bio || (rvState.bio = {}),
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], doctores:['anio'], genero:['anio'], general:[] },
+  pdf:['cierre', 'modelos', 'doctores', 'genero', 'general'],
+  pdfSel:s => s,
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña Biobrace no tiene registros todavía.',
+  detalle:regs => ({
+    head:['Fecha', 'Doctor', 'Clínica', 'Tipo de cirugía', 'Género', 'Edad', 'Modelo', 'Cantidad'],
+    rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.tipo, r.genero === '?' ? '' : r.genero, r.edad === null ? '' : r.edad, r.modelo.label, r.cant])
+  })
+};
+
+/* ============ LIPOGEMS: cierre mensual desde la pestaña "Lipogems" ============ */
+// Columnas esperadas: Ítem, Año, Fecha, Doctor, Clínica, Paciente, Kit, Cant., Nº Nota, Stock inicial, Stock final.
+// Stock inicial = unidades compradas (se suman). Venta = Cant. Stock final = lo que queda tras cada venta.
+// El nombre del paciente y el Nº de nota no se muestran ni se exportan.
+function lgParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
+  const ix = { anio:col('ano'), fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), kit:col('kit'),
+               cant:col('cant'), sini:col('stock inicial'), sfin:col('stock final') };
+  const nombres = { fecha:'Fecha', doctor:'Doctor', clinica:'Clínica', cant:'Cant.', sini:'Stock inicial', sfin:'Stock final' };
+  const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
+  if(faltan.length) return { error:'La pestaña Lipogems no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  let stockActual = null;
+  rows.slice(1).forEach(r => {
+    const doctor = String(r[ix.doctor] || '').trim();
+    const f = bvFecha(r[ix.fecha]);
+    const compra = rvNum(r[ix.sini]) || 0;
+    const cant = rvNum(r[ix.cant]);
+    const sfin = rvNum(r[ix.sfin]);
+    if(!doctor && !compra && cant === null && !f) return;
+    let anio = ix.anio >= 0 ? parseInt(String(r[ix.anio]).replace(/\D/g, ''), 10) : NaN;
+    if(isNaN(anio) && f) anio = f.getFullYear();
+    if(isNaN(anio)) return;
+    regs.push({
+      anio, fecha:f, mes:f ? f.getMonth() : null, doctor, clinica:String(r[ix.clinica] || '').trim(),
+      kit:ix.kit >= 0 ? String(r[ix.kit] || '').trim() : '',
+      venta:cant !== null ? cant : (doctor ? 1 : 0), compra, stockFin:sfin
+    });
+    if(sfin !== null) stockActual = sfin;
+  });
+  const ventasRegs = regs.filter(r => r.venta > 0);
+  const fechas = regs.filter(r => r.fecha).map(r => r.fecha.getTime());
+  return {
+    regs, ventasRegs, stockActual,
+    anios:[...new Set(regs.map(r => r.anio))].sort((a, b) => a - b),
+    ultima:fechas.length ? new Date(Math.max(...fechas)) : null
+  };
+}
+const lgV = regs => regs.reduce((s, r) => s + r.venta, 0);
+const lgMesesVentas = (d, anio) => [...new Set(d.ventasRegs.filter(r => r.anio === anio && r.mes !== null).map(r => r.mes))].sort((a, b) => a - b);
+function lgSel(d){
+  const st = rvState.lg || (rvState.lg = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
+  const ms = lgMesesVentas(d, st.anio);
+  st.mes = ms.length ? ms[ms.length - 1] : 0;
+  return st;
+}
+const lgMesesAct = (d, anio) => lgMesesVentas(d, anio).length;
+
+function lgVistaMensual(d, s){
+  const vr = d.ventasRegs;
+  const cur = BV_MES3.map((_, j) => lgV(vr.filter(r => r.anio === s.anio && r.mes === j)));
+  const pre = BV_MES3.map((_, j) => lgV(vr.filter(r => r.anio === s.anio - 1 && r.mes === j)));
+  const hayPre = pre.some(x => x > 0);
+  const total = cur.reduce((a, b) => a + b, 0);
+  const ms = lgMesesVentas(d, s.anio), ultM = ms.length ? ms[ms.length - 1] : -1;
+  const activos = ms.length || 1;
+  const mejor = cur.indexOf(Math.max(...cur));
+  const ultV = ultM >= 0 ? cur[ultM] : 0;
+  const antV = ultM > 0 ? cur[ultM - 1] : (ultM === 0 ? pre[11] : 0);
+  const vMes = bvVar(ultV, antV);
+  const tramoPre = pre.slice(0, ultM + 1).reduce((a, b) => a + b, 0);
+  const vTramo = hayPre && ultM >= 0 ? bvVar(total, tramoPre) : null;
+  const lbl = Object.assign({}, bvLabelEnd, { formatter:(v, ctx) => ctx.dataIndex <= ultM ? rvFmt(v || 0) : '' });
+  const datasets = [];
+  if(hayPre) datasets.push({ label:String(s.anio - 1), data:pre, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:18 });
+  datasets.push({ label:String(s.anio), data:cur, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:hayPre ? 18 : 30, datalabels:lbl });
+  const cls = x => x === null ? '' : (x >= 0 ? 'dash-good' : 'dash-bad');
+  return {
+    id:'mensual', file:'Lipogems_mensual_' + s.anio,
+    title:'Ortho Kits vendidos por mes · Año ' + s.anio,
+    sub:hayPre ? 'Barras azules: ' + s.anio + ' · Barras grises: ' + (s.anio - 1) : 'Unidades vendidas cada mes',
+    kpis:[
+      { l:'Vendidos ' + s.anio, v:rvFmt(total) },
+      { l:'Mejor mes', v:total ? BV_MESES[mejor] + ' · ' + rvFmt(cur[mejor]) : '—' },
+      { l:'Promedio mensual', v:rvFmt(total / activos) },
+      { l:'Último mes', v:ultM >= 0 ? BV_MESES[ultM] + ' · ' + rvFmt(ultV) : '—' },
+      { l:'Vs mismo tramo ' + (s.anio - 1), v:bvPctTxt(vTramo), cls:cls(vTramo) }
+    ],
+    charts:[{ h:330, cfg:{ type:'bar', data:{ labels:BV_MES3, datasets }, options:bvOpts({ legend:hayPre }) } }],
+    table:{
+      head:hayPre ? ['Mes', String(s.anio - 1), String(s.anio), 'Variación'] : ['Mes', String(s.anio)],
+      rows:BV_MESES.map((m, j) => {
+        const c = j <= ultM ? cur[j] : '';
+        return hayPre ? [m, pre[j] || '', c, j <= ultM && pre[j] ? bvPctTxt(bvVar(cur[j], pre[j])) : ''] : [m, c];
+      }),
+      foot:hayPre ? ['Total', pre.reduce((a, b) => a + b, 0), total, bvPctTxt(bvVar(total, pre.reduce((a, b) => a + b, 0)))] : ['Total', total]
+    },
+    detail:vr.filter(r => r.anio === s.anio)
+  };
+}
+
+function lgVistaAnios(d, s){
+  const an = d.anios, vr = d.ventasRegs;
+  const ven = an.map(a => lgV(vr.filter(r => r.anio === a)));
+  const act = an.map(a => lgMesesAct(d, a));
+  const prom = ven.map((v, i) => act[i] ? v / act[i] : 0);
+  const total = ven.reduce((a, b) => a + b, 0), mejor = ven.indexOf(Math.max(...ven));
+  const ult = an.length - 1, ultAnio = an[ult];
+  const ms = lgMesesVentas(d, ultAnio), ultM = ms.length ? ms[ms.length - 1] : -1;
+  const tramoAnt = lgV(vr.filter(r => r.anio === ultAnio - 1 && r.mes !== null && r.mes <= ultM));
+  const vT = ultM >= 0 && tramoAnt ? bvVar(ven[ult], tramoAnt) : null;
+  const totAct = act.reduce((a, b) => a + b, 0) || 1;
+  const labels = an.map(String);
+  const barra = (data, color, label) => ({ type:'bar', data:{ labels, datasets:[{
+    label, data, backgroundColor:color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
+    datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v ? rvFmt(v) : '' }) }] }, options:bvOpts({}) });
+  return {
+    id:'anios', file:'Lipogems_por_anio',
+    title:'Ortho Kits vendidos por año', sub:'Ventas anuales y promedio mensual de cada año',
+    kpis:[
+      { l:'Total histórico', v:rvFmt(total) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(ven[mejor]) },
+      { l:'Promedio mensual', v:rvFmt(total / totAct) },
+      { l:ultAnio + ' vs mismo tramo ' + (ultAnio - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') },
+      { l:'Años con datos', v:an.length > 1 ? an[0] + ' – ' + ultAnio : String(an[0]) }
+    ],
+    charts:[
+      { h:320, half:true, cfg:barra(ven, BV.cat[0], 'Ventas por año') },
+      { h:320, half:true, cfg:barra(prom.map(x => Math.round(x * 10) / 10), BV.cat[1], 'Promedio mensual') }
+    ],
+    table:{
+      head:['Año', 'Ventas', 'Meses con ventas', 'Promedio mensual', 'Variación'],
+      rows:an.map((a, i) => [String(a), ven[i], act[i], Math.round(prom[i] * 10) / 10, i && ven[i - 1] ? bvPctTxt(bvVar(ven[i], ven[i - 1])) : '—']),
+      foot:['Total', total, act.reduce((a, b) => a + b, 0), Math.round(total / totAct * 10) / 10, '']
+    },
+    nota:'El promedio mensual se calcula sobre los meses en que hubo ventas.',
+    detail:vr
+  };
+}
+
+function lgVistaInventario(d, s){
+  const an = d.anios, vr = d.ventasRegs;
+  const compras = an.map(a => d.regs.filter(r => r.anio === a).reduce((x, r) => x + r.compra, 0));
+  const ventas = an.map(a => lgV(vr.filter(r => r.anio === a)));
+  let prev = null;
+  const cierre = an.map(a => {
+    const sf = d.regs.filter(r => r.anio === a && r.stockFin !== null);
+    if(sf.length) prev = sf[sf.length - 1].stockFin;
+    return prev;
+  });
+  const tCompras = compras.reduce((a, b) => a + b, 0), tVentas = ventas.reduce((a, b) => a + b, 0);
+  const actual = d.stockActual !== null ? d.stockActual : tCompras - tVentas;
+  const pct = tCompras ? tVentas / tCompras * 100 : null;
+  // stock al cierre de cada mes (último "Stock final" del mes; si no hay movimiento, se arrastra el anterior)
+  const meses = [];
+  d.regs.forEach(r => { if(r.mes !== null && !meses.some(m => m.k === r.anio * 12 + r.mes)) meses.push({ k:r.anio * 12 + r.mes, a:r.anio, m:r.mes }); });
+  meses.sort((x, y) => x.k - y.k);
+  let arr = null;
+  const serie = meses.map(m => {
+    const sf = d.regs.filter(r => r.anio === m.a && r.mes === m.m && r.stockFin !== null);
+    if(sf.length) arr = sf[sf.length - 1].stockFin;
+    return arr;
+  });
+  const lo = Object.assign({}, bvOpts({ top:24 }));
+  lo.scales.x.ticks = Object.assign({}, lo.scales.x.ticks, { autoSkip:true, maxTicksLimit:12, maxRotation:0 });
+  const po = bvOpts({ legend:true, top:4 });
+  po.cutout = '68%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {};
+  po.layout.padding = { top:4, right:4 };
+  po.plugins.bvCenter = { valor:pct === null ? '—' : rvFmt(pct) + '%', texto:'vendido' };
+  po.plugins.tooltip.callbacks = { label:c => ' ' + c.label.split(' · ')[0] + ': ' + rvFmt(c.parsed) };
+  const nota = d.stockActual !== null && tCompras - tVentas !== d.stockActual
+    ? 'Ojo: compras (' + rvFmt(tCompras) + ') menos ventas (' + rvFmt(tVentas) + ') dan ' + rvFmt(tCompras - tVentas) + ', pero el último Stock final registrado es ' + rvFmt(d.stockActual) + '. Revisa esas columnas en el Sheets.' : '';
+  return {
+    id:'inventario', file:'Lipogems_inventario', nota,
+    title:'Inventario · Stock inicial contra stock final', sub:'Unidades compradas, vendidas y disponibles',
+    kpis:[
+      { l:'Stock inicial (compras)', v:rvFmt(tCompras) },
+      { l:'Total ventas', v:rvFmt(tVentas) },
+      { l:'Stock actual', v:rvFmt(actual) },
+      { l:'% de ventas total', v:pct === null ? '—' : rvFmt(pct) + '%' },
+      { l:'Última carga', v:d.ultima ? bvFechaTxt(d.ultima) : '—' }
+    ],
+    charts:[
+      { h:320, half:true, pdfH:200, cfg:{ type:'doughnut', plugins:[bvCenterPlugin],
+        data:{ labels:['Vendido · ' + rvFmt(tVentas), 'Disponible · ' + rvFmt(actual)], datasets:[{ data:[tVentas, actual], backgroundColor:[BV.cat[0], BV.muted], borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] },
+        options:po } },
+      { h:320, half:true, pdfH:200, cfg:{ type:'bar', data:{ labels:an.map(String), datasets:[
+          { label:'Compradas', data:compras, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) },
+          { label:'Vendidas', data:ventas, backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) }
+        ] }, options:bvOpts({ legend:true }) } },
+      { h:300, full:true, pdfH:170, cfg:{ type:'line', data:{ labels:meses.map(m => BV_MES3[m.m] + ' ' + String(m.a).slice(2)), datasets:[{
+          label:'Stock al cierre del mes', data:serie, borderColor:BV.cat[0], backgroundColor:'rgba(42,120,214,.10)', fill:true, borderWidth:2,
+          tension:.2, pointRadius:0, pointHoverRadius:5, pointBackgroundColor:BV.cat[0], pointBorderColor:BV.surface, pointBorderWidth:2,
+          datalabels:{ display:ctx => ctx.dataIndex === serie.length - 1, align:'top', anchor:'end', color:BV.ink, font:{ family:BV_FONT, weight:'normal', size:12 }, formatter:v => rvFmt(v) } }] },
+        options:lo } }
+    ],
+    table:{
+      head:['Año', 'Compras (stock inicial)', 'Ventas', 'Stock al cierre del año'],
+      rows:an.map((a, i) => [String(a), compras[i] || '', ventas[i], cierre[i] === null ? '' : cierre[i]]),
+      foot:['Total', tCompras, tVentas, actual]
+    },
+    detail:d.regs
+  };
+}
+
+function lgVistaTop(campo){
+  const esDoc = campo === 'doctor';
+  return function(d, s){
+    const p = s.periodo, an = d.anios;
+    const base = d.ventasRegs.filter(r => (esDoc ? r.doctor : true));
+    const nom = r => (esDoc ? r.doctor : r.clinica) || (esDoc ? 'Sin doctor' : 'Sin clínica');
+    const otro = r => (esDoc ? r.clinica : r.doctor) || '—';
+    const mapa = {};
+    base.forEach(r => {
+      const k = nom(r), x = mapa[k] || (mapa[k] = { nombre:k, años:{}, otros:{}, n:0 });
+      x.años[r.anio] = (x.años[r.anio] || 0) + r.venta;
+      if(p === 'todo' || r.anio === p){ x.n += r.venta; x.otros[otro(r)] = (x.otros[otro(r)] || 0) + r.venta; }
+    });
+    const lista = Object.values(mapa).filter(x => x.n > 0).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+    lista.forEach(x => { x.ot = Object.keys(x.otros).sort((a, b) => x.otros[b] - x.otros[a])[0] || '—'; });
+    const total = lista.reduce((a, x) => a + x.n, 0), top = lista.slice(0, 10);
+    const top3 = lista.slice(0, 3).reduce((a, x) => a + x.n, 0);
+    const ent = esDoc ? 'doctor' : 'clínica', ents = esDoc ? 'doctores' : 'clínicas';
+    const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
+    const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
+    const o = bvOpts({ top:4 });
+    o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
+    o.layout.padding = { top:4, right:34 };
+    o.scales = {
+      x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
+      y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+    };
+    const totAn = an.map(a => lista.reduce((x, r) => x + (r.años[a] || 0), 0));
+    return {
+      id:esDoc ? 'doctores' : 'clinicas', file:'Lipogems_' + (esDoc ? 'doctores' : 'clinicas') + '_' + (p === 'todo' ? 'historico' : p),
+      title:(esDoc ? 'Ventas por doctor' : 'Despachos por clínica') + ' · ' + per,
+      sub:'Top 10 de ' + lista.length + ' ' + ents,
+      kpis:[
+        { l:'Total ' + (p === 'todo' ? 'histórico' : p), v:rvFmt(total) },
+        { l:esDoc ? 'Doctores activos' : 'Clínicas activas', v:rvFmt(lista.length) },
+        { l:(esDoc ? 'Doctor' : 'Clínica') + ' líder', v:lista.length ? lista[0].nombre + ' · ' + rvFmt(lista[0].n) : '—' },
+        { l:'Top 3', v:bvShare(top3, total) },
+        { l:'Promedio por ' + ent, v:lista.length ? rvFmt(total / lista.length) : '—' }
+      ],
+      charts:[{ h:Math.max(200, 46 + top.length * 34), pdfH:290, cfg:{
+        type:'bar',
+        data:{ labels:top.map(x => x.nombre), datasets:[{ label:'Ventas', data:top.map(x => x.n), backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'start', maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) }] },
+        options:o } }],
+      table:{
+        head:['#', esDoc ? 'Doctor' : 'Clínica', esDoc ? 'Clínica principal' : 'Doctor principal'].concat(an.map(String), [p === 'todo' ? 'Total' : 'Total ' + p]), left:[1, 2],
+        rows:lista.map((x, i) => [i + 1, x.nombre, x.ot].concat(an.map(a => x.años[a] || ''), [x.n])),
+        foot:['', 'Total', ''].concat(totAn.map(x => x || ''), [total])
+      },
+      detail:d.ventasRegs.filter(r => p === 'todo' || r.anio === p)
+    };
+  };
+}
+
+const LG_VISTAS = { mensual:lgVistaMensual, anios:lgVistaAnios, inventario:lgVistaInventario, doctores:lgVistaTop('doctor'), clinicas:lgVistaTop('clinica') };
+const VIZ_LG = {
+  clave:'lg', nombre:'LIPOGEMS', parse:lgParse, vistas:LG_VISTAS, sel:lgSel,
+  estado:() => rvState.lg || (rvState.lg = {}),
+  ctrl:{ mensual:['anio'], anios:[], inventario:[], doctores:['periodo'], clinicas:['periodo'] },
+  pdf:['mensual', 'anios', 'inventario', 'doctores', 'clinicas'],
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña Lipogems no tiene registros todavía.',
+  detalle:regs => ({
+    head:['Fecha', 'Doctor', 'Clínica', 'Kit', 'Cantidad', 'Compra (stock inicial)', 'Stock final'],
+    rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.kit, r.venta || '', r.compra || '', r.stockFin === null ? '' : r.stockFin])
+  })
+};
 
 const EMPRESAS = {
   PIEMCA: {
