@@ -135,9 +135,6 @@
   .pt-foot{position:relative;padding:16px 6vw 20px;text-align:center;font-size:13px;color:#4B5963;}
   @media (max-height:640px){.pt-top{padding:12px 5vw;}.pt-top .pt-art img{height:54px;}.pt-top .pt-pie{height:52px;}.pt-card{height:92px;}.pt-ico{flex-basis:62px;height:62px;}}
   /* cabecera de módulo */
-  .mod-label:empty{display:none;}
-  .mod-label{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.65);padding-left:14px;border-left:1px solid rgba(255,255,255,.25);}
-  .brand img{cursor:pointer;}
   body.en-portal header,body.en-portal .panel{visibility:hidden;}
   .tabs{display:flex;gap:6px;margin-left:8px;}
   .tab{
@@ -756,8 +753,7 @@
 
 <header>
   <div class="brand">
-    <img src="logo-piemca.png" alt="PIEMCA" id="brandHome" title="Volver al inicio">
-    <span class="mod-label" id="modLabel"></span>
+    <button type="button" class="btn" id="btnInicio" title="Volver al portal">⌂ Inicio</button>
   </div>
 
   <div class="tabs">
@@ -766,7 +762,6 @@
     <div class="tab" data-view="inventario" data-mod="operaciones">INVENTARIO</div>
     <div class="tab" data-view="pedidos" data-mod="operaciones">PEDIDOS</div>
   </div>
-  <button type="button" class="btn" id="btnInicio" title="Volver al portal">⌂ Inicio</button>
 </header>
 
 <!-- Panels -->
@@ -3706,8 +3701,7 @@ function abrirModulo(mod){
   document.getElementById('portal').classList.add('hidden');
   document.body.classList.remove('en-portal');
   document.body.dataset.mod = mod;
-  document.getElementById('modLabel').textContent = mod === 'ventas' ? '' : MODULOS[mod];
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.dataset.mod !== mod));
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.dataset.mod !== mod));
   const primera = document.querySelector('.tab[data-mod="' + mod + '"]');
   if(primera) primera.click();
   document.title = 'PIEMCA · ' + MODULOS[mod];
@@ -3720,7 +3714,6 @@ function segunHash(){
 document.getElementById('ptAnio').textContent = new Date().getFullYear();
 document.querySelectorAll('.pt-card').forEach(b => b.onclick = () => { location.hash = b.dataset.mod; });
 document.getElementById('btnInicio').onclick = () => { history.pushState(null, '', location.pathname + location.search); segunHash(); };
-document.getElementById('brandHome').onclick = () => document.getElementById('btnInicio').click();
 window.addEventListener('hashchange', segunHash);
 segunHash();
 
