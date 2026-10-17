@@ -552,7 +552,7 @@
     color:var(--text);
   }
   .inv-header{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
-  .inv-logo{height:64px;}
+  .inv-logo{height:58px;}
   .inv-header h2{
     flex:1;
     text-align:center;
@@ -944,7 +944,7 @@
 
     <div class="inv-sheet" id="invSheet">
       <div class="inv-header">
-        <img src="logo-piemca.png" alt="PIEMCA" class="inv-logo">
+        <img src="logo-artrogen.png" alt="ARTROGEN" class="inv-logo">
         <h2>TOMA FÍSICA DE INVENTARIOS</h2>
         <div class="inv-fecha">FECHA: <span id="invFecha"></span></div>
       </div>
@@ -2396,6 +2396,7 @@ const EMPRESAS = {
   PIEMCA: {
     prefijo: "PIV",
     logo: "logo-piemca.png",
+    logoAlto: 84,
     direccionEmisor: "CR 21 con calle 24 Edif Drolara piso 1 of 3 Sector Centro,<br>Barquisimeto, Lara - Zona postal 3001.",
     direccionEntrega: "PIEMCA<br>Avenida Principal de Los Chorros con 7ma. Avenida.<br>Quinta Villa García Nro. 57-A. Urb.<br>Los Chorros. Municipio Sucre – Edo. Miranda.<br>Telf.: +58 414 5460188 / piemca@me.com",
     claseColor: "empresa-piemca"
@@ -2403,6 +2404,7 @@ const EMPRESAS = {
   ARTROGEN: {
     prefijo: "ARV",
     logo: "logo-artrogen.png",
+    logoAlto: 60,
     direccionEmisor: "Calle 5 Edif Residencias Avila Suite Piso 2 Apt 202 Urb<br>Terrazas Del Avila Caracas (Petare) Miranda Zona Postal 1073",
     direccionEntrega: "ARTROGEN<br>Avenida Principal de Los Chorros con 7ma. Avenida.<br>Quinta Villa García Nro. 57-A. Urb.<br>Los Chorros. Municipio Sucre – Edo. Miranda.<br>Telf.: +58 414 5460188 / piemca@me.com",
     claseColor: "empresa-artrogen"
@@ -2877,6 +2879,7 @@ function renderPedSheet(total, simbolo){
   sheet.className = "ped-sheet " + emp.claseColor;
 
   document.getElementById('pedLogoOut').src = emp.logo;
+  document.getElementById('pedLogoOut').style.height = (emp.logoAlto || 60) + 'px';
   document.getElementById('pedDirEmisorOut').innerHTML = emp.direccionEmisor;
   document.getElementById('pedDirEntregaOut').innerHTML = emp.direccionEntrega;
   document.getElementById('pedFechaOut').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
