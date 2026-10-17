@@ -104,12 +104,9 @@
       linear-gradient(180deg,#F7F9FB 0%,#EDF1F5 100%);
   }
   #portal .pt-lines{position:absolute;inset:0;pointer-events:none;opacity:.55;}
-  .pt-top{position:relative;padding:30px 6vw 6px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+  .pt-top{position:relative;padding:30px 6vw 6px;display:flex;align-items:center;justify-content:flex-start;gap:24px;}
   .pt-top .pt-art{display:flex;align-items:flex-end;gap:18px;}
-  .pt-top .pt-art img{height:76px;display:block;}
-  .pt-top .pt-pie{height:82px;display:block;}
-  /* el blanco de los logos se funde con el fondo (si subes los PNG sin fondo, esto no estorba) */
-  .pt-top img{mix-blend-mode:multiply;}
+  .pt-top .pt-pie{height:112px;display:block;}
   .pt-main{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 5vw;text-align:center;}
   .pt-main h1{margin:0;font-weight:400;font-size:clamp(28px,3.4vw,44px);letter-spacing:.2px;color:#1E2A32;}
   .pt-main p{margin:8px 0 0;font-weight:400;font-size:clamp(15px,1.6vw,21px);color:#4B5963;}
@@ -133,7 +130,7 @@
   .pt-txt b{font-weight:500;font-size:clamp(20px,2vw,27px);letter-spacing:.2px;align-self:flex-start;white-space:nowrap;}
   .pt-txt span{font-size:13px;opacity:.9;letter-spacing:.3px;}
   .pt-foot{position:relative;padding:16px 6vw 20px;text-align:center;font-size:13px;color:#4B5963;}
-  @media (max-height:640px){.pt-top{padding:12px 5vw;}.pt-top .pt-art img{height:54px;}.pt-top .pt-pie{height:52px;}.pt-card{height:92px;}.pt-ico{flex-basis:62px;height:62px;}}
+  @media (max-height:640px){.pt-top{padding:12px 5vw;}.pt-top .pt-pie{height:80px;}.pt-card{height:92px;}.pt-ico{flex-basis:62px;height:62px;}}
   /* cabecera de módulo */
   body.en-portal header,body.en-portal .panel{visibility:hidden;}
   .tabs{display:flex;gap:6px;margin-left:8px;}
@@ -728,10 +725,9 @@
 <div id="portal">
   <svg class="pt-lines" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 700" fill="none" stroke="#8FA6BA" stroke-width="1" aria-hidden="true">
     <path d="M0 520 L260 330 L430 420"/><path d="M0 560 L300 340"/><path d="M60 700 L400 450"/>
-    <path d="M900 120 L1200 300"/><path d="M960 90 L1200 230 L1200 400"/><path d="M1010 640 L1200 520"/>
+    <path d="M683 -10 L1200 300"/><path d="M789 -10 L1200 230 L1200 400"/><path d="M1000 -10 L1200 110"/><path d="M1010 640 L1200 520"/>
   </svg>
   <div class="pt-top">
-    <div class="pt-art"><img src="logo-artrogen.jpg" alt="ARTROGEN · pasión por la ciencia · RIF J-50010476-6"></div>
     <img class="pt-pie" src="logo-piemca.png" alt="PIEMCA">
   </div>
   <div class="pt-main">
@@ -748,7 +744,7 @@
       </button>
     </div>
   </div>
-  <div class="pt-foot">ARTROGEN C.A. - Todos los derechos reservados. © <span id="ptAnio"></span></div>
+  <div class="pt-foot">ARTROGEN INVERSIONES, C.A. - Todos los derechos reservados. © <span id="ptAnio"></span></div>
 </div>
 
 <header>
