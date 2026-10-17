@@ -104,10 +104,12 @@
       linear-gradient(180deg,#F7F9FB 0%,#EDF1F5 100%);
   }
   #portal .pt-lines{position:absolute;inset:0;pointer-events:none;opacity:.55;}
-  .pt-top{position:relative;background:#fff;box-shadow:0 2px 14px rgba(8,43,68,.08);padding:22px 6vw;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+  .pt-top{position:relative;padding:30px 6vw 6px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
   .pt-top .pt-art{display:flex;align-items:flex-end;gap:18px;}
   .pt-top .pt-art img{height:76px;display:block;}
-  .pt-top .pt-pie{height:74px;display:block;}
+  .pt-top .pt-pie{height:82px;display:block;}
+  /* el blanco de los logos se funde con el fondo (si subes los PNG sin fondo, esto no estorba) */
+  .pt-top img{mix-blend-mode:multiply;}
   .pt-main{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 5vw;text-align:center;}
   .pt-main h1{margin:0;font-weight:400;font-size:clamp(28px,3.4vw,44px);letter-spacing:.2px;color:#1E2A32;}
   .pt-main p{margin:8px 0 0;font-weight:400;font-size:clamp(15px,1.6vw,21px);color:#4B5963;}
@@ -130,7 +132,7 @@
   .pt-txt{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;position:relative;z-index:1;}
   .pt-txt b{font-weight:500;font-size:clamp(20px,2vw,27px);letter-spacing:.2px;align-self:flex-start;white-space:nowrap;}
   .pt-txt span{font-size:13px;opacity:.9;letter-spacing:.3px;}
-  .pt-foot{position:relative;background:#fff;border-top:1px solid #E3E9ED;padding:14px 6vw;text-align:center;font-size:13px;color:#4B5963;}
+  .pt-foot{position:relative;padding:16px 6vw 20px;text-align:center;font-size:13px;color:#4B5963;}
   @media (max-height:640px){.pt-top{padding:12px 5vw;}.pt-top .pt-art img{height:54px;}.pt-top .pt-pie{height:52px;}.pt-card{height:92px;}.pt-ico{flex-basis:62px;height:62px;}}
   /* cabecera de módulo */
   .mod-label:empty{display:none;}
