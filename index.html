@@ -1188,7 +1188,7 @@
         <div class="field"><label>Realizado por</label><input type="text" id="ndRealizadoPor" placeholder="Ej: RAFAEL MILLAN"></div>
       </div>
       <div style="margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;" class="ctrl-grid">
-        <div class="field" style="grid-column:span 2;"><label>Tipo de Cirugía</label><input type="text" id="ndCirugia" placeholder="Ej: LCA INFINITY + ARTROSCOPIA"></div>
+        <div class="field" style="grid-column:span 2;"><label>Tipo de Cirugía</label><input list="ndLineasDatalist" id="ndCirugia" placeholder="Selecciona o escribe la línea..."><datalist id="ndLineasDatalist"></datalist></div>
         <div class="field"><label>Sublíneas / Plantillas (Base de Datos)</label><select id="ndPlantillaSelect"><option value="">-- Selecciona Sublínea --</option></select></div>
         <div style="display:flex;gap:6px;align-items:flex-end;">
           <button type="button" class="btn-accent" id="ndBtnCargarPlantilla">⚡ + Cargar Sublínea</button>
@@ -3901,6 +3901,8 @@ function loadBaseDatos(){
 }
 
 function populateBdSelectors(){
+  const dlLin = document.getElementById('ndLineasDatalist');
+  if(dlLin) dlLin.innerHTML = (bdData.lineas||[]).map(l => `<option value="${l}">`).join("");
   const dlDoc = document.getElementById('ndDoctoresList');
   if(dlDoc) dlDoc.innerHTML = (bdData.doctores||[]).map(d => `<option value="${d}">`).join("");
   const dlCli = document.getElementById('ndClinicasList');
@@ -4037,8 +4039,8 @@ function renderNdSheet(){
             <img src="logo-piemca.png" alt="PIEMCA">
             <span class="nd-rif">ARTROGEN INVERSIONES, C.A. RIF: J-50010476-6</span>
           </div>
-          <div class="nd-head-right">
-            <div class="nd-sacs-box"><b>SACS</b><span>EMP. Nº 4.262</span></div>
+<div class="nd-head-right">
+            <div style="text-align:right;margin-bottom:6px;"><img src="logo-sacs.png" alt="SACS" style="height:36px;object-fit:contain;"></div>
             <div class="nd-doc-title">NOTA DE DESPACHO</div>
             <div class="nd-num-row">Nº: <span>${num}</span></div>
             <div class="nd-fecha-row">FECHA: &nbsp;${fecha}</div>
