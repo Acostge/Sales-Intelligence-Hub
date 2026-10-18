@@ -131,7 +131,7 @@
   .pt-txt span{font-size:13px;opacity:.9;letter-spacing:.3px;}
   .pt-foot{position:relative;padding:16px 6vw 20px;text-align:center;font-size:13px;color:#4B5963;}
   @media (max-height:640px){.pt-top{padding:24px 28px 4px;}.pt-top .pt-pie{height:80px;}.pt-card{height:92px;}.pt-ico{flex-basis:62px;height:62px;}}
-  /* cabecera de módulo */
+  
   body.en-portal header,body.en-portal .panel{visibility:hidden;}
   .tabs{display:flex;gap:6px;margin-left:8px;}
   .tab{
@@ -179,7 +179,6 @@
   .section-title-row{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding-left:11px;}
   .status-bar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   
-  /* ESTILOS DE BARRA INFERIOR DE TABLA Y BOTON DE REFRESCAR */
   .table-bottom-bar{
     margin-top:12px;
     display:flex;
@@ -194,6 +193,7 @@
     align-items:center;
     gap:8px;
     color:var(--gray);
+    flex-wrap:wrap;
   }
   .sync-status-tag {
     font-size: 11.5px;
@@ -202,9 +202,9 @@
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  .sync-status-tag.show {
-    opacity: 1;
-  }
+  .sync-status-tag.show { opacity: 1; }
+  .sync-status-tag.warn { color: var(--warn); opacity: 1; }
+
   .btn-refresh{
     background:var(--navy);
     color:var(--white);
@@ -241,7 +241,7 @@
     border-radius: 0;
   }
 
-  /* ESTRUCTURA SPLIT TABLA */
+  /* ESTRUCTURA SPLIT TABLA CON SCROLL BIDIRECCIONAL */
   .table-wrap{
     background:var(--white);
     border-radius:12px;
@@ -253,10 +253,14 @@
   }
   .split-fixed{
     flex:0 0 auto;
-    overflow-y:hidden;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
     box-shadow: 3px 0 6px rgba(0,0,0,0.06);
     z-index:10;
   }
+  .split-fixed::-webkit-scrollbar{display:none;}
   .split-scroll{
     flex:1;
     overflow-x:auto;
@@ -345,7 +349,6 @@
   .dash-kpi-value.dash-good{color:#8CF0C4;}
   .dash-kpi-value.dash-bad{color:#FFB4B4;}
 
-  /* Botón RESUMEN DE VENTAS dentro de la cinta 1 del Dashboard */
   .dash-kpi-btn{
     flex:1.5 1 0;min-width:240px;border:none;border-left:1px solid rgba(255,255,255,.15);
     background:rgba(63,169,217,.22);font-family:inherit;text-align:left;cursor:pointer;transition:background .15s;
@@ -356,7 +359,7 @@
     padding:2px 7px;border-radius:10px;
   }
 
-  /* Ventana RESUMEN DE VENTAS (cierres de mes) */
+  /* Ventana RESUMEN DE VENTAS */
   .rv-overlay{
     position:fixed;inset:0;background:rgba(8,43,68,.6);z-index:200;
     display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
@@ -409,7 +412,6 @@
   .rv-pending code{background:var(--bg);border:1px solid var(--gray-line);border-radius:4px;padding:1px 5px;font-size:12px;}
   .rv-msg{padding:30px;text-align:center;color:var(--gray);font-size:13.5px;}
 
-  /* Biobrace: controles, gráficos, cuadro y reporte PDF */
   .rv-controls{
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:10px 16px;margin-bottom:10px;
     display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;
@@ -464,15 +466,7 @@
   .rvp-sec tfoot td{font-weight:800;border-top:2px solid #0B3B5C;}
   .rvp-sec tr.rv-hl td{background:#FFF3EA;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .rvp-foot{margin-top:12px;font-size:9px;color:#5B6B78;text-align:center;}
-  @media print{
-    @page{size:letter landscape;margin:10mm;}
-    body.rv-printing > *:not(#rvReport){display:none !important;}
-    body.rv-printing #rvReport{display:block !important;}
-    body.rv-printing #rvReport, body.rv-printing #rvReport *{visibility:visible !important;}
-    body.rv-printing{background:#fff;}
-  }
-
-  /* Tipografía redondeada y sin negritas (Arial Rounded MT Bold si el equipo la tiene; si no, Varela Round) */
+  
   .rv-overlay, #rvReport{--rv-font:"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif;}
   .rv-overlay *, #rvReport *{font-family:var(--rv-font) !important;font-weight:400 !important;}
   .rv-overlay code{font-family:Consolas,monospace !important;}
@@ -591,22 +585,6 @@
   .inv-table tbody tr:nth-child(odd){background:#ffffff;}
   .inv-table tbody tr:nth-child(even){background:#f9fafb;}
 
-  @media print {
-    @page { margin: 12mm; }
-    html, body, main { background: #ffffff !important; background-color: #ffffff !important; }
-    body * { visibility: hidden; }
-    .inv-sheet, .inv-sheet *, .ped-sheet, .ped-sheet * { visibility: visible; }
-    .inv-sheet, .ped-sheet {
-      position: absolute; top: 0; left: 0; width: 100%;
-      border: none !important; padding: 0 !important; border-radius: 0 !important;
-      box-shadow: none !important; background: #ffffff !important;
-    }
-    .no-print { display: none !important; }
-    header, .status-bar, .table-wrap, .table-bottom-bar, .kpi-body, .kpi-controls { display: none !important; }
-    thead { display: table-header-group; }
-    tr { page-break-inside: avoid; }
-  }
-
   /* Vista Pedidos */
   .ped-controls{
     display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
@@ -655,7 +633,6 @@
   .ped-print-total td{border:0.5px solid #ccc;padding:4px 10px;}
   .ped-print-total td.tot-val{background:#e6e6e6;}
 
-  /* Pie de página ajustado */
   .ped-footer {
     margin-top: 18px;
     font-size: 11px;
@@ -664,37 +641,49 @@
     gap: 12px;
     page-break-inside: avoid;
   }
-
   .ped-footer-info {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-bottom: 2px;
   }
-
   .ped-obs {
     width: 100%;
     border-top: 0.5px dashed #ccc;
     padding-top: 8px;
   }
-
   .ped-firma-container {
     display: flex;
     justify-content: flex-end;
     margin-top: 15px;
   }
-
   .ped-footer .ped-firma {
     text-align: center;
     font-size: 10px;
     color: #555;
     width: 180px;
   }
-
   .ped-footer .ped-firma-linea {
     border-bottom: 0.5px solid #999;
     height: 45px;
     margin-bottom: 4px;
+  }
+
+  /* Impresión */
+  @media print {
+    @page { margin: 10mm; }
+    html, body, main { background: #ffffff !important; background-color: #ffffff !important; }
+    body * { visibility: hidden; }
+    .inv-sheet, .inv-sheet *, .ped-sheet, .ped-sheet * { visibility: visible; }
+    .inv-sheet, .ped-sheet {
+      position: absolute; top: 0; left: 0; width: 100%;
+      border: none !important; padding: 0 !important; border-radius: 0 !important;
+      box-shadow: none !important; background: #ffffff !important;
+    }
+    .no-print { display: none !important; }
+    header, .status-bar, .table-wrap, .table-bottom-bar, .kpi-body, .kpi-controls, .panel { display: none !important; }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
   }
 
   /* Pantalla de bloqueo */
@@ -717,11 +706,10 @@
   <img src="logo-piemca.png" alt="PIEMCA">
   <div class="icon">🖥️</div>
   <h2>Disponible solo en PC o Tablet</h2>
-  <p>Para ofrecerte la mejor experiencia, esta herramienta incluye gráficos y tablas complejas no optimizadas para celulares. Accede desde una PC o una Tablet (9" o superior) en formato horizontal..</p>
+  <p>Para ofrecerte la mejor experiencia, esta herramienta incluye gráficos y tablas complejas no optimizadas para celulares. Accede desde una PC o una Tablet (9" o superior) en formato horizontal.</p>
 </div>
 
-
-<!-- ============ PORTAL DE INICIO: elige el módulo ============ -->
+<!-- ============ PORTAL DE INICIO ============ -->
 <div id="portal">
   <svg class="pt-lines" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 700" fill="none" stroke="#8FA6BA" stroke-width="1" aria-hidden="true">
     <path d="M0 520 L260 330 L430 420"/><path d="M0 560 L300 340"/><path d="M60 700 L400 450"/>
@@ -804,7 +792,7 @@
     <label>Preparación del fabricante <input type="number" id="ltFabricante" min="0" value="0"></label>
     <label>Tiempo de traslado <input type="number" id="ltTraslado" min="0" value="0"></label>
   </div>
-  <div class="kpi-hint">Total tiempo de entrega: <strong id="ltTotal">0</strong> días — el Stock de Seguridad se calcula solo a partir de este total.</div>
+  <div class="kpi-hint">Total tiempo de entrega: <strong id="ltTotal">0</strong> días — el Stock de Seguridad se calcula a partir de este total.</div>
 </div>
 
 <main>
@@ -853,7 +841,6 @@
       </div>
     </div>
     
-    <!-- BARRA INFERIOR DE SINCRONIZACIÓN Y REFRESCAR -->
     <div class="table-bottom-bar">
       <div class="sync-info">
         <span>Última sincronización de datos:</span>
@@ -979,8 +966,11 @@
         </select>
       </div>
       <div class="field">
-        <label>No. de pedido (próximo)</label>
-        <input type="text" id="pedNumero" readonly style="font-weight:700;">
+        <label>No. de pedido</label>
+        <div style="display:flex;gap:4px;">
+          <input type="text" id="pedNumero" readonly style="font-weight:700;flex:1;">
+          <button type="button" class="btn btn-solid" id="pedEditNumBtn" title="Editar número manualmente" style="padding:0 10px;height:36px;">✏️</button>
+        </div>
       </div>
       <button class="btn btn-solid" id="pedRefreshNum">🔄 Actualizar N°</button>
       <button class="btn btn-solid" id="pedPrint">🖨️ Generar / Imprimir Pedido</button>
@@ -1105,7 +1095,7 @@
   </div>
 </main>
 
-<!-- VENTANA: RESUMEN DE VENTAS (cierres de mes) -->
+<!-- VENTANA: RESUMEN DE VENTAS -->
 <div id="rvOverlay" class="rv-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rvTitle">
   <div class="rv-window">
     <div class="rv-head">
@@ -1130,25 +1120,17 @@
 </div>
 
 <script>
-/* ============ CONFIG ============ */
+/* ============ CONFIGURACIÓN Y CONSTANTES ============ */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=0&single=true&output=csv";
-
-// TODO: publica la pestaña "Proveedores" (Archivo > Compartir > Publicar en la web > esa pestaña > CSV)
-// y pega aquí el link que te da Google (cambia el gid, el resto de la URL es igual al de arriba).
 const PROVEEDORES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs2BBekIq1DlaDZ8cDU8u_RMo_bGnJ-EewEkz4Eg64KXsmGnmYRp-wSbzJPgS_sFPZ1h1bF11-FEwi/pub?gid=1064159766&single=true&output=csv";
-
-// Mismo enlace /exec que ya usa la macro de Excel (Sincronizador Apps Script).
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTp_po4-RfWdqs45rBGb1wejmcnoBPmpLKknaKxj_tTcP_HIGqK_3oTEcvZe8IuVLySg/exec";
-const APPS_SCRIPT_SECRET = "*Ga1591*"; // la misma clave del Apps Script
+const APPS_SCRIPT_SECRET = "*Ga1591*";
 
-/* ============ RESUMEN DE VENTAS (cierres de mes) ============ */
-// Cada pestaña de cierre que subas a Sheets = una línea en esta lista.
-//  1) Sube la pestaña al Sheets.
-//  2) Archivo > Compartir > Publicar en la web > esa pestaña > CSV.
-//  3) Copia el número que sale después de "gid=" y pégalo en 'gid' (mismo libro de siempre, solo cambia el gid).
-// Mientras 'gid' esté vacío, la línea aparece como "pendiente de conectar".
-// 'opciones' = la cinta de gráficos de esa línea. Cada opción tiene su propia función 'render',
-// así cada cierre se desarrolla por separado (por ahora todas usan la vista general automática).
+const PREFS_KEY = 'piemca_user_preferences';
+const CACHE_SALES_KEY = 'piemca_cached_sales';
+const CACHE_PROV_KEY = 'piemca_cached_proveedores';
+
+/* ============ RESUMEN DE VENTAS (CIERRES DE MES) ============ */
 const RESUMEN_LINEAS = [
   { id:'biobrace', nombre:'BIOBRACE', gid:'1962243658',
     opciones:[
@@ -1255,9 +1237,7 @@ function rvCargar(){
             <li>Copia el número que sale después de <code>gid=</code> y pégalo en <code>RESUMEN_LINEAS</code>.</li>
           </ol>
         </div>
-        <div style="display:flex;justify-content:center;"><button type="button" class="btn btn-solid" id="rvVerEjemplo">Ver ejemplo con datos de septiembre 2026</button></div>
       </div>`;
-    document.getElementById('rvVerEjemplo').onclick = () => { rvState.demo = true; rvCargar(); };
     return;
   }
 
@@ -1282,107 +1262,8 @@ function rvCargar(){
 
 function rvPintar(rows, esDemo){
   const box = document.getElementById('rvContenido');
-  box.innerHTML = (esDemo
-    ? `<div class="rv-banner"><strong>Ejemplo:</strong> datos del cierre de septiembre 2026 tomados de tu PDF, solo para ver cómo quedaría. <button type="button" class="link-btn" id="rvSalirEjemplo">Salir del ejemplo</button></div>`
-    : '') + '<div id="rvOpcionBox"></div>';
-  if(esDemo) document.getElementById('rvSalirEjemplo').onclick = () => { rvState.demo = false; rvCargar(); };
+  box.innerHTML = '<div id="rvOpcionBox"></div>';
   rvState.opcion.render(rows, document.getElementById('rvOpcionBox'), rvState.linea);
-}
-
-/* Vista general automática: columna A = nombre, fila 1 = periodos (meses o años). Una columna TOTAL se recalcula sola. */
-function rvRenderGeneral(rows, el, linea){
-  const head = rows[0] || [];
-  let cols = head.slice(1).map((h, i) => ({ label:String(h).trim(), idx:i + 1 })).filter(c => c.label !== '');
-  cols = cols.filter(c => c.label.toUpperCase() !== 'TOTAL');
-  const filas = rows.slice(1)
-    .filter(r => r[0] && String(r[0]).trim() && String(r[0]).trim().toUpperCase() !== 'TOTAL')
-    .map(r => ({ nombre:String(r[0]).trim(), vals:cols.map(c => rvNum(r[c.idx])) }));
-  if(!filas.length || !cols.length){
-    el.innerHTML = '<div class="rv-card rv-msg">La pestaña no tiene filas con datos todavía.</div>';
-    return;
-  }
-  const sum = a => a.reduce((s, v) => s + (v || 0), 0);
-  filas.forEach(f => f.total = sum(f.vals));
-  const colTot = cols.map((c, i) => sum(filas.map(f => f.vals[i])));
-  const total = sum(colTot);
-  let mejor = 0; colTot.forEach((v, i) => { if(v > colTot[mejor]) mejor = i; });
-  let ult = -1; colTot.forEach((v, i) => { if(v > 0) ult = i; });
-  const activos = colTot.filter(v => v > 0).length || 1;
-  const prom = total / activos;
-  let varTxt = '—', varCls = '';
-  if(ult > 0 && colTot[ult - 1] > 0){
-    const p = (colTot[ult] - colTot[ult - 1]) / colTot[ult - 1] * 100;
-    varTxt = (p >= 0 ? '+' : '') + p.toFixed(1) + '%';
-    varCls = p >= 0 ? 'dash-good' : 'dash-bad';
-  }
-
-  el.innerHTML = `
-    <div class="dash-ribbon1">
-      <div class="dash-kpi"><div class="dash-kpi-label">Total del período</div><div class="dash-kpi-value">🛍️ ${rvFmt(total)}</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-label">Mejor ${rvEsc(head[0] && /año/i.test(head[0]) ? 'año' : 'período')}</div><div class="dash-kpi-value">🏆 ${rvEsc(cols[mejor].label)} · ${rvFmt(colTot[mejor])}</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-label">Promedio por período</div><div class="dash-kpi-value">📊 ${rvFmt(prom)}</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-label">Último con datos</div><div class="dash-kpi-value">📦 ${ult >= 0 ? rvEsc(cols[ult].label) + ' · ' + rvFmt(colTot[ult]) : '—'}</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-label">Vs período anterior</div><div class="dash-kpi-value ${varCls}">📈 ${varTxt}</div></div>
-    </div>
-    <div class="rv-card">
-      <div class="rv-card-top">
-        <div><h3>${rvEsc(linea.nombre)} · Vista general</h3><p>${filas.length} ${filas.length === 1 ? 'fila' : 'filas'} · ${cols.length} períodos</p></div>
-        <div class="rv-toggle">
-          <button type="button" class="rv-chip rv-opt ${rvState.tipo === 'bar' ? 'active' : ''}" data-tipo="bar">Barras</button>
-          <button type="button" class="rv-chip rv-opt ${rvState.tipo === 'line' ? 'active' : ''}" data-tipo="line">Líneas</button>
-        </div>
-      </div>
-      <div class="rv-chart-wrap"><canvas id="rvCanvas" role="img" aria-label="Gráfico de ${rvEsc(linea.nombre)}"></canvas></div>
-    </div>
-    <div class="rv-card">
-      <div class="rv-table-wrap">
-        <table class="rv-table">
-          <thead><tr><th>${rvEsc(head[0] || '')}</th>${cols.map(c => `<th>${rvEsc(c.label)}</th>`).join('')}<th>TOTAL</th></tr></thead>
-          <tbody>${filas.map(f => `<tr><td>${rvEsc(f.nombre)}</td>${f.vals.map(v => `<td>${rvFmt(v)}</td>`).join('')}<td class="rv-tot">${rvFmt(f.total)}</td></tr>`).join('')}</tbody>
-        </table>
-      </div>
-    </div>`;
-
-  rvState.last = { cols, filas };
-  el.querySelectorAll('[data-tipo]').forEach(b => b.onclick = () => {
-    rvState.tipo = b.dataset.tipo;
-    el.querySelectorAll('[data-tipo]').forEach(x => x.classList.toggle('active', x === b));
-    rvDibujar();
-  });
-  rvDibujar();
-}
-
-function rvDibujar(){
-  const d = rvState.last;
-  const cv = document.getElementById('rvCanvas');
-  if(!d || !cv) return;
-  if(rvState.chart) rvState.chart.destroy();
-  const tipo = rvState.tipo;
-  const filas = d.filas.slice(0, 6);
-  rvState.chart = new Chart(cv, {
-    type: tipo,
-    data: {
-      labels: d.cols.map(c => c.label),
-      datasets: filas.map((f, i) => ({
-        label: f.nombre, data: f.vals,
-        backgroundColor: RV_PALETA[i % 6], borderColor: RV_PALETA[i % 6],
-        borderWidth: tipo === 'line' ? 3 : 0, borderRadius: tipo === 'bar' ? 4 : 0,
-        tension: .25, spanGaps: false, pointRadius: tipo === 'line' ? 3 : 0
-      }))
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: filas.length > 1, position: 'bottom', labels: { font: { family: BV_FONT } } },
-        datalabels: {
-          display: filas.length === 1, anchor: 'end', align: 'end', color: '#0B3B5C',
-          font: { family: BV_FONT, weight: 'normal' }, formatter: v => v === null ? '' : rvFmt(v)
-        }
-      },
-      layout: { padding: { top: 18 } },
-      scales: { y: { beginAtZero: true, grid: { color: '#DCE3E8' }, ticks: { font: { family: BV_FONT } } }, x: { grid: { display: false }, ticks: { font: { family: BV_FONT } } } }
-    }
-  });
 }
 
 document.getElementById('rvClose').onclick = cerrarResumenVentas;
@@ -1391,18 +1272,15 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && !document.getElementById('rvOverlay').classList.contains('hidden')) cerrarResumenVentas();
 });
 
-/* ============ BIOBRACE: cierre mensual desde la pestaña "Biobrace" ============ */
-// Columnas esperadas: Ítem, Año, Fecha, Doctor, Clínica, Tipo de Cirugía, Paciente, Género, Edad, Talla, Cant.
-// Modelo = columna Talla. El nombre del paciente no se muestra ni se exporta.
+/* ============ BIOBRACE VIZ ============ */
 const BV = {
   ink:'#1E2A32', ink2:'#5B6B78', grid:'#E3E9ED', surface:'#FFFFFF', muted:'#C3CDD5',
   cat:['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948']
 };
 const BV_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const BV_MES3 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-const BV_FIJOS = { '5x250':0, '23x30':1, 'rc23x25':2, '40x60':3 }; // cada modelo conserva siempre su color
+const BV_FIJOS = { '5x250':0, '23x30':1, 'rc23x25':2, '40x60':3 };
 const BV_FONT = '"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif';
-if(document.fonts && document.fonts.load){ document.fonts.load('16px "Varela Round"').catch(() => {}); } // precarga para que los gráficos salgan con la misma letra
 
 function bvNorm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
 function bvPad(n){ return String(n).padStart(2, '0'); }
@@ -1465,13 +1343,12 @@ function bvParse(rows){
   return { regs, modelos, anios, ultima:fechas.length ? new Date(Math.max(...fechas)) : null };
 }
 
-/* ---------- opciones de gráfico (estilo común) ---------- */
 function bvOpts(o){
   o = o || {};
   const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
   return {
     responsive:true, maintainAspectRatio:false,
-    animation:{ duration:700, easing:'easeOutQuart' },
+    animation:{ duration:600, easing:'easeOutQuart' },
     layout:{ padding:{ top:o.top !== undefined ? o.top : 22, right:8 } },
     interaction:{ mode:'index', intersect:false },
     plugins:{
@@ -1522,7 +1399,6 @@ const bvCenterPlugin = {
   }
 };
 
-/* ---------- las 5 vistas: devuelven título, KPIs, gráficos y cuadro ---------- */
 function bvPrev(anio, mes){ return mes === 0 ? { anio:anio - 1, mes:11 } : { anio, mes:mes - 1 }; }
 
 function bvVistaCierre(d, s){
@@ -1714,7 +1590,6 @@ function bvVistaGeneral(d, s){
 }
 const BV_VISTAS = { cierre:bvVistaCierre, modelos:bvVistaModelosAnio, doctores:bvVistaDoctores, genero:bvVistaGenero, general:bvVistaGeneral };
 
-/* ---------- selección (año y mes) ---------- */
 function bvMesesConDatos(d, anio){
   return [...new Set(d.regs.filter(r => r.anio === anio && r.mes !== null).map(r => r.mes))].sort((a, b) => a - b);
 }
@@ -1727,7 +1602,6 @@ function bvSel(d){
   return st;
 }
 
-/* ---------- pantalla ---------- */
 function bvTablaHtml(t){
   const left = t.left || [0];
   const money = t.money || [];
@@ -1746,7 +1620,6 @@ function rvDestruirGraficos(){
   rvState.bioCharts = [];
 }
 
-/* ---------- motor común de vistas (Biobrace y Lipogems) ---------- */
 function bioRender(id){ return (rows, el, linea) => vizRender(VIZ_BIO, id, rows, el, linea); }
 function lipoRender(id){ return (rows, el, linea) => vizRender(VIZ_LG, id, rows, el, linea); }
 
@@ -1805,7 +1678,6 @@ function vizRender(cfg, id, rows, el, linea){
   pintar();
 }
 
-/* ---------- exportar cuadro a Excel ---------- */
 function bvDescargar(blob, nombre){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = nombre;
@@ -1826,11 +1698,10 @@ function vizExcel(cfg, v){
     XLSX.writeFile(wb, v.file + '.xlsx');
     return;
   }
-  const csv = '﻿' + cuadro.map(f => f.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const csv = '\uFEFF' + cuadro.map(f => f.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
   bvDescargar(new Blob([csv], { type:'text/csv;charset=utf-8' }), v.file + '.csv');
 }
 
-/* ---------- exportar el cierre completo a PDF (imprimir > guardar como PDF) ---------- */
 function bvChartImg(cfg, w, h){
   const cv = document.createElement('canvas');
   cv.width = w; cv.height = h;
@@ -1842,8 +1713,6 @@ function bvChartImg(cfg, w, h){
 }
 function vizReporteHtml(cfg, d, s){
   const hoy = new Date(), s2 = cfg.pdfSel(s);
-  // Página carta horizontal con margen de 10 mm: unos 980 px de ancho por 740 px de alto.
-  // Si gráficos y cuadro no caben cómodos juntos, el cuadro pasa a su propia página para que ninguna se vea cargada.
   const ALTO = 690, MAX_FILAS = 12;
   let n = 0;
   const secs = cfg.pdf.map(id => {
@@ -1862,7 +1731,7 @@ function vizReporteHtml(cfg, d, s){
       t.rows = t.rows.slice(0, MAX_FILAS).concat([t.head.map((_, k) => k === 1 ? '… y ' + resto + ' más (ver Excel)' : '')]);
     }
     const hTabla = 30 + (t.rows.length + (t.foot ? 1 : 0)) * 21 + 24;
-    const hFijo = 110 + (n === 1 ? 80 : 0) + (v.nota ? 40 : 0);      // título, subtítulo, tarjetas y (en la primera) la cabecera
+    const hFijo = 110 + (n === 1 ? 80 : 0) + (v.nota ? 40 : 0);
     const aparte = hFijo + hCharts + hTabla > ALTO;
     const tabla = `<div class="rvp-tbl${aparte ? ' rvp-newpage' : ''}">${aparte ? `<h3>${n}. ${rvEsc(v.title)} · cuadro de datos</h3>` : ''}${bvTablaHtml(t)}</div>`;
     return `<section class="rvp-sec"><div class="rvp-main"><h2>${n}. ${rvEsc(v.title)}</h2><p class="rvp-sub">${rvEsc(v.sub)}</p>
@@ -1919,10 +1788,7 @@ const VIZ_BIO = {
   })
 };
 
-/* ============ LIPOGEMS: cierre mensual desde la pestaña "Lipogems" ============ */
-// Columnas esperadas: Ítem, Año, Fecha, Doctor, Clínica, Paciente, Kit, Cant., Nº Nota, Stock inicial, Stock final.
-// Stock inicial = unidades compradas (se suman). Venta = Cant. Stock final = lo que queda tras cada venta.
-// El nombre del paciente y el Nº de nota no se muestran ni se exportan.
+/* ============ LIPOGEMS VIZ ============ */
 function lgParse(rows){
   const head = (rows[0] || []).map(bvNorm);
   const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
@@ -1931,7 +1797,6 @@ function lgParse(rows){
   const nombres = { fecha:'Fecha', doctor:'Doctor', clinica:'Clínica', cant:'Cant.', sini:'Stock inicial', sfin:'Stock final' };
   const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
   if(faltan.length) return { error:'La pestaña Lipogems no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
-  // Costos de la compra (columnas N a W). Se buscan por título; si el título no coincide se usa la letra de columna.
   const ancho = head.length >= 23;
   const cc = (pos, ...names) => { const i = col(...names); return i >= 0 ? i : (ancho ? pos : -1); };
   const fechas2 = head.map((h, i) => h.startsWith('fecha') ? i : -1).filter(i => i >= 0);
@@ -1962,7 +1827,6 @@ function lgParse(rows){
     });
     if(sfin !== null) stockActual = sfin;
   });
-  // Una compra = fila con unidades en Stock inicial (o con costos). Neto = factura menos descuento.
   const compras = regs.filter(r => r.compra > 0 || r.hayCosto).map(r => {
     const c = r.c, f = r.fechaFac || r.fecha;
     const neto = c.monto - c.desc, imp = c.flete + c.seguro + c.manejo + c.arancel + c.aduanal, calc = neto + imp + c.otros;
@@ -2065,7 +1929,7 @@ function lgVistaAnios(d, s){
       rows:an.map((a, i) => [String(a), ven[i], act[i], prom[i], i && ven[i - 1] ? bvPctTxt(bvVar(ven[i], ven[i - 1])) : '—']),
       foot:['Total', total, act.reduce((a, b) => a + b, 0), Math.round(total / totAct), '']
     },
-    nota:'El promedio mensual se calcula sobre los meses en que hubo ventas y se muestra sin decimales. El promedio por año es el total histórico entre los años con datos.',
+    nota:'El promedio mensual se calcula sobre los meses en que hubo ventas. El promedio por año es el total histórico entre los años con datos.',
     detail:vr
   };
 }
@@ -2083,7 +1947,6 @@ function lgVistaInventario(d, s){
   const tCompras = compras.reduce((a, b) => a + b, 0), tVentas = ventas.reduce((a, b) => a + b, 0);
   const actual = d.stockActual !== null ? d.stockActual : tCompras - tVentas;
   const pct = tCompras ? tVentas / tCompras * 100 : null;
-  // stock al cierre de cada mes (último "Stock final" del mes; si no hay movimiento, se arrastra el anterior)
   const meses = [];
   d.regs.forEach(r => { if(r.mes !== null && !meses.some(m => m.k === r.anio * 12 + r.mes)) meses.push({ k:r.anio * 12 + r.mes, a:r.anio, m:r.mes }); });
   meses.sort((x, y) => x.k - y.k);
@@ -2192,7 +2055,6 @@ function lgVistaTop(campo){
   };
 }
 
-/* ---------- costos e inversión (columnas N a W de la pestaña) ---------- */
 const LG_SIN_COSTOS = 'La pestaña Lipogems todavía no trae las columnas de costos (Monto, Descuento, Flete, Seguro, Manejo, Aranceles, Ag. aduanal, Otros, Total USD) o están vacías.';
 const lgSuma = (arr, k) => arr.reduce((t, x) => t + (x[k] || 0), 0);
 function lgAgg(d){
@@ -2273,7 +2135,7 @@ function lgVistaCostos(d){
       datalabels:Object.assign({}, lgLblUsd, { align:'top', anchor:'end' }) }]) },
     options:lgOptsUsd({ legend:true, stacked:true }) };
   const ceros = ['seguro', 'manejo'].filter(k => T(k) === 0).map(k => k === 'seguro' ? 'seguro' : 'manejo');
-  const nota = [ceros.length ? 'No se muestran ' + ceros.join(' ni ') + ' porque hoy valen 0 (Lipogems no los cobra). Si algún día se cobran, aparecerán solos.' : '', lgNotaTotal(d)].filter(Boolean).join(' ');
+  const nota = [ceros.length ? 'No se muestran ' + ceros.join(' ni ') + ' porque hoy valen 0 (Lipogems no los cobra).' : '', lgNotaTotal(d)].filter(Boolean).join(' ');
   return {
     id:'costos', file:'Lipogems_unidades_vs_costos', nota,
     title:'Unidades vendidas contra costo total de inversión', sub:'Costo = factura menos descuento, más flete, seguro, manejo, aranceles y agente aduanal',
@@ -2305,14 +2167,14 @@ function lgVistaCostoKit(d){
   const labels = cs.map(c => lgFechaCorta(c.fecha));
   const u = lgSuma(cs, 'unidades'), t = lgSuma(cs, 'total');
   const ult = ck.length - 1, ant = ult > 0 ? ck[ult - 1] : null;
-  const cls = x => x === null ? '' : (x <= 0 ? 'dash-good' : 'dash-bad');   // que el costo baje es bueno
+  const cls = x => x === null ? '' : (x <= 0 ? 'dash-good' : 'dash-bad');
   const o2 = bvOpts({});
   o2.scales.y.ticks = Object.assign({}, o2.scales.y.ticks, { callback:v => v + '%' });
   o2.plugins.tooltip.callbacks = { label:c => ' ' + c.dataset.label + ': ' + bvPctTxt(c.parsed.y) };
   const vals = vr.map(x => x === null ? null : Math.round(x * 10) / 10);
   return {
     id:'costokit', file:'Lipogems_costo_por_kit', nota:lgNotaTotal(d),
-    title:'Costo individual de cada kit según la compra', sub:'Total USD de la compra entre las unidades compradas, y cuánto cambió frente a la compra anterior',
+    title:'Costo individual de cada kit según la compra', sub:'Total USD de la compra entre las unidades compradas, y cuánto cambió frente a la anterior',
     kpis:[
       { l:'Compras registradas', v:rvFmt(cs.length) },
       { l:'Último costo por kit', v:'$' + rvUsd2(ck[ult]) },
@@ -2350,7 +2212,7 @@ function lgVistaImportacion(d){
   po.plugins.tooltip.callbacks = { label:c => ' ' + c.label.split(' · ')[0] + ': $' + rvUsd2(c.parsed) };
   const trozos = [['Factura neta', neto, BV.cat[0]], ['Gastos de importación', imp, BV.cat[1]], ['Insumos', ins, BV.cat[2]]].filter(x => x[1] > 0);
   return {
-    id:'importacion', file:'Lipogems_costo_importacion', nota:'Gasto de importación = flete + seguro + manejo + aranceles + agente aduanal. Los insumos (Otros) se muestran aparte. ' + lgNotaTotal(d),
+    id:'importacion', file:'Lipogems_costo_importacion', nota:'Gasto de importación = flete + seguro + manejo + aranceles + agente aduanal. Insumos (Otros) se muestran aparte. ' + lgNotaTotal(d),
     title:'Costo de importación según la factura de compra', sub:'Cuánto pesa el gasto de importación sobre la factura y sobre cada unidad comprada',
     kpis:[
       { l:'Gasto de importación', v:'$' + rvUsd2(imp) },
@@ -2411,9 +2273,10 @@ const EMPRESAS = {
   }
 };
 
-let providerInfo = {};   // { "NOMBRE PROVEEDOR": {direccion, telefono, email, contacto} }
-let pedLineas = [];       // líneas del pedido actual
-let pedSeq = 1;           // consecutivo calculado (candidato, aún no confirmed)
+/* ============ ESTADO GLOBAL ============ */
+let providerInfo = {};
+let pedLineas = [];
+let pedSeq = 1;
 
 Chart.register(ChartDataLabels);
 
@@ -2421,6 +2284,14 @@ const _measureCtx = document.createElement('canvas').getContext('2d');
 function measureTextWidth(text, font){
   _measureCtx.font = font;
   return _measureCtx.measureText(text).width;
+}
+
+function debounce(fn, delay = 250){
+  let t;
+  return function(...args){
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), delay);
+  };
 }
 
 let rawData = [];      
@@ -2436,7 +2307,50 @@ let chartInstance = null;
 let selectedFamilies = new Set(); 
 let showOnlySelected = false; 
 
-/* ============ GESTIÓN INTELIGENTE DE FECHA DE SINCRONIZACIÓN (OPCIÓN B) ============ */
+/* ============ PERSISTENCIA DE CONFIGURACIÓN ============ */
+function saveUserPrefs(){
+  const prefs = {
+    coverageMonths,
+    leadTime,
+    empresa: document.getElementById('pedEmpresa')?.value,
+    almacen: document.getElementById('invAlmacen')?.value,
+    responsable: document.getElementById('invResponsable')?.value,
+    autorizado: document.getElementById('pedAutorizado')?.value,
+    observaciones: document.getElementById('pedObservaciones')?.value
+  };
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch(e){}
+}
+
+function loadUserPrefs(){
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.coverageMonths){
+      coverageMonths = p.coverageMonths;
+      const slider = document.getElementById('coverageSlider');
+      if(slider) slider.value = coverageMonths;
+      document.getElementById('coverageVal').textContent = coverageMonths;
+      document.getElementById('covLabel').textContent = coverageMonths;
+    }
+    if(p.leadTime){
+      leadTime = Object.assign(leadTime, p.leadTime);
+      ['reorden','pago','fabricante','traslado'].forEach(k => {
+        const inp = document.getElementById('lt' + k.charAt(0).toUpperCase() + k.slice(1));
+        if(inp) inp.value = leadTime[k] || 0;
+      });
+      const tot = (leadTime.reorden||0) + (leadTime.pago||0) + (leadTime.fabricante||0) + (leadTime.traslado||0);
+      document.getElementById('ltTotal').textContent = tot;
+    }
+    if(p.empresa && document.getElementById('pedEmpresa')) document.getElementById('pedEmpresa').value = p.empresa;
+    if(p.almacen && document.getElementById('invAlmacen')) document.getElementById('invAlmacen').value = p.almacen;
+    if(p.responsable && document.getElementById('invResponsable')) document.getElementById('invResponsable').value = p.responsable;
+    if(p.autorizado && document.getElementById('pedAutorizado')) document.getElementById('pedAutorizado').value = p.autorizado;
+    if(p.observaciones && document.getElementById('pedObservaciones')) document.getElementById('pedObservaciones').value = p.observaciones;
+  } catch(e){}
+}
+
+/* ============ SINCRONIZACIÓN Y CACHÉ ============ */
 function generateDataHash(data) {
   let str = JSON.stringify(data);
   let hash = 0;
@@ -2448,7 +2362,7 @@ function generateDataHash(data) {
   return hash.toString();
 }
 
-function handleSyncTimestamp(newData) {
+function handleSyncTimestamp(newData, isOffline = false) {
   const currentHash = generateDataHash(newData);
   const savedHash = localStorage.getItem('piemca_data_hash');
   const savedTimestamp = localStorage.getItem('piemca_last_sync_time');
@@ -2456,15 +2370,22 @@ function handleSyncTimestamp(newData) {
   const el = document.getElementById('lastSyncText');
   const tag = document.getElementById('syncTag');
 
-  // Si los datos cambiaron O es la primerísima vez que entra la app
+  if(isOffline){
+    if(el) el.textContent = savedTimestamp || "Caché local";
+    if(tag){
+      tag.textContent = "⚠️ Modo local (sin conexión)";
+      tag.className = "sync-status-tag warn";
+    }
+    return;
+  }
+
   if (currentHash !== savedHash || !savedTimestamp) {
     const now = new Date();
     const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     let hours = now.getHours();
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
+    hours = hours % 12 || 12;
     const hoursStr = hours.toString().padStart(2, '0');
     
     const formattedStamp = `${dateStr} ${hoursStr}:${minutes} ${ampm}`;
@@ -2473,18 +2394,16 @@ function handleSyncTimestamp(newData) {
     localStorage.setItem('piemca_last_sync_time', formattedStamp);
     
     if (el) el.textContent = formattedStamp;
-    
-    if (savedHash && tag) {
+    if (tag) {
       tag.textContent = "¡Datos actualizados!";
-      tag.classList.add('show');
+      tag.className = "sync-status-tag show";
       setTimeout(() => tag.classList.remove('show'), 3500);
     }
   } else {
-    // Si no hubo ningún cambio en Google Sheets, mantenemos la fecha anterior
     if (el) el.textContent = savedTimestamp;
     if (tag) {
       tag.textContent = "✓ Sin cambios nuevos en Sheet";
-      tag.classList.add('show');
+      tag.className = "sync-status-tag show";
       setTimeout(() => tag.classList.remove('show'), 3000);
     }
   }
@@ -2505,6 +2424,9 @@ function loadData(){
     header:true,
     skipEmptyLines:true,
     complete: function(results){
+      try {
+        localStorage.setItem(CACHE_SALES_KEY, JSON.stringify({ data: results.data, fields: results.meta.fields }));
+      } catch(e){}
       processData(results.data, results.meta.fields);
       handleSyncTimestamp(results.data);
       if(refreshBtn){
@@ -2513,9 +2435,20 @@ function loadData(){
       }
     },
     error: function(err){
-      document.getElementById('statusText').textContent =
-        "No se pudo cargar el Google Sheet. Verifica que esté publicado en la web.";
-      console.error(err);
+      console.warn("Fallo en la conexión en vivo con Google Sheets. Intentando usar copia de caché local...", err);
+      const cached = localStorage.getItem(CACHE_SALES_KEY);
+      if(cached){
+        try{
+          const c = JSON.parse(cached);
+          processData(c.data, c.fields);
+          handleSyncTimestamp(c.data, true);
+          document.getElementById('statusText').textContent += " (Copia de seguridad local)";
+        }catch(e){
+          document.getElementById('statusText').textContent = "Error al leer datos locales.";
+        }
+      } else {
+        document.getElementById('statusText').textContent = "No se pudo conectar a Google Sheets ni hay copia local guardada.";
+      }
       if(refreshBtn){
         refreshBtn.classList.remove('loading');
         refreshBtn.disabled = false;
@@ -2524,19 +2457,15 @@ function loadData(){
   });
 }
 
-// Convierte un precio en formato español (punto = miles, coma = decimales) a número real.
 function parsePrecio(raw){
   if (raw === undefined || raw === null) return null;
   const s = raw.toString().trim();
   if (!s || s === "-") return null;
-  
-  // Reemplaza puntos de miles y cambia coma por punto decimal
   const cleaned = s.replace(/\./g, "").replace(",", ".");
   const num = parseFloat(cleaned);
   return isNaN(num) ? null : num;
 }
 
-// Búsqueda insensible a mayúsculas/minúsculas y espacios en las llaves de las filas
 function getRowValue(r, searchKey){
   const keys = Object.keys(r);
   const matchedKey = keys.find(k => k.trim().toUpperCase() === searchKey.trim().toUpperCase());
@@ -2544,11 +2473,9 @@ function getRowValue(r, searchKey){
 }
 
 function processData(rows, fields){
-  // Filtra dinámicamente las columnas de 4 dígitos (años: 2019, 2020, etc.)
   yearCols = fields.filter(f => /^\d{4}$/.test(f.trim())).map(f => f.trim()).sort();
 
   rawData = rows.map(r => {
-    // Busca las claves de Moneda y Precio sin importar variaciones de nombre
     const rawMoneda = (getRowValue(r, "MONEDA") || getRowValue(r, "DIVISA") || "").toString().trim().toUpperCase();
     const esEuro = rawMoneda.includes("EUR") || rawMoneda.includes("€");
     const simbolo = esEuro ? "€" : "$";
@@ -2576,7 +2503,7 @@ function processData(rows, fields){
   providers = [...new Set(rawData.map(r => r.proveedor).filter(Boolean))].sort();
 
   activeYearCols = yearCols.filter(y => rawData.some(r => r.years[y] !== null));
-  visibleYearCols = new Set(); // Años deshabilitados por defecto al iniciar
+  visibleYearCols = new Set();
   buildDashAnioSelector();
 
   document.getElementById('statusText').textContent =
@@ -2611,7 +2538,7 @@ function buildYearToggleBar(){
   });
 }
 
-/* ============ CALCULOS ============ */
+/* ============ CÁLCULOS ============ */
 function computeMetrics(item){
   const dataYears = activeYearCols.filter(y => visibleYearCols.has(y) && item.years[y] !== null);
   const total = dataYears.reduce((s,y) => s + item.years[y], 0);
@@ -2643,7 +2570,6 @@ function computeMetrics(item){
   };
 }
 
-/* ============ FILTROS ============ */
 function getFilteredData(){
   return rawData.filter(r => {
     if(selectedProviders.size && !selectedProviders.has(r.proveedor)) return false;
@@ -2682,7 +2608,6 @@ function renderTable(){
     return;
   }
 
-  // Render Filas Fijas
   bodyFixed.innerHTML = data.map(r => {
     const tienePrecio = r.precio !== null && r.precio !== undefined;
     const precioTxt = tienePrecio 
@@ -2700,7 +2625,6 @@ function renderTable(){
     `;
   }).join("");
 
-  // Render Filas Móviles
   const z = (v) => v ? v : `<span class="zero-val">0</span>`;
   const yearCell = (v) => v === null ? "" : z(v);
 
@@ -2718,12 +2642,26 @@ function renderTable(){
   }).join("");
 }
 
-// Sincronización del Scroll Vertical
+/* Sincronización bidireccional suave del scroll vertical */
 const splitScroll = document.getElementById('splitScroll');
 const splitFixed = document.getElementById('splitFixed');
+let isSyncingFixed = false;
+let isSyncingScroll = false;
 
 splitScroll.addEventListener('scroll', () => {
-  splitFixed.scrollTop = splitScroll.scrollTop;
+  if (!isSyncingScroll) {
+    isSyncingFixed = true;
+    splitFixed.scrollTop = splitScroll.scrollTop;
+  }
+  isSyncingScroll = false;
+});
+
+splitFixed.addEventListener('scroll', () => {
+  if (!isSyncingFixed) {
+    isSyncingScroll = true;
+    splitScroll.scrollTop = splitFixed.scrollTop;
+  }
+  isSyncingFixed = false;
 });
 
 /* ============ PANEL PROVEEDORES ============ */
@@ -2739,12 +2677,12 @@ function buildProviderPanel(){
       renderTable();
     });
   });
-  document.getElementById('provSearch').addEventListener('input', e => {
+  document.getElementById('provSearch').addEventListener('input', debounce(e => {
     const t = e.target.value.toLowerCase();
     list.querySelectorAll('label').forEach(l => {
       l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none";
     });
-  });
+  }, 150));
 }
 
 /* ============ INVENTARIO ============ */
@@ -2772,31 +2710,40 @@ function renderInventario(){
   `).join("");
 }
 
-/* ============ PROVEEDORES (direcciones para Pedidos) ============ */
+/* ============ PROVEEDORES DIRECTIVAS ============ */
 function loadProveedores(){
-  if(!PROVEEDORES_CSV_URL || PROVEEDORES_CSV_URL.indexOf("PEGA_AQUI") === 0){
-    return; // el usuario aún no publicó/pegó el link de la pestaña Proveedores
-  }
+  if(!PROVEEDORES_CSV_URL) return;
   Papa.parse(PROVEEDORES_CSV_URL, {
     download:true,
     header:true,
     skipEmptyLines:true,
     complete: function(results){
-      providerInfo = {};
-      results.data.forEach(r => {
-        const nombre = (getRowValue(r,"PROVEEDOR") || "").trim();
-        if(!nombre) return;
-        providerInfo[nombre] = {
-          direccion: (getRowValue(r,"DIRECCION") || getRowValue(r,"DIRECCIÓN") || "").trim(),
-          telefono: (getRowValue(r,"TELEFONO") || getRowValue(r,"TELÉFONO") || getRowValue(r,"FAX") || "").trim(),
-          email: (getRowValue(r,"EMAIL") || getRowValue(r,"CORREO") || "").trim(),
-          contacto: (getRowValue(r,"CONTACTO PROVEEDOR") || getRowValue(r,"CONTACTO") || "").trim()
-        };
-      });
-      buildPedidoSelectors();
+      try{ localStorage.setItem(CACHE_PROV_KEY, JSON.stringify(results.data)); }catch(e){}
+      parseProveedores(results.data);
     },
-    error: function(err){ console.error("No se pudo cargar Proveedores:", err); }
+    error: function(err){
+      console.warn("No se pudo cargar Proveedores en vivo. Intentando caché...", err);
+      const cached = localStorage.getItem(CACHE_PROV_KEY);
+      if(cached){
+        try{ parseProveedores(JSON.parse(cached)); }catch(e){}
+      }
+    }
   });
+}
+
+function parseProveedores(data){
+  providerInfo = {};
+  data.forEach(r => {
+    const nombre = (getRowValue(r,"PROVEEDOR") || "").trim();
+    if(!nombre) return;
+    providerInfo[nombre] = {
+      direccion: (getRowValue(r,"DIRECCION") || getRowValue(r,"DIRECCIÓN") || "").trim(),
+      telefono: (getRowValue(r,"TELEFONO") || getRowValue(r,"TELÉFONO") || getRowValue(r,"FAX") || "").trim(),
+      email: (getRowValue(r,"EMAIL") || getRowValue(r,"CORREO") || "").trim(),
+      contacto: (getRowValue(r,"CONTACTO PROVEEDOR") || getRowValue(r,"CONTACTO") || "").trim()
+    };
+  });
+  buildPedidoSelectors();
 }
 
 /* ============ PEDIDOS ============ */
@@ -2897,7 +2844,6 @@ function renderPedSheet(total, simbolo){
   document.getElementById('pedSimboloOut').textContent = simbolo;
   document.getElementById('pedPrintTotalOut').textContent = total.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'});
 
-  // Filas reales + relleno vacío hasta un mínimo de filas, ajustado para que quepa en 1 sola página
   const filas = pedLineas.map(l => {
     const prod = rawData.find(r => r.codigo === l.codigo);
     return `<tr>
@@ -2915,21 +2861,25 @@ function renderPedSheet(total, simbolo){
   document.getElementById('pedPrintBody').innerHTML = filas.join("");
 }
 
-/* --- Numeración automática vía Apps Script (Contadores) --- */
 function pedProximoNumero(){
   const emp = empresaActual();
   const anio = new Date().getFullYear().toString().slice(-2);
-  document.getElementById('pedNumero').value = "Cargando...";
-  if(pedLineas.length) updatePedTotales(); // refleja "Cargando..." en el documento mientras llega la respuesta
+  const pedInput = document.getElementById('pedNumero');
+  if(pedInput.dataset.manual === "true") return;
+
+  pedInput.value = "Cargando...";
+  if(pedLineas.length) updatePedTotales();
   const url = `${APPS_SCRIPT_URL}?action=contadores`;
+  
   fetch(url).then(r=>r.json()).then(data => {
     const fila = (data.contadores||[]).find(c => c.prefijo === emp.prefijo && c.anio === anio);
     pedSeq = fila ? (parseInt(fila.ultimo,10) + 1) : 1;
-    document.getElementById('pedNumero').value = `${emp.prefijo}${anio}-${String(pedSeq).padStart(3,'0')}`;
+    pedInput.value = `${emp.prefijo}${anio}-${String(pedSeq).padStart(3,'0')}`;
     updatePedTotales();
   }).catch(err => {
-    console.error("No se pudo leer el contador de pedidos:", err);
-    document.getElementById('pedNumero').value = `${emp.prefijo}${anio}-???`;
+    console.warn("No se pudo contactar el contador automático remoto:", err);
+    pedInput.value = `${emp.prefijo}${anio}-001`;
+    updatePedTotales();
   });
 }
 
@@ -2940,8 +2890,36 @@ function pedConfirmarNumero(){
     method: "POST",
     headers: {"Content-Type":"text/plain;charset=utf-8"},
     body: JSON.stringify({ secret: APPS_SCRIPT_SECRET, action: "incrementarContador", prefijo: emp.prefijo, anio: anio })
-  }).catch(err => console.error("No se pudo confirmar el número de pedido:", err));
+  }).catch(err => console.error("No se pudo confirmar número de pedido:", err));
 }
+
+/* ============ BOTÓN DE EDICIÓN MANUAL DEL NÚMERO DE PEDIDO ============ */
+document.getElementById('pedEditNumBtn').addEventListener('click', () => {
+  const inp = document.getElementById('pedNumero');
+  const esManual = inp.dataset.manual === "true";
+  if(!esManual){
+    inp.removeAttribute('readonly');
+    inp.dataset.manual = "true";
+    inp.style.backgroundColor = "#fff";
+    inp.style.border = "2px solid var(--sky)";
+    inp.focus();
+    inp.select();
+    document.getElementById('pedEditNumBtn').textContent = "🔒";
+    document.getElementById('pedEditNumBtn').title = "Fijar y bloquear número";
+  } else {
+    inp.setAttribute('readonly', true);
+    inp.dataset.manual = "false";
+    inp.style.backgroundColor = "";
+    inp.style.border = "";
+    document.getElementById('pedEditNumBtn').textContent = "✏️";
+    document.getElementById('pedEditNumBtn').title = "Editar número manualmente";
+  }
+  updatePedTotales();
+});
+
+document.getElementById('pedNumero').addEventListener('input', () => {
+  updatePedTotales();
+});
 
 /* ============ SELECTORES KPI ============ */
 function buildKpiSelectors(){
@@ -3031,7 +3009,7 @@ function buildKpiChecklist(){
 }
 
 /* ============ DASHBOARD: TIPO DE CAMBIO Y CINTAS ============ */
-let eurToUsdRate = 1.08; // valor de respaldo si falla la consulta en vivo
+let eurToUsdRate = 1.08;
 
 function cargarTipoCambio(){
   fetch('https://open.er-api.com/v6/latest/EUR')
@@ -3040,7 +3018,7 @@ function cargarTipoCambio(){
       if(d && d.rates && d.rates.USD) eurToUsdRate = d.rates.USD;
       renderDashboardRibbons();
     })
-    .catch(err => { console.error("No se pudo obtener el tipo de cambio EUR/USD, usando valor de respaldo:", err); });
+    .catch(err => { console.warn("Tipo de cambio EUR/USD no disponible, usando 1.08:", err); });
 }
 
 function montoUSD(r, anio){
@@ -3075,7 +3053,6 @@ function renderDashboardRibbon1(){
   const actual = totalVentasUSD(anioActual);
   const ventasAnterior = anioAnterior ? totalVentasUSD(anioAnterior) : 0;
   const ventasBase2 = anioBase2 ? totalVentasUSD(anioBase2) : ventasAnterior;
-  // Objetivo/pronóstico: promedio de los últimos dos años ya cerrados
   const objetivo = anioAnterior ? (ventasAnterior + ventasBase2) / 2 : actual;
   const realizacion = objetivo ? (actual / objetivo * 100) : 0;
   const crecimiento = ventasAnterior ? ((actual - ventasAnterior) / ventasAnterior * 100) : 0;
@@ -3110,7 +3087,7 @@ function renderDashboardRibbon1(){
 
 function buildDashAnioSelector(){
   const sel = document.getElementById('dashAnio');
-  const anioPrevio = sel.value; // conserva la selección si ya había una
+  const anioPrevio = sel.value;
   sel.innerHTML = activeYearCols.slice().reverse()
     .map(y => `<option value="${y}">${y}</option>`).join("");
   sel.value = activeYearCols.includes(anioPrevio) ? anioPrevio : activeYearCols[activeYearCols.length-1];
@@ -3127,8 +3104,8 @@ function renderDashboardRibbon2(){
     if(!porProveedor[r.proveedor]) porProveedor[r.proveedor] = { actual:0, anterior:0, unidades:0, simbolos:{} };
     const p = porProveedor[r.proveedor];
     const udsActual = r.years[anioActual];
-    if(udsActual) p.unidades += udsActual;               // unidades: cuentan aunque el producto no tenga precio cargado
-    if(udsActual && r.precio) p.actual += udsActual * r.precio; // monto: solo si además tiene precio
+    if(udsActual) p.unidades += udsActual;
+    if(udsActual && r.precio) p.actual += udsActual * r.precio;
     if(anioAnterior){
       const udsAnt = r.years[anioAnterior];
       if(udsAnt && r.precio) p.anterior += udsAnt * r.precio;
@@ -3173,7 +3150,6 @@ function renderDashboardRibbon2(){
   requestAnimationFrame(drawDashLine);
 }
 
-// Línea que conecta los porcentajes de cada barra, solo decorativa
 function drawDashLine(){
   const container = document.getElementById('dashTopRow');
   const badges = container.querySelectorAll('.dash-pct');
@@ -3222,7 +3198,6 @@ function renderDashRiskPanel(){
   const pctTop1 = totalUsd ? (top1.monto / totalUsd * 100) : 0;
   const pctTop3 = totalUsd ? (top3Suma / totalUsd * 100) : 0;
 
-  // Mini-tendencia: hasta los últimos 4 años que terminan en el año elegido
   const rango = years.slice(Math.max(0, idxActual - 3), idxActual + 1);
   const nombresTop = listaUsd.slice(0, 6).map(p => p.nombre);
 
@@ -3293,7 +3268,7 @@ function computeDurmientes(anioActual, anioAnterior, anioBase2, proveedorFiltro)
     .filter(r => !proveedorFiltro || r.proveedor === proveedorFiltro)
     .filter(r => {
       const actual = r.years[anioActual];
-      if(actual && actual > 0) return false; // sigue vendiendo, no está "durmiente"
+      if(actual && actual > 0) return false;
       const histSum = (anioAnterior ? (r.years[anioAnterior] || 0) : 0) + (anioBase2 ? (r.years[anioBase2] || 0) : 0);
       return histSum > 0;
     })
@@ -3357,13 +3332,13 @@ document.getElementById('dashProdBtn').addEventListener('click', () => {
   panel.classList.toggle('open', abriendo);
 });
 
-/* ============ GRAFICO KPI ============ */
+/* ============ GRÁFICO KPI ============ */
 function renderChart(){
   const year = document.getElementById('kpiYear').value;
   const subtitle = document.getElementById('chartSubtitle');
 
   if(!selectedFamilies.size){
-    subtitle.textContent = "Selecciona al menos un producto en la lista de arriba";
+    subtitle.textContent = "Selecciona al menos un producto en la lista de la izquierda";
     document.getElementById('chartTitle').textContent = "ANÁLISIS DE VENTAS";
     if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
     return;
@@ -3466,7 +3441,6 @@ function togglePanel(id, btn){
     document.getElementById(p).classList.toggle('open', p === id ? !wasOpen : false);
   });
   if(!wasOpen && btn){
-    // Posiciona el panel justo debajo del botón que lo abrió, sin depender de un alto fijo de header
     const panel = document.getElementById(id);
     const rect = btn.getBoundingClientRect();
     panel.style.top = (rect.bottom + 8) + "px";
@@ -3501,15 +3475,16 @@ document.getElementById('provNone').onclick = () => {
   renderTable();
 };
 
-document.getElementById('searchInput').addEventListener('input', e => {
+document.getElementById('searchInput').addEventListener('input', debounce(e => {
   searchText = e.target.value;
   renderTable();
-});
+}, 200));
 
 document.getElementById('coverageSlider').addEventListener('input', e => {
-  coverageMonths = parseInt(e.target.value);
+  coverageMonths = parseInt(e.target.value, 10);
   document.getElementById('coverageVal').textContent = coverageMonths;
   document.getElementById('covLabel').textContent = coverageMonths;
+  saveUserPrefs();
   renderTable();
 });
 
@@ -3521,6 +3496,7 @@ document.getElementById('coverageSlider').addEventListener('input', e => {
     leadTime.traslado = parseFloat(document.getElementById('ltTraslado').value) || 0;
     const total = leadTime.reorden + leadTime.pago + leadTime.fabricante + leadTime.traslado;
     document.getElementById('ltTotal').textContent = total;
+    saveUserPrefs();
     renderTable();
   });
 });
@@ -3549,12 +3525,15 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 document.getElementById('invProveedor').addEventListener('change', renderInventario);
-document.getElementById('invAlmacen').addEventListener('input', renderInventario);
-document.getElementById('invResponsable').addEventListener('input', renderInventario);
+document.getElementById('invAlmacen').addEventListener('input', () => { saveUserPrefs(); renderInventario(); });
+document.getElementById('invResponsable').addEventListener('input', () => { saveUserPrefs(); renderInventario(); });
 document.getElementById('invPrint').addEventListener('click', () => window.print());
 
-/* ---- Eventos vista Pedidos ---- */
-document.getElementById('pedEmpresa').addEventListener('change', () => { pedProximoNumero(); });
+/* Eventos Pedidos */
+document.getElementById('pedEmpresa').addEventListener('change', () => {
+  saveUserPrefs();
+  pedProximoNumero();
+});
 document.getElementById('pedRefreshNum').addEventListener('click', pedProximoNumero);
 document.getElementById('pedAddLinea').addEventListener('click', () => pedAddLinea());
 document.getElementById('pedProveedor').addEventListener('change', e => {
@@ -3565,25 +3544,28 @@ document.getElementById('pedProveedor').addEventListener('change', e => {
   document.getElementById('pedContacto').value = info.contacto || "";
   updatePedTotales();
 });
+
 ['pedProvDireccion','pedProvTelefono','pedProvEmail','pedContacto','pedAutorizado','pedObservaciones']
-  .forEach(id => document.getElementById(id).addEventListener('input', updatePedTotales));
+  .forEach(id => document.getElementById(id).addEventListener('input', () => {
+    saveUserPrefs();
+    updatePedTotales();
+  }));
+
 document.getElementById('pedPrint').addEventListener('click', () => {
   if(!pedLineas.length){ alert("Agrega al menos una línea de producto antes de generar el pedido."); return; }
   if(!document.getElementById('pedProveedor').value){ alert("Selecciona un proveedor antes de generar el pedido."); return; }
   const numeroActual = document.getElementById('pedNumero').value;
   if(!numeroActual || numeroActual.indexOf("???") !== -1 || numeroActual.indexOf("...") !== -1){
-    alert("Todavía no se ha calculated el número de pedido (o falló la conexión con Google Sheets). Dale a 'Actualizar N°' y espera un segundo antes de imprimir.");
+    alert("Todavía no se ha calculado el número de pedido. Espera un segundo o edítalo con el botón ✏️.");
     return;
   }
-  pedConfirmarNumero();       // confirma/consume el número de pedido en el contador de Sheets
+  pedConfirmarNumero();
 
-  // Pone el nombre "NUMERO OC - PROVEEDOR DD-MM-AAAA" como sugerencia al Guardar como PDF
   const tituloOriginal = document.title;
   document.title = pedNombreArchivo();
   window.print();
   setTimeout(() => { document.title = tituloOriginal; }, 1000);
-
-  setTimeout(pedProximoNumero, 800); // recalcula el próximo número disponible para el siguiente pedido
+  setTimeout(pedProximoNumero, 800);
 });
 
 function pedNombreArchivo(){
@@ -3607,7 +3589,7 @@ document.getElementById('kpiYear').addEventListener('change', () => {
   renderChart();
 });
 
-document.getElementById('kpiSearchList').addEventListener('input', applyKpiSearchFilter);
+document.getElementById('kpiSearchList').addEventListener('input', debounce(applyKpiSearchFilter, 150));
 
 function setupClearableSearch(inputId, btnId, onClear){
   const input = document.getElementById(inputId);
@@ -3653,7 +3635,7 @@ document.getElementById('kpiToggleSelectedOnly').onclick = function(){
 
 document.addEventListener('click', (e) => {
   const isPanel = e.target.closest('.panel');
-  const isBtn = e.target.closest('.btn'); // cualquier botón disparador (Cobertura ya no vive dentro de .toolbar)
+  const isBtn = e.target.closest('.btn');
   if(!isPanel && !isBtn){
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
   }
@@ -3673,6 +3655,7 @@ function checkDeviceBlock(){
   document.getElementById('deviceBlock').classList.toggle('hidden', !blocked);
   if(!blocked && !appStarted){
     appStarted = true;
+    loadUserPrefs();
     loadData();
     loadProveedores();
     cargarTipoCambio();
@@ -3684,8 +3667,7 @@ window.addEventListener('orientationchange', () => setTimeout(checkDeviceBlock, 
 /* ============ INICIO ============ */
 checkDeviceBlock();
 
-/* ============ PORTAL: Gestión de Ventas / Operaciones ============ */
-// El módulo abierto vive en la URL (#ventas, #operaciones); sin nada se muestra el portal.
+/* ============ PORTAL ============ */
 const MODULOS = { ventas:'Gestión de Ventas', operaciones:'Operaciones' };
 function mostrarPortal(){
   if(typeof cerrarResumenVentas === 'function') cerrarResumenVentas();
@@ -3700,7 +3682,7 @@ function abrirModulo(mod){
   document.getElementById('portal').classList.add('hidden');
   document.body.classList.remove('en-portal');
   document.body.dataset.mod = mod;
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.dataset.mod !== mod));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.dataset.mod !== mod));
   const primera = document.querySelector('.tab[data-mod="' + mod + '"]');
   if(primera) primera.click();
   document.title = 'PIEMCA · ' + MODULOS[mod];
@@ -3716,8 +3698,6 @@ document.getElementById('btnInicio').onclick = () => { history.pushState(null, '
 window.addEventListener('hashchange', segunHash);
 segunHash();
 
-
-// Registro del service worker (solo habilita la instalación como app; no cachea nada)
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
