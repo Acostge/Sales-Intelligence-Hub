@@ -698,6 +698,86 @@
   #deviceBlock h2{font-family:'Baloo 2',sans-serif;font-size:20px;margin:0 0 12px;}
   #deviceBlock p{max-width:360px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.8);margin:0;}
   #deviceBlock .icon{font-size:38px;margin-bottom:16px;}
+
+/* === ESTILOS NOTA DE DESPACHO Y ACTA DE ENTREGA === */
+  .ctrl-card{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+  .btn-accent{background:var(--sky);color:var(--navy-deep);border:none;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;height:36px;}
+  .btn-accent:hover{background:#2A92C2;}
+  .items-builder{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:14px;margin-bottom:16px;}
+  .items-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .items-table th{background:var(--sky-soft);color:var(--navy);padding:8px;text-align:left;font-size:11px;text-transform:uppercase;}
+  .items-table td{padding:5px 6px;border-bottom:1px solid var(--gray-line);}
+  .items-table input{width:100%;padding:5px 7px;border:1px solid var(--gray-line);border-radius:6px;font-size:12px;}
+  .items-table .td-rm{width:36px;text-align:center;}
+  .items-table .btn-rm{background:none;border:none;color:var(--bad);font-size:15px;cursor:pointer;}
+  .nd-preview-container{margin-top:16px;}
+  .nd-sheet-page{
+    background:#ffffff;border:1px solid #d0d0d0;box-shadow:0 4px 18px rgba(0,0,0,.08);
+    width:215.9mm;min-height:279.4mm;margin:0 auto 24px;padding:12mm 16mm 10mm;
+    color:#111;font-family:"Segoe UI",Arial,sans-serif;font-size:9.5px;box-sizing:border-box;
+    display:flex;flex-direction:column;
+  }
+  .nd-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;}
+  .nd-head-left img{height:52px;object-fit:contain;margin-bottom:4px;}
+  .nd-rif{font-size:9px;font-weight:700;font-style:italic;color:#1B3550;}
+  .nd-head-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;}
+  .nd-sacs-box{border:1px solid #1B3550;padding:2px 8px;border-radius:3px;text-align:center;margin-bottom:6px;background:#F8FAFC;}
+  .nd-sacs-box b{display:block;font-size:11px;color:#1B3550;letter-spacing:1px;}
+  .nd-sacs-box span{font-size:8px;font-weight:700;color:#1B3550;}
+  .nd-doc-title{font-size:13.5px;font-weight:800;color:#1B3550;letter-spacing:.5px;}
+  .nd-num-row{font-size:14px;font-weight:800;color:#1B3550;}
+  .nd-num-row span{font-size:16px;color:#0B3B5C;}
+  .nd-fecha-row{font-size:10px;font-weight:700;color:#222;}
+  .nd-cirugia-bar{background:#C2D9F2;color:#082B44;padding:4px 10px;font-size:10.5px;font-weight:800;margin:6px 0 4px;border:0.5px solid #A4C2E2;}
+  .nd-meta-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5px;}
+  .nd-meta-table td{padding:2px 4px;vertical-align:top;}
+  .nd-meta-table td b{color:#082B44;}
+  .nd-table{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:4px;}
+  .nd-table th{background:#C2D9F2;color:#082B44;border:0.5px solid #8FAEC9;padding:4px 5px;text-align:center;font-weight:800;}
+  .nd-table td{border:0.5px solid #BFD1E2;padding:3.2px 5px;height:18px;vertical-align:middle;}
+  .nd-table tbody tr:nth-child(even){background:#EDF4FC;}
+  .nd-table td:first-child{text-align:center;width:34px;}
+  .nd-table td:nth-child(2){text-align:center;width:95px;font-weight:600;}
+  .nd-table td:nth-child(4){text-align:center;width:55px;font-weight:700;}
+  .nd-table td:nth-child(5){text-align:center;width:55px;}
+  .nd-total-row td{font-weight:800;background:#D4E5F7 !important;border-top:1px solid #082B44;}
+  .nd-footer-block{margin-top:auto;padding-top:6px;}
+  .nd-legal-notes{font-size:8px;font-style:italic;color:#333;margin-bottom:14px;line-height:1.4;}
+  .nd-signatures{display:flex;justify-content:space-between;margin-bottom:14px;padding:0 20px;}
+  .nd-sig{text-align:center;width:150px;font-size:9px;font-weight:700;}
+  .nd-sig-line{border-top:0.5px solid #222;margin-bottom:3px;height:38px;}
+  .nd-foot-address{border-top:0.5px solid #C2D9F2;padding-top:4px;display:flex;justify-content:space-between;font-size:8px;color:#285172;font-weight:700;}
+  
+  .acta-sheet{
+    background:#ffffff;border:1px solid #d0d0d0;box-shadow:0 4px 18px rgba(0,0,0,.08);
+    width:215.9mm;min-height:279.4mm;margin:0 auto 24px;padding:16mm 18mm;
+    color:#111;font-family:"Segoe UI",Arial,sans-serif;font-size:10px;box-sizing:border-box;
+    display:flex;flex-direction:column;
+  }
+  .acta-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+  .acta-head img{height:54px;}
+  .acta-title{text-align:center;font-size:18px;font-weight:800;letter-spacing:.6px;margin:10px 0 16px;color:#1B3550;}
+  .acta-text{font-size:10.5px;line-height:1.6;margin-bottom:14px;}
+  .acta-table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:16px;}
+  .acta-table th{background:#EFE6F2;color:#4A2054;border:0.5px solid #BFA4C8;padding:5px;font-weight:800;text-align:center;}
+  .acta-table td{border:0.5px solid #CCC;padding:3.5px 5px;}
+  .acta-table tbody tr:nth-child(even){background:#FAF6FC;}
+  .acta-obs-box{border:0.5px solid #999;border-radius:4px;min-height:55px;padding:6px;margin-top:4px;}
+
+  @media print {
+    .nd-preview-container, .nd-preview-container *, .acta-sheet, .acta-sheet * { visibility:visible !important; }
+    .nd-preview-container, .acta-sheet {
+      position:absolute; top:0; left:0; width:100%; margin:0 !important; padding:8mm 12mm !important;
+      border:none !important; box-shadow:none !important;
+    }
+    .nd-sheet-page {
+      page-break-after:always; break-after:page; height:279.4mm; max-height:279.4mm; margin:0 !important;
+      padding:10mm 14mm 8mm !important; border:none !important; box-shadow:none !important;
+    }
+    .nd-sheet-page:last-child { page-break-after:avoid; break-after:avoid; }
+  }
+
 </style>
 </head>
 <body>
@@ -745,6 +825,8 @@
     <div class="tab" data-view="kpi" data-mod="ventas">DASHBOARD</div>
     <div class="tab" data-view="inventario" data-mod="operaciones">INVENTARIO</div>
     <div class="tab" data-view="pedidos" data-mod="operaciones">PEDIDOS</div>
+<div class="tab" data-view="despachos" data-mod="operaciones">DESPACHOS</div>
+    <div class="tab" data-view="acta" data-mod="operaciones">ACTA DE ENTREGA</div>
   </div>
 </header>
 
@@ -1090,6 +1172,97 @@
             Firma / Sello
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+<!-- VISTA NOTAS DE DESPACHO -->
+  <div id="viewDespachos" class="hidden">
+    <div class="ctrl-card no-print">
+      <div class="ctrl-grid">
+        <div class="field"><label>N° Despacho</label><div style="display:flex;gap:4px;"><input type="text" id="ndNumero" readonly style="font-weight:800;font-size:14px;"><button type="button" class="btn btn-solid" id="ndEditNumBtn" style="padding:0 8px;">✏️</button></div></div>
+        <div class="field"><label>Fecha</label><input type="text" id="ndFecha"></div>
+        <div class="field"><label>Hosp. / Clínica</label><input list="ndClinicasList" id="ndClinica" placeholder="Escribe o selecciona..."><datalist id="ndClinicasList"></datalist></div>
+        <div class="field"><label>Doctor (a)</label><input list="ndDoctoresList" id="ndDoctor" placeholder="Escribe o selecciona..."><datalist id="ndDoctoresList"></datalist></div>
+        <div class="field"><label>Paciente / C.I.</label><input type="text" id="ndPaciente" placeholder="Ej: JUAN PEREZ CI: 12.345.678"></div>
+        <div class="field"><label>Realizado por</label><input type="text" id="ndRealizadoPor" placeholder="Ej: RAFAEL MILLAN"></div>
+      </div>
+      <div style="margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;" class="ctrl-grid">
+        <div class="field" style="grid-column:span 2;"><label>Tipo de Cirugía</label><input type="text" id="ndCirugia" placeholder="Ej: LCA INFINITY + ARTROSCOPIA"></div>
+        <div class="field"><label>Sublíneas / Plantillas (Base de Datos)</label><select id="ndPlantillaSelect"><option value="">-- Selecciona Sublínea --</option></select></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;">
+          <button type="button" class="btn-accent" id="ndBtnCargarPlantilla">⚡ + Cargar Sublínea</button>
+          <button type="button" class="btn-solid" id="ndBtnImprimir">🖨️ Imprimir Despacho</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="items-builder no-print">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:700;color:var(--navy);">Líneas de la Nota de Despacho (<span id="ndCountItems">0</span> artículos)</span>
+        <button type="button" class="link-btn" id="ndBtnLimpiarLista">Vaciar lista</button>
+      </div>
+      <table class="items-table">
+        <thead><tr><th style="width:40px;">#</th><th style="width:140px;">Código</th><th>Descripción</th><th style="width:90px;">Set (Cant.)</th><th class="td-rm"></th></tr></thead>
+        <tbody id="ndTableBody"></tbody>
+      </table>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button type="button" class="btn-solid" id="ndBtnAddManual">+ Agregar Ítem Manual</button>
+      </div>
+    </div>
+
+    <!-- Paginación multi-hoja oficial -->
+    <div class="nd-preview-container" id="ndPagesContainer"></div>
+  </div>
+
+  <!-- VISTA ACTA DE ENTREGA -->
+  <div id="viewActa" class="hidden">
+    <div class="ctrl-card no-print">
+      <div class="ctrl-grid">
+        <div class="field"><label>Fecha</label><input type="text" id="actaFecha"></div>
+        <div class="field" style="grid-column:span 2;"><label>Entregar constancia a:</label><input type="text" id="actaReceptor" placeholder="Nombre de la persona, clínica o Dr."></div>
+        <div class="field"><label>C.I. / RIF:</label><input type="text" id="actaDocId" placeholder="Ej: V-12.345.678"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;">
+        <button type="button" class="btn-accent" id="actaBtnCopiarDespacho">📥 Copiar desde Despacho Actual</button>
+        <button type="button" class="btn-solid" id="actaBtnImprimir">🖨️ Imprimir Acta de Entrega</button>
+      </div>
+    </div>
+
+    <div class="items-builder no-print">
+      <table class="items-table">
+        <thead><tr><th style="width:40px;">#</th><th style="width:140px;">Código</th><th>Descripción</th><th style="width:130px;">Lote / Serie</th><th style="width:80px;">Cant.</th><th class="td-rm"></th></tr></thead>
+        <tbody id="actaTableBody"></tbody>
+      </table>
+      <button type="button" class="btn-solid" id="actaBtnAddLinea" style="margin-top:10px;">+ Agregar Fila</button>
+    </div>
+
+    <div class="acta-sheet" id="actaSheet">
+      <div class="acta-head">
+        <img src="logo-artrogen.png" alt="ARTROGEN">
+        <div style="font-weight:700;font-size:11px;">FECHA: <span id="actaFechaOut"></span></div>
+      </div>
+      <div class="acta-title">ACTA DE ENTREGA</div>
+      <div class="acta-text">
+        Sirva la presente para dejar constancia de entrega a: <strong id="actaReceptorOut">__________________________</strong>, C.I / RIF: <strong id="actaDocIdOut">__________________</strong>. Los productos , equipos o instrumentos que a continuación se detallan:
+      </div>
+      <table class="acta-table">
+        <thead><tr><th style="width:36px;">Ítem</th><th style="width:120px;">Código</th><th>Descripción</th><th style="width:120px;">Lote</th><th style="width:70px;">Cant.</th></tr></thead>
+        <tbody id="actaPrintBody"></tbody>
+      </table>
+      <div style="font-size:8.5px;font-style:italic;line-height:1.4;margin-bottom:8px;">
+        <strong>NOTA:</strong> MATERIAL ENVIADO EN PERFECTO ESTADO.<br>
+        <strong>NOTA:</strong> FAVOR DEVOLVER ESTE DOCUMENTO FIRMADO / SELLADO (LETRA LEGIBLE).
+      </div>
+      <div style="font-weight:700;font-size:9.5px;margin-bottom:4px;">Observaciones:</div>
+      <div class="acta-obs-box" id="actaObsOut" contenteditable="true">Equipos entregados en calidad de custodia temporal para procedimiento quirúrgico programado.</div>
+      <div class="nd-signatures" style="margin-top:35px;margin-bottom:15px;">
+        <div class="nd-sig"><div class="nd-sig-line"></div>Almacenista</div>
+        <div class="nd-sig"><div class="nd-sig-line"></div>Coordinación Quirúrgica</div>
+        <div class="nd-sig"><div class="nd-sig-line"></div>Recibe</div>
+      </div>
+      <div class="nd-foot-address" style="margin-top:auto;">
+        <span>Dirección: Los Chorros, cruce con 7ma Av. Quinta Villa García. Telf. (0212) 232.17.93 - Caracas</span>
       </div>
     </div>
   </div>
@@ -3703,6 +3876,347 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
+
+/* ============ LÓGICA DE DESPACHOS Y ACTAS DE ENTREGA ============ */
+const CACHE_BD_KEY = 'piemca_cached_basedatos';
+let bdData = { lineas:[], doctores:[], clinicas:[], plantillas:[] };
+let ndItems = [];
+let ndSeq = 2067;
+let actaItems = [];
+
+function loadBaseDatos(){
+  fetch(`${APPS_SCRIPT_URL}?action=baseDatos`)
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.ok){
+        bdData = d;
+        try{ localStorage.setItem(CACHE_BD_KEY, JSON.stringify(d)); }catch(e){}
+        populateBdSelectors();
+      }
+    })
+    .catch(() => {
+      const c = localStorage.getItem(CACHE_BD_KEY);
+      if(c){ try{ bdData = JSON.parse(c); populateBdSelectors(); }catch(e){} }
+    });
+}
+
+function populateBdSelectors(){
+  const dlDoc = document.getElementById('ndDoctoresList');
+  if(dlDoc) dlDoc.innerHTML = (bdData.doctores||[]).map(d => `<option value="${d}">`).join("");
+  const dlCli = document.getElementById('ndClinicasList');
+  if(dlCli) dlCli.innerHTML = (bdData.clinicas||[]).map(c => `<option value="${c}">`).join("");
+  const selPlan = document.getElementById('ndPlantillaSelect');
+  if(selPlan){
+    selPlan.innerHTML = `<option value="">-- Selecciona Sublínea --</option>` +
+      (bdData.plantillas||[]).map(p => `<option value="${p.nombre}">${p.nombre} (${p.codigos.length} ítems)</option>`).join("");
+  }
+}
+
+function ndProximoNumero(){
+  const inp = document.getElementById('ndNumero');
+  if(!inp || inp.dataset.manual === "true") return;
+  inp.value = "Cargando...";
+
+  fetch(`${APPS_SCRIPT_URL}?action=proximoDespacho`)
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.proximoNumero){ ndSeq = d.proximoNumero; inp.value = ndSeq; renderNdSheet(); }
+    })
+    .catch(() => { inp.value = ndSeq; renderNdSheet(); });
+}
+
+function ndConfirmarNumero(){
+  fetch(APPS_SCRIPT_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({ secret:APPS_SCRIPT_SECRET, action:"incrementarDespacho" })
+  }).catch(() => {});
+}
+
+document.getElementById('ndEditNumBtn').onclick = () => {
+  const inp = document.getElementById('ndNumero');
+  const esMan = inp.dataset.manual === "true";
+  inp.dataset.manual = esMan ? "false" : "true";
+  if(!esMan){
+    inp.removeAttribute('readonly'); inp.focus(); inp.select();
+    document.getElementById('ndEditNumBtn').textContent = "🔒";
+  } else {
+    inp.setAttribute('readonly', true);
+    document.getElementById('ndEditNumBtn').textContent = "✏️";
+  }
+  renderNdSheet();
+};
+
+document.getElementById('ndNumero').addEventListener('input', () => renderNdSheet());
+
+document.getElementById('ndBtnCargarPlantilla').onclick = () => {
+  const selNom = document.getElementById('ndPlantillaSelect').value;
+  if(!selNom){ alert("Selecciona una sublínea primero."); return; }
+  const plan = (bdData.plantillas||[]).find(p => p.nombre === selNom);
+  if(!plan) return;
+
+  plan.codigos.forEach(cod => {
+    const prod = rawData.find(r => r.codigo.toUpperCase() === cod.toUpperCase());
+    const desc = prod ? prod.descripcion : (cod === "S/C" ? "EQUIPO / ACCESORIO" : "Ítem " + cod);
+    ndItems.push({ codigo: cod, descripcion: desc, set: plan.cantPorDefecto || 1 });
+  });
+
+  renderNdTable();
+  renderNdSheet();
+};
+
+document.getElementById('ndBtnAddManual').onclick = () => {
+  ndItems.push({ codigo: "S/C", descripcion: "", set: 1 });
+  renderNdTable();
+  renderNdSheet();
+};
+
+document.getElementById('ndBtnLimpiarLista').onclick = () => {
+  if(confirm("¿Vaciar todos los artículos de esta nota?")){
+    ndItems = [];
+    renderNdTable();
+    renderNdSheet();
+  }
+};
+
+function renderNdTable(){
+  document.getElementById('ndCountItems').textContent = ndItems.length;
+  const tbody = document.getElementById('ndTableBody');
+  tbody.innerHTML = ndItems.map((item, idx) => `
+    <tr data-idx="${idx}">
+      <td>${idx + 1}</td>
+      <td><input list="pedCodigos" class="nd-in-cod" value="${item.codigo}"></td>
+      <td><input class="nd-in-desc" value="${item.descripcion}"></td>
+      <td><input type="number" min="1" class="nd-in-set" value="${item.set}"></td>
+      <td class="td-rm"><button type="button" class="btn-rm nd-btn-rm">✕</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const i = +tr.dataset.idx;
+    tr.querySelector('.nd-in-cod').onchange = e => {
+      const v = e.target.value.trim();
+      ndItems[i].codigo = v;
+      const found = rawData.find(r => r.codigo.toUpperCase() === v.toUpperCase());
+      if(found){ ndItems[i].descripcion = found.descripcion; }
+      renderNdTable();
+      renderNdSheet();
+    };
+    tr.querySelector('.nd-in-desc').oninput = e => { ndItems[i].descripcion = e.target.value; renderNdSheet(); };
+    tr.querySelector('.nd-in-set').oninput = e => { ndItems[i].set = parseInt(e.target.value, 10) || 1; renderNdSheet(); };
+    tr.querySelector('.nd-btn-rm').onclick = () => { ndItems.splice(i, 1); renderNdTable(); renderNdSheet(); };
+  });
+}
+
+function renderNdSheet(){
+  const num = document.getElementById('ndNumero').value || ndSeq;
+  const fecha = document.getElementById('ndFecha').value || new Date().toLocaleDateString('es-ES');
+  const clinica = (document.getElementById('ndClinica').value || "CM EL VALLE").toUpperCase();
+  const doctor = (document.getElementById('ndDoctor').value || "EDUARDO BUSTILLO").toUpperCase();
+  const cirugia = (document.getElementById('ndCirugia').value || "LCA INFINITY + ARTROSCOPIA").toUpperCase();
+  const paciente = (document.getElementById('ndPaciente').value || "").toUpperCase();
+  const realizado = (document.getElementById('ndRealizadoPor').value || "").toUpperCase();
+
+  const container = document.getElementById('ndPagesContainer');
+  const ROWS_PER_PAGE = 34;
+  const totalItems = ndItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ROWS_PER_PAGE));
+  const totalSetSum = ndItems.reduce((acc, it) => acc + (parseInt(it.set, 10) || 0), 0);
+
+  let html = "";
+  for(let p = 0; p < totalPages; p++){
+    const start = p * ROWS_PER_PAGE;
+    const end = Math.min(start + ROWS_PER_PAGE, totalItems);
+    const chunk = ndItems.slice(start, end);
+    const isLast = (p === totalPages - 1);
+
+    html += `
+      <div class="nd-sheet-page">
+        <div class="nd-head">
+          <div class="nd-head-left">
+            <img src="logo-piemca.png" alt="PIEMCA">
+            <span class="nd-rif">ARTROGEN INVERSIONES, C.A. RIF: J-50010476-6</span>
+          </div>
+          <div class="nd-head-right">
+            <div class="nd-sacs-box"><b>SACS</b><span>EMP. Nº 4.262</span></div>
+            <div class="nd-doc-title">NOTA DE DESPACHO</div>
+            <div class="nd-num-row">Nº: <span>${num}</span></div>
+            <div class="nd-fecha-row">FECHA: &nbsp;${fecha}</div>
+          </div>
+        </div>
+
+        <div class="nd-cirugia-bar">TIPO DE CIRUGÍA: ${cirugia}</div>
+        <table class="nd-meta-table">
+          <tr><td style="width:55%;"><b>HOSP. / CLÍNICA:</b> ${clinica}</td><td></td></tr>
+          <tr><td><b>DOCTOR (A):</b> ${doctor}</td><td></td></tr>
+          <tr><td><b>PACIENTE / C.I.:</b> ${paciente || "—"}</td><td><b>REALIZADO POR:</b> ${realizado || "—"}</td></tr>
+        </table>
+
+        <table class="nd-table">
+          <thead>
+            <tr><th>ÍTEM</th><th>CÓDIGO</th><th>DESCRIPCIÓN</th><th>SET</th><th>CHECK</th></tr>
+          </thead>
+          <tbody>
+            ${chunk.map((item, idx) => `
+              <tr>
+                <td>${start + idx + 1}</td>
+                <td>${item.codigo}</td>
+                <td style="text-align:left;">${item.descripcion}</td>
+                <td>${item.set}</td>
+                <td></td>
+              </tr>
+            `).join("")}
+          </tbody>
+          ${isLast ? `
+            <tfoot>
+              <tr class="nd-total-row">
+                <td colspan="3" style="text-align:right;padding-right:14px;">Total</td>
+                <td>${totalSetSum}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          ` : ''}
+        </table>
+
+        <div class="nd-footer-block">
+          ${isLast ? `
+            <div class="nd-legal-notes">
+              <strong>NOTA:</strong> MATERIAL ENVIADO EN PERFECTO ESTADO.<br>
+              <strong>NOTA:</strong> POR FAVOR DEVOLVER ESTE DOCUMENTO FIRMADO Y SELLADO (LETRA LEGIBLE).
+            </div>
+            <div class="nd-signatures">
+              <div class="nd-sig"><div class="nd-sig-line"></div>Almacenista</div>
+              <div class="nd-sig"><div class="nd-sig-line"></div>Coordinador Qx.</div>
+              <div class="nd-sig"><div class="nd-sig-line"></div>Recibe</div>
+            </div>
+          ` : '<div style="height:35px;"></div>'}
+
+          <div class="nd-foot-address">
+            <span>Dirección: Los Chorros, cruce con 7ma Av. Quinta Villa Garcia. Telf. (0212) 232.17.93 - Caracas</span>
+            <span>${p + 1}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+['ndFecha','ndClinica','ndDoctor','ndCirugia','ndPaciente','ndRealizadoPor'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', () => renderNdSheet());
+});
+
+document.getElementById('ndBtnImprimir').onclick = () => {
+  if(!ndItems.length){ alert("Agrega al menos un artículo antes de imprimir."); return; }
+  ndConfirmarNumero();
+  const num = document.getElementById('ndNumero').value || ndSeq;
+  const doc = document.getElementById('ndDoctor').value || "DR";
+  const orig = document.title;
+  document.title = `ND ${num} - ${doc}`;
+  window.print();
+  setTimeout(() => { document.title = orig; }, 1000);
+  setTimeout(ndProximoNumero, 1200);
+};
+
+/* Lógica Acta de Entrega */
+document.getElementById('actaBtnCopiarDespacho').onclick = () => {
+  if(!ndItems.length){ alert("No hay artículos en la Nota de Despacho actual."); return; }
+  actaItems = ndItems.map(it => ({
+    codigo: it.codigo, descripcion: it.descripcion,
+    lote: it.codigo === "S/C" ? "EQUIPO" : "LOTE/SERIE", cant: it.set
+  }));
+  document.getElementById('actaReceptor').value = document.getElementById('ndDoctor').value || document.getElementById('ndClinica').value;
+  renderActaTable();
+  renderActaSheet();
+};
+
+function renderActaTable(){
+  const tb = document.getElementById('actaTableBody');
+  tb.innerHTML = actaItems.map((it, i) => `
+    <tr data-i="${i}">
+      <td>${i + 1}</td>
+      <td><input class="acta-in-cod" value="${it.codigo}"></td>
+      <td><input class="acta-in-desc" value="${it.descripcion}"></td>
+      <td><input class="acta-in-lote" value="${it.lote}"></td>
+      <td><input type="number" class="acta-in-cant" value="${it.cant}"></td>
+      <td class="td-rm"><button class="btn-rm acta-btn-rm">✕</button></td>
+    </tr>
+  `).join("");
+
+  tb.querySelectorAll('tr').forEach(tr => {
+    const idx = +tr.dataset.i;
+    tr.querySelector('.acta-in-cod').oninput = e => { actaItems[idx].codigo = e.target.value; renderActaSheet(); };
+    tr.querySelector('.acta-in-desc').oninput = e => { actaItems[idx].descripcion = e.target.value; renderActaSheet(); };
+    tr.querySelector('.acta-in-lote').oninput = e => { actaItems[idx].lote = e.target.value; renderActaSheet(); };
+    tr.querySelector('.acta-in-cant').oninput = e => { actaItems[idx].cant = e.target.value; renderActaSheet(); };
+    tr.querySelector('.acta-btn-rm').onclick = () => { actaItems.splice(idx, 1); renderActaTable(); renderActaSheet(); };
+  });
+}
+
+document.getElementById('actaBtnAddLinea').onclick = () => {
+  actaItems.push({ codigo:"S/C", descripcion:"", lote:"SERIE", cant:1 });
+  renderActaTable();
+  renderActaSheet();
+};
+
+function renderActaSheet(){
+  document.getElementById('actaFechaOut').textContent = document.getElementById('actaFecha').value || new Date().toLocaleDateString('es-ES');
+  document.getElementById('actaReceptorOut').textContent = document.getElementById('actaReceptor').value || "__________________________";
+  document.getElementById('actaDocIdOut').textContent = document.getElementById('actaDocId').value || "__________________";
+
+  const rows = actaItems.map((it, i) => `
+    <tr>
+      <td style="text-align:center;">${i + 1}</td>
+      <td style="text-align:center;font-weight:600;">${it.codigo}</td>
+      <td>${it.descripcion}</td>
+      <td style="text-align:center;">${it.lote}</td>
+      <td style="text-align:center;font-weight:700;">${it.cant}</td>
+    </tr>
+  `);
+  const fill = Math.max(0, 18 - actaItems.length);
+  for(let f = 0; f < fill; f++){
+    rows.push(`<tr><td style="text-align:center;">${actaItems.length + f + 1}</td><td></td><td></td><td></td><td></td></tr>`);
+  }
+  document.getElementById('actaPrintBody').innerHTML = rows.join("");
+}
+
+['actaFecha','actaReceptor','actaDocId'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', () => renderActaSheet());
+});
+
+document.getElementById('actaBtnImprimir').onclick = () => {
+  const orig = document.title;
+  document.title = "Acta de Entrega - " + (document.getElementById('actaReceptor').value || "Custodia");
+  window.print();
+  setTimeout(() => { document.title = orig; }, 1000);
+};
+
+// Enlace en el evento de pestañas existente:
+const oldTabClick = document.querySelectorAll('.tab');
+oldTabClick.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const v = tab.dataset.view.toLowerCase();
+    const vd = document.getElementById('viewDespachos');
+    const va = document.getElementById('viewActa');
+    if(vd) vd.classList.toggle('hidden', v !== 'despachos');
+    if(va) va.classList.toggle('hidden', v !== 'acta');
+
+    if(v === 'despachos'){ ndProximoNumero(); renderNdSheet(); }
+    if(v === 'acta'){ renderActaSheet(); }
+  });
+});
+
+// Inicialización de fechas y Base de Datos
+document.addEventListener('DOMContentLoaded', () => {
+  const ndF = document.getElementById('ndFecha');
+  const acF = document.getElementById('actaFecha');
+  if(ndF) ndF.value = new Date().toLocaleDateString('es-ES');
+  if(acF) acF.value = new Date().toLocaleDateString('es-ES');
+  loadBaseDatos();
+});
+
 </script>
 </body>
 </html>
