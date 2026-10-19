@@ -3969,9 +3969,59 @@ document.getElementById('btnInicio').onclick = () => { history.pushState(null, '
 window.addEventListener('hashchange', segunHash);
 segunHash();
 
+/* ===== ACTUALIZACIÓN AUTOMÁTICA DE LA APP (service worker) =====
+   - Busca una versión nueva al abrir, al volver a la app y cada 30 min.
+   - Cuando la hay, la instala sola y recarga; si hay una nota/acta/pedido a medias, muestra un aviso para no perder nada. */
 if('serviceWorker' in navigator){
+  const hayTrabajoEnCurso = () => {
+    try{
+      return (typeof ndItems !== 'undefined' && ndItems.length) || (typeof actaItems !== 'undefined' && actaItems.length) ||
+             (typeof pedLineas !== 'undefined' && pedLineas.some(l => l.codigo)) ||
+             ['ndClinica','ndDoctor','ndPaciente','actaReceptor'].some(id => { const e = document.getElementById(id); return e && e.value.trim(); });
+    }catch(e){ return false; }
+  };
+  const avisoActualizar = () => {
+    if(document.getElementById('avisoUpdate')) return;
+    const d = document.createElement('div');
+    d.id = 'avisoUpdate';
+    d.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99999;background:#0B3B5C;color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.3);font:600 13px Arial,sans-serif;display:flex;gap:14px;align-items:center;';
+    d.innerHTML = '<span>Hay una versión nueva de la app.</span><button type="button" style="background:#4FB3E0;color:#08283d;border:none;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer;">Actualizar ahora</button>';
+    d.querySelector('button').onclick = () => location.reload();
+    document.body.appendChild(d);
+  };
+  let recargando = false;
+  const aplicarActualizacion = () => {
+    if(recargando) return;
+    if(hayTrabajoEnCurso()){ avisoActualizar(); return; }
+    recargando = true; location.reload();
+  };
+  // 1) Si cambia el service worker (sw.js), se recarga.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(navigator.serviceWorker.controller) aplicarActualizacion();
+  });
+  // 2) Si cambia el propio index.html en GitHub, también: se compara con la copia que se cargó al abrir.
+  let huellaInicial = null;
+  const huella = async () => {
+    try{
+      const r = await fetch('index.html', { cache: 'no-store' });
+      const t = await r.text();
+      let h = 0; for(let i = 0; i < t.length; i++){ h = (h * 31 + t.charCodeAt(i)) | 0; }
+      return t.length + ':' + h;
+    }catch(e){ return null; }
+  };
+  const buscarVersionNueva = async () => {
+    const h = await huella();
+    if(!h) return;
+    if(huellaInicial === null){ huellaInicial = h; return; }
+    if(h !== huellaInicial) aplicarActualizacion();
+  };
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      reg.update().catch(() => {});
+    }).catch(() => {});
+    buscarVersionNueva();
+    setInterval(buscarVersionNueva, 30 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if(!document.hidden) buscarVersionNueva(); });
   });
 }
 
