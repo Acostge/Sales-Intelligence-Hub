@@ -594,6 +594,13 @@
   .inv-table tbody tr:nth-child(even){background:#f9fafb;}
 
   /* Vista Pedidos */
+  .ped-top-card{background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .pt-row1{display:grid;grid-template-columns:130px 230px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) auto;gap:14px;align-items:end;}
+  .pt-row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,2fr);gap:14px;align-items:end;margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;}
+  .ped-top-card .field{min-width:0;} .ped-top-card .field input,.ped-top-card .field select{width:100%;min-width:0;box-sizing:border-box;}
+  .pt-num{display:flex;gap:4px;} .pt-num input{flex:1;min-width:0;} .pt-num .btn{padding:0 9px;height:36px;}
+  .pt-print{height:36px;white-space:nowrap;}
+  @media (max-width:1250px){ .pt-row1{grid-template-columns:repeat(3,minmax(0,1fr));} .pt-row2{grid-template-columns:repeat(2,minmax(0,1fr));} }
   .ped-controls{
     display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
@@ -787,11 +794,12 @@
   /* Impresión Nota de Despacho / Acta: hoja carta, margen cero en @page; los márgenes los controla el padding de cada hoja (iguales en pantalla y papel) */
   @page nd { size: letter portrait; margin: 0; }
   .nd-sheet-page, .acta-sheet { page: nd; }
-  .nd-sheet-page{ padding:14mm 16mm 12mm !important; height:279.4mm; }
-  .acta-sheet{ padding:14mm 16mm 12mm !important; }
+  .nd-sheet-page{ padding:12mm 15mm 12mm 15mm !important; height:279.4mm; }
+  .acta-sheet{ padding:12mm 15mm 12mm 15mm !important; }
   .nd-head, .nd-cirugia-bar, .nd-meta-table, .nd-table, .nd-footer-block, .nd-legal-notes{ width:100%; box-sizing:border-box; }
   .nd-signatures{ padding:0 !important; }
   .nd-table{ table-layout:fixed; }
+  .nd-table td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .nd-table th:nth-child(1){width:34px;} .nd-table th:nth-child(2){width:95px;}
   .nd-table th:nth-child(4), .nd-table th:nth-child(5){width:55px;}
   .nd-row1{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr)) 140px 170px;gap:14px;align-items:end;}
@@ -817,17 +825,22 @@
     max-height:calc(100vh - 90px);overflow-y:auto;overflow-x:hidden;background:#e9eef4;border:1px solid var(--gray-line);border-radius:12px;padding:14px 0 0;}
   .nd-split .nd-sheet-page{zoom:var(--nd-zoom,1);margin:0 auto 14px;}
   @media (max-width:1100px){ .nd-split{grid-template-columns:1fr;} .nd-split .items-builder{position:static;max-height:none;} .nd-split .nd-preview-container{position:static;max-height:none;} }
+  /* Impresión por "raíz de impresión": solo la hoja (clonada como hijo directo del body), sin nada más en el layout */
+  #printRoot{display:none;}
   @media print {
-    .nd-split{display:block;}
-    .nd-preview-container, .nd-preview-container *, .acta-sheet, .acta-sheet * { visibility:visible !important; }
-    .nd-split .nd-preview-container, .nd-preview-container { position:absolute !important; top:0; left:0; width:215.9mm; max-height:none !important; overflow:visible !important; background:none !important; border:none !important; border-radius:0 !important; margin:0 !important; padding:0 !important; }
-    .nd-split .nd-sheet-page { zoom:1 !important; margin:0 !important; }
-    .nd-split .acta-sheet, .acta-sheet { zoom:1 !important; margin:0 !important; width:215.9mm; height:279.4mm; max-height:279.4mm; overflow:hidden; border:none !important; box-shadow:none !important; }
-    .nd-sheet-page {
-      width:215.9mm; height:279.4mm; max-height:279.4mm; margin:0 !important; overflow:hidden;
+    body.pr-printing > *:not(#printRoot){display:none !important;}
+    body.pr-printing{background:#fff !important;margin:0 !important;padding:0 !important;}
+    body.pr-printing #printRoot{display:block !important;position:static !important;width:215.9mm;margin:0;padding:0;page:nd;}
+    body.pr-printing #printRoot, body.pr-printing #printRoot *{visibility:visible !important;}
+    #printRoot .nd-sheet-page{
+      zoom:1 !important; width:215.9mm; height:279.4mm; max-height:279.4mm; margin:0 !important; overflow:hidden;
       border:none !important; box-shadow:none !important; break-after:page; page-break-after:always;
     }
-    .nd-sheet-page:last-child { break-after:auto; page-break-after:auto; }
+    #printRoot .nd-sheet-page:last-child{break-after:auto; page-break-after:auto;}
+    #printRoot .acta-sheet{
+      zoom:1 !important; width:215.9mm; height:auto; min-height:279.4mm; margin:0 !important;
+      border:none !important; box-shadow:none !important;
+    }
   }
 
 </style>
@@ -1101,53 +1114,30 @@
 
   <!-- VISTA PEDIDOS -->
   <div id="viewPedidos" class="hidden">
-    <div class="ped-controls no-print">
-      <div class="field">
-        <label>Empresa</label>
-        <select id="pedEmpresa">
-          <option value="PIEMCA">PIEMCA</option>
-          <option value="ARTROGEN">ARTROGEN</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>No. de pedido</label>
-        <div style="display:flex;gap:4px;">
-          <input type="text" id="pedNumero" readonly style="font-weight:700;flex:1;">
-          <button type="button" class="btn btn-solid" id="pedEditNumBtn" title="Editar número manualmente" style="padding:0 10px;height:36px;">✏️</button>
+    <div class="ped-top-card no-print">
+      <div class="pt-row1">
+        <div class="field"><label>Empresa</label>
+          <select id="pedEmpresa"><option value="PIEMCA">PIEMCA</option><option value="ARTROGEN">ARTROGEN</option></select>
         </div>
+        <div class="field"><label>No. de pedido</label>
+          <div class="pt-num">
+            <input type="text" id="pedNumero" readonly style="font-weight:700;">
+            <button type="button" class="btn btn-solid" id="pedEditNumBtn" title="Editar número manualmente">✏️</button>
+            <button type="button" class="btn btn-solid" id="pedRefreshNum" title="Actualizar N°">🔄</button>
+          </div>
+        </div>
+        <div class="field"><label>Proveedor</label>
+          <select id="pedProveedor"><option value="">Selecciona...</option></select>
+        </div>
+        <div class="field"><label>Contacto</label><input type="text" id="pedContacto"></div>
+        <div class="field"><label>Autorizado por</label><input type="text" id="pedAutorizado"></div>
+        <button class="btn btn-solid pt-print" id="pedPrint">🖨️ Generar / Imprimir Pedido</button>
       </div>
-      <button class="btn btn-solid" id="pedRefreshNum">🔄 Actualizar N°</button>
-      <button class="btn btn-solid" id="pedPrint">🖨️ Generar / Imprimir Pedido</button>
-    </div>
-
-    <div class="ped-form no-print">
-      <div class="field">
-        <label>Proveedor</label>
-        <select id="pedProveedor"><option value="">Selecciona...</option></select>
-      </div>
-      <div class="field field-wide">
-        <label>Dirección proveedor</label>
-        <input type="text" id="pedProvDireccion">
-      </div>
-      <div class="field">
-        <label>Teléfono / Fax</label>
-        <input type="text" id="pedProvTelefono">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="text" id="pedProvEmail">
-      </div>
-      <div class="field">
-        <label>Contacto</label>
-        <input type="text" id="pedContacto">
-      </div>
-      <div class="field">
-        <label>Autorizado por</label>
-        <input type="text" id="pedAutorizado">
-      </div>
-      <div class="field field-wide">
-        <label>Observaciones</label>
-        <input type="text" id="pedObservaciones" value="Quedamos a la espera de la Proforma para su aprobación y despacho.">
+      <div class="pt-row2">
+        <div class="field"><label>Dirección proveedor</label><input type="text" id="pedProvDireccion"></div>
+        <div class="field"><label>Email</label><input type="text" id="pedProvEmail"></div>
+        <div class="field"><label>Teléfono / Fax</label><input type="text" id="pedProvTelefono"></div>
+        <div class="field"><label>Observaciones</label><input type="text" id="pedObservaciones" value="Quedamos a la espera de la Proforma para su aprobación y despacho."></div>
       </div>
     </div>
 
@@ -4142,15 +4132,19 @@ function renderNdSheet(){
   const realizado = (document.getElementById('ndRealizadoPor').value || "").toUpperCase();
 
   const container = document.getElementById('ndPagesContainer');
-  const ROWS_PER_PAGE = 34;
+  const FULL_CAP = 34, LAST_CAP = 29;   // filas por hoja intermedia / por hoja final (la final lleva total, notas y firmas)
   const totalItems = ndItems.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / ROWS_PER_PAGE));
+  const chunks = [];
+  let resto = totalItems, ini = 0;
+  while(resto > LAST_CAP){ const t = Math.min(FULL_CAP, resto - 5); chunks.push([ini, ini + t]); ini += t; resto -= t; }
+  chunks.push([ini, totalItems]);
+  const totalPages = chunks.length;
   const totalSetSum = ndItems.reduce((acc, it) => acc + (parseInt(it.set, 10) || 0), 0);
 
   let html = "";
   for(let p = 0; p < totalPages; p++){
-    const start = p * ROWS_PER_PAGE;
-    const end = Math.min(start + ROWS_PER_PAGE, totalItems);
+    const start = chunks[p][0];
+    const end = chunks[p][1];
     const chunk = ndItems.slice(start, end);
     const isLast = (p === totalPages - 1);
 
@@ -4227,6 +4221,22 @@ function renderNdSheet(){
   ndFit();
 }
 
+
+/* Imprime solo la(s) hoja(s) indicadas: se clonan en #printRoot (hijo directo del body) para que ningún otro elemento afecte al tamaño de página */
+function imprimirRaiz(origen){
+  const viejo = document.getElementById('printRoot'); if(viejo) viejo.remove();
+  const root = document.createElement('div');
+  root.id = 'printRoot';
+  root.innerHTML = origen.innerHTML;
+  root.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+  root.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+  document.body.appendChild(root);
+  document.body.classList.add('pr-printing');
+  const limpiar = () => { document.body.classList.remove('pr-printing'); const r = document.getElementById('printRoot'); if(r) r.remove(); window.removeEventListener('afterprint', limpiar); };
+  window.addEventListener('afterprint', limpiar);
+  window.print();
+}
+
 function ndFit(){
   ['ndPagesContainer','actaPreview'].forEach(id => {
     const c = document.getElementById(id);
@@ -4251,7 +4261,7 @@ document.getElementById('ndBtnImprimir').onclick = () => {
   const doc = document.getElementById('ndDoctor').value || "DR";
   const orig = document.title;
   document.title = `ND ${num} - ${doc}`;
-  window.print();
+  imprimirRaiz(document.getElementById('ndPagesContainer'));
   setTimeout(() => { document.title = orig; }, 1000);
   setTimeout(ndProximoNumero, 1200);
 };
@@ -4328,7 +4338,7 @@ function renderActaSheet(){
 document.getElementById('actaBtnImprimir').onclick = () => {
   const orig = document.title;
   document.title = "Acta de Entrega - " + (document.getElementById('actaReceptor').value || "Custodia");
-  window.print();
+  imprimirRaiz(document.getElementById('actaPreview'));
   setTimeout(() => { document.title = orig; }, 1000);
 };
 
