@@ -781,6 +781,16 @@
   .nd-table{ table-layout:fixed; }
   .nd-table th:nth-child(1){width:34px;} .nd-table th:nth-child(2){width:95px;}
   .nd-table th:nth-child(4), .nd-table th:nth-child(5){width:55px;}
+  .nd-row1{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr)) 140px 170px;gap:14px;align-items:end;}
+  .nd-row2{display:flex;gap:14px;align-items:flex-end;margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;}
+  .nd-f-cir{flex:0 0 300px;} .nd-f-sub{flex:0 0 240px;}
+  .nd-btn-print{margin-left:auto;height:36px;}
+  .nd-row1 .field{min-width:0;} .nd-row1 .field input{width:100%;min-width:0;box-sizing:border-box;}
+  .nd-row1 .field > div{display:flex;gap:4px;} .nd-row1 .field > div input{flex:1;}
+  .nd-row2 .field label{white-space:nowrap;}
+  .btn-nuevo{height:44px;border:none;border-radius:8px;background:#2F6FD0;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-nuevo:hover{background:#2559AD;}
+  @media (max-width:1100px){ .nd-row1{grid-template-columns:repeat(3,minmax(0,1fr));} .nd-row2{flex-wrap:wrap;} .nd-btn-print{margin-left:0;} }
   /* Vista dividida: líneas a la izquierda, hoja a la derecha */
   .nd-split{display:grid;grid-template-columns:minmax(360px,5fr) 7fr;gap:16px;align-items:start;}
   .nd-split .items-builder{margin-bottom:0;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 90px);overflow-y:auto;}
@@ -1203,21 +1213,20 @@
 <!-- VISTA NOTAS DE DESPACHO -->
   <div id="viewDespachos" class="hidden">
     <div class="ctrl-card no-print">
-      <div class="ctrl-grid">
-        <div class="field"><label>N° Despacho</label><div style="display:flex;gap:4px;"><input type="text" id="ndNumero" readonly style="font-weight:800;font-size:14px;"><button type="button" class="btn btn-solid" id="ndEditNumBtn" style="padding:0 8px;">✏️</button></div></div>
-        <div class="field"><label>Fecha</label><input type="text" id="ndFecha"></div>
+      <div class="nd-row1">
+        <button type="button" class="btn-nuevo" id="ndBtnNuevo" title="Iniciar una nota nueva">+ Nuevo</button>
         <div class="field"><label>Hosp. / Clínica</label><input list="ndClinicasList" id="ndClinica" placeholder="Escribe o selecciona..."><datalist id="ndClinicasList"></datalist></div>
         <div class="field"><label>Doctor (a)</label><input list="ndDoctoresList" id="ndDoctor" placeholder="Escribe o selecciona..."><datalist id="ndDoctoresList"></datalist></div>
         <div class="field"><label>Paciente / C.I.</label><input type="text" id="ndPaciente" placeholder="Ej: JUAN PEREZ CI: 12.345.678"></div>
         <div class="field"><label>Realizado por</label><input type="text" id="ndRealizadoPor" placeholder="Ej: RAFAEL MILLAN"></div>
+        <div class="field"><label>Fecha</label><input type="text" id="ndFecha"></div>
+        <div class="field"><label>N° Despacho</label><div style="display:flex;gap:4px;"><input type="text" id="ndNumero" readonly style="font-weight:800;font-size:14px;"><button type="button" class="btn btn-solid" id="ndEditNumBtn" style="padding:0 8px;">✏️</button></div></div>
       </div>
-      <div style="margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;" class="ctrl-grid">
-        <div class="field" style="grid-column:span 2;"><label>Tipo de Cirugía</label><input list="ndLineasDatalist" id="ndCirugia" placeholder="Selecciona o escribe la línea..."><datalist id="ndLineasDatalist"></datalist></div>
-        <div class="field"><label>Sublíneas / Plantillas (Base de Datos)</label><select id="ndPlantillaSelect"><option value="">-- Selecciona Sublínea --</option></select></div>
-        <div style="display:flex;gap:6px;align-items:flex-end;">
-          <button type="button" class="btn-accent" id="ndBtnCargarPlantilla">⚡ + Cargar Sublínea</button>
-          <button type="button" class="btn-solid" id="ndBtnImprimir">🖨️ Imprimir Despacho</button>
-        </div>
+      <div class="nd-row2">
+        <div class="field nd-f-cir"><label>Tipo de Cirugía</label><input list="ndLineasDatalist" id="ndCirugia" placeholder="Selecciona o escribe la línea..."><datalist id="ndLineasDatalist"></datalist></div>
+        <div class="field nd-f-sub"><label>Sublíneas / Plantillas</label><select id="ndPlantillaSelect"><option value="">-- Selecciona Sublínea --</option></select></div>
+        <button type="button" class="btn-accent" id="ndBtnCargarPlantilla">⚡ + Cargar Sublínea</button>
+        <button type="button" class="btn-solid nd-btn-print" id="ndBtnImprimir">🖨️ Imprimir Despacho</button>
       </div>
     </div>
 
@@ -4246,6 +4255,19 @@ oldTabClick.forEach(tab => {
     if(v === 'acta'){ renderActaSheet(); }
   });
 });
+
+document.getElementById('ndBtnNuevo').onclick = () => {
+  const hayDatos = ndItems.length || ['ndClinica','ndDoctor','ndPaciente','ndRealizadoPor','ndCirugia'].some(id => (document.getElementById(id).value||'').trim());
+  if(hayDatos && !confirm("¿Iniciar una nota nueva? Se borrarán los datos y artículos actuales.")) return;
+  ['ndClinica','ndDoctor','ndPaciente','ndRealizadoPor','ndCirugia'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('ndPlantillaSelect').value = '';
+  document.getElementById('ndFecha').value = new Date().toLocaleDateString('es-ES');
+  const num = document.getElementById('ndNumero');
+  num.dataset.manual = "false"; num.setAttribute('readonly', true);
+  document.getElementById('ndEditNumBtn').textContent = "✏️";
+  ndItems = [];
+  renderNdTable(); renderNdSheet(); ndProximoNumero();
+};
 
 // Inicialización de fechas y Base de Datos
 document.addEventListener('DOMContentLoaded', () => {
