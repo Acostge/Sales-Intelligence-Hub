@@ -4065,10 +4065,24 @@ document.getElementById('ndBtnCargarPlantilla').onclick = () => {
   const plan = (bdData.plantillas||[]).find(p => p.nombre === selNom);
   if(!plan) return;
 
-  plan.codigos.forEach(cod => {
-    const prod = rawData.find(r => r.codigo.toUpperCase() === cod.toUpperCase());
-    const desc = prod ? prod.descripcion : (cod === "S/C" ? "EQUIPO / ACCESORIO" : "Ítem " + cod);
-    ndItems.push({ codigo: cod, descripcion: desc, set: plan.cantPorDefecto || 1 });
+  /* Sintaxis de cada código en la plantilla (todo opcional, lo anterior sigue igual):
+       110431044            -> catálogo, cantidad de la columna I
+       110431046*2          -> catálogo, cantidad 2
+       INST1|Instrumental   -> fuera de catálogo, con descripción
+       S/C|Anclas (+1)*2    -> fuera de catálogo, con descripción y cantidad 2 */
+  plan.codigos.forEach(tok => {
+    let t = String(tok).trim(), cant = plan.cantPorDefecto || 1, desc = "";
+    const mq = t.match(/^(.*?)\s*\*\s*(\d+)$/);
+    if(mq){ t = mq[1].trim(); cant = parseInt(mq[2], 10); }
+    let cod = t;
+    const ip = t.indexOf('|');
+    if(ip >= 0){ cod = t.slice(0, ip).trim(); desc = t.slice(ip + 1).trim(); }
+    if(!cod) return;
+    if(!desc){
+      const prod = rawData.find(r => r.codigo.toUpperCase() === cod.toUpperCase());
+      desc = prod ? prod.descripcion : (cod === "S/C" ? "EQUIPO / ACCESORIO" : "Ítem " + cod);
+    }
+    ndItems.push({ codigo: cod, descripcion: desc, set: cant });
   });
 
   renderNdTable();
