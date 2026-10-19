@@ -776,9 +776,19 @@
   .nd-table{ table-layout:fixed; }
   .nd-table th:nth-child(1){width:34px;} .nd-table th:nth-child(2){width:95px;}
   .nd-table th:nth-child(4), .nd-table th:nth-child(5){width:55px;}
+  /* Vista dividida: líneas a la izquierda, hoja a la derecha */
+  .nd-split{display:grid;grid-template-columns:minmax(360px,5fr) 7fr;gap:16px;align-items:start;}
+  .nd-split .items-builder{margin-bottom:0;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 90px);overflow-y:auto;}
+  .nd-split .items-table td:nth-child(2){width:120px;}
+  .nd-split .nd-preview-container{margin-top:0;min-width:0;position:sticky;top:12px;
+    max-height:calc(100vh - 90px);overflow-y:auto;overflow-x:hidden;background:#e9eef4;border:1px solid var(--gray-line);border-radius:12px;padding:14px 0 0;}
+  .nd-split .nd-sheet-page{zoom:var(--nd-zoom,1);margin:0 auto 14px;}
+  @media (max-width:1100px){ .nd-split{grid-template-columns:1fr;} .nd-split .items-builder{position:static;max-height:none;} .nd-split .nd-preview-container{position:static;max-height:none;} }
   @media print {
+    .nd-split{display:block;}
     .nd-preview-container, .nd-preview-container *, .acta-sheet, .acta-sheet * { visibility:visible !important; }
-    .nd-preview-container { position:absolute; top:0; left:0; width:215.9mm; margin:0 !important; padding:0 !important; }
+    .nd-split .nd-preview-container, .nd-preview-container { position:absolute !important; top:0; left:0; width:215.9mm; max-height:none !important; overflow:visible !important; background:none !important; border:none !important; border-radius:0 !important; margin:0 !important; padding:0 !important; }
+    .nd-split .nd-sheet-page { zoom:1 !important; margin:0 !important; }
     .acta-sheet { position:absolute; top:0; left:0; margin:0 !important; border:none !important; box-shadow:none !important; }
     .nd-sheet-page {
       width:215.9mm; height:279.4mm; max-height:279.4mm; margin:0 !important; overflow:hidden;
@@ -1206,6 +1216,7 @@
       </div>
     </div>
 
+    <div class="nd-split">
     <div class="items-builder no-print">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="font-weight:700;color:var(--navy);">Líneas de la Nota de Despacho (<span id="ndCountItems">0</span> artículos)</span>
@@ -1222,6 +1233,7 @@
 
     <!-- Paginación multi-hoja oficial -->
     <div class="nd-preview-container" id="ndPagesContainer"></div>
+    </div>
   </div>
 
   <!-- VISTA ACTA DE ENTREGA -->
@@ -4111,7 +4123,18 @@ function renderNdSheet(){
     `;
   }
   container.innerHTML = html;
+  ndFit();
 }
+
+function ndFit(){
+  const c = document.getElementById('ndPagesContainer');
+  if(!c || !c.parentElement.classList.contains('nd-split')) return;
+  const w = c.clientWidth - 24;
+  if(w <= 0) return;
+  c.style.setProperty('--nd-zoom', Math.min(1, w / 816).toFixed(3));
+}
+window.addEventListener('resize', ndFit);
+if(window.ResizeObserver){ new ResizeObserver(ndFit).observe(document.getElementById('ndPagesContainer')); }
 
 ['ndFecha','ndClinica','ndDoctor','ndCirugia','ndPaciente','ndRealizadoPor'].forEach(id => {
   const el = document.getElementById(id);
