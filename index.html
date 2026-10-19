@@ -535,6 +535,11 @@
   .inv-prov-pop{position:absolute;top:calc(100% + 6px);left:0;width:300px;z-index:70;background:#fff;border:1px solid var(--gray-line);border-radius:10px;box-shadow:0 10px 30px rgba(8,43,68,.25);padding:14px;}
   .inv-controls .inv-prov-pop .prov-list label{text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:#1c2b39;display:flex;gap:8px;align-items:center;margin:0;}
   .inv-controls .inv-prov-pop .prov-list input[type=checkbox]{width:16px;height:16px;padding:0;margin:0;flex:0 0 auto;border-radius:3px;}
+  .nd-row2 .inv-prov-pop .prov-list label{text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:#1c2b39;display:flex;gap:8px;align-items:center;margin:0;white-space:normal;}
+  .nd-row2 .inv-prov-pop .prov-list input[type=checkbox]{width:16px;height:16px;padding:0;margin:0;flex:0 0 auto;border-radius:3px;}
+  .nd-row2 .inv-prov-pop input[type=text]{width:100%;box-sizing:border-box;}
+  .nd-row2 .inv-prov-pop .panel-actions{display:flex;justify-content:space-between;margin-top:10px;}
+  .nd-row2 .nd-plan{min-width:0;} .nd-row2 .nd-plan .inv-prov-pop{width:320px;}
   .inv-controls .inv-prov-pop .panel-actions{display:flex;justify-content:space-between;margin-top:10px;}
   .inv-prov-pop input[type=text]{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--gray-line);border-radius:8px;margin-bottom:10px;font-size:13px;}
   .inv-controls{
@@ -1242,7 +1247,17 @@
       </div>
       <div class="nd-row2">
         <div class="field nd-f-cir"><label>Tipo de Cirugía</label><input list="ndLineasDatalist" id="ndCirugia" placeholder="Selecciona o escribe la línea..."><datalist id="ndLineasDatalist"></datalist></div>
-        <div class="field nd-f-sub"><label>Sublíneas / Plantillas</label><select id="ndPlantillaSelect"><option value="">-- Selecciona Sublínea --</option></select></div>
+        <div class="field nd-f-sub"><label>Sublíneas / Plantillas</label><div class="inv-prov nd-plan">
+            <button type="button" id="ndPlanBtn" class="inv-prov-btn"><span id="ndPlanLabel">-- Selecciona Sublínea --</span><span class="inv-prov-caret">▾</span></button>
+            <div class="inv-prov-pop hidden" id="ndPlanPop">
+              <input type="text" id="ndPlanSearch" placeholder="Buscar sublínea...">
+              <div class="prov-list" id="ndPlanList"></div>
+              <div class="panel-actions">
+                <button type="button" class="link-btn" id="ndPlanAll">Seleccionar todas</button>
+                <button type="button" class="link-btn" id="ndPlanNone">Limpiar</button>
+              </div>
+            </div>
+          </div></div>
         <button type="button" class="btn-accent" id="ndBtnCargarPlantilla">⚡ + Cargar Sublínea</button>
         <button type="button" class="btn-solid nd-btn-print" id="ndBtnImprimir">🖨️ Imprimir Despacho</button>
       </div>
@@ -4055,32 +4070,54 @@ function populateBdSelectors(){
   if(dlDoc) dlDoc.innerHTML = (bdData.doctores||[]).map(d => `<option value="${d}">`).join("");
   const dlCli = document.getElementById('ndClinicasList');
   if(dlCli) dlCli.innerHTML = (bdData.clinicas||[]).map(c => `<option value="${c}">`).join("");
-  const selPlan = document.getElementById('ndPlantillaSelect');
-  if(selPlan){
-    selPlan.innerHTML = `<option value="">-- Selecciona Sublínea --</option>` +
-      (bdData.plantillas||[]).map(p => `<option value="${p.nombre}">${p.nombre} (${p.codigos.length} ítems)</option>`).join("");
+  const lp = document.getElementById('ndPlanList');
+  if(lp){
+    lp.innerHTML = (bdData.plantillas||[]).map(p => {
+      const n = p.nombre.replace(/"/g,'&quot;');
+      return `<label><input type="checkbox" value="${n}" class="nd-plan-check"> ${p.nombre} <span style="color:#7b8a99;">(${p.codigos.length} ítems)</span></label>`;
+    }).join("");
+    lp.querySelectorAll('.nd-plan-check').forEach(cb => cb.addEventListener('change', ndPlanLabel));
   }
+  ndPlanLabel();
 }
 
+/* ===== NÚMERO DE NOTA =====
+   El número se RESERVA en el Sheet (contador "ND") al pulsar "+ Nuevo" (o al imprimir si la nota no tiene número).
+   La reserva es atómica en Apps Script, así que dos personas en PCs distintas nunca reciben el mismo número.
+   Imprimir o reimprimir no gasta números. */
+const ND_KEY = 'piemca_nd_actual';
+function ndGuardado(){ try{ return JSON.parse(localStorage.getItem(ND_KEY) || 'null'); }catch(e){ return null; } }
+function ndGuardar(o){ try{ localStorage.setItem(ND_KEY, JSON.stringify(o)); }catch(e){} }
+
+function ndReservarNumero(){
+  const inp = document.getElementById('ndNumero');
+  inp.value = 'Reservando…';
+  return fetch(APPS_SCRIPT_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({ secret:APPS_SCRIPT_SECRET, action:"reservarDespacho" })
+  }).then(r => r.json()).then(d => {
+    if(!(d && d.ok && d.numero)) throw new Error(d && d.error || 'sin respuesta');
+    ndSeq = d.numero; inp.value = d.numero;
+    ndGuardar({ num: d.numero, impreso: false });
+    renderNdSheet();
+    return d.numero;
+  }).catch(() => {
+    inp.value = '';
+    renderNdSheet();
+    alert("No se pudo reservar el número de nota (revisa la conexión o el Apps Script). Puedes escribirlo a mano con el lápiz ✏️.");
+    return null;
+  });
+}
+
+// Al abrir la pestaña: recupera el número reservado de la nota en curso (si no se ha impreso ya)
 function ndProximoNumero(){
   const inp = document.getElementById('ndNumero');
   if(!inp || inp.dataset.manual === "true") return;
-  inp.value = "Cargando...";
-
-  fetch(`${APPS_SCRIPT_URL}?action=proximoDespacho`)
-    .then(r => r.json())
-    .then(d => {
-      if(d && d.proximoNumero){ ndSeq = d.proximoNumero; inp.value = ndSeq; renderNdSheet(); }
-    })
-    .catch(() => { inp.value = ndSeq; renderNdSheet(); });
-}
-
-function ndConfirmarNumero(){
-  fetch(APPS_SCRIPT_URL, {
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({ secret:APPS_SCRIPT_SECRET, action:"incrementarDespacho" })
-  }).catch(() => {});
+  const g = ndGuardado();
+  inp.value = (g && !g.impreso) ? g.num : '';
+  inp.placeholder = 'Pulsa + Nuevo';
+  renderNdSheet();
 }
 
 document.getElementById('ndEditNumBtn').onclick = () => {
@@ -4099,11 +4136,31 @@ document.getElementById('ndEditNumBtn').onclick = () => {
 
 document.getElementById('ndNumero').addEventListener('input', () => renderNdSheet());
 
+function ndPlanSeleccion(){ return [...document.querySelectorAll('.nd-plan-check:checked')].map(c => c.value); }
+function ndPlanLabel(){
+  const sel = ndPlanSeleccion();
+  document.getElementById('ndPlanLabel').textContent =
+    sel.length === 0 ? "-- Selecciona Sublínea --" : sel.length === 1 ? sel[0] : sel.length + " sublíneas seleccionadas";
+}
+(function(){
+  const btn = document.getElementById('ndPlanBtn'), pop = document.getElementById('ndPlanPop');
+  btn.addEventListener('click', e => { e.stopPropagation(); pop.classList.toggle('hidden'); if(!pop.classList.contains('hidden')) document.getElementById('ndPlanSearch').focus(); });
+  pop.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => pop.classList.add('hidden'));
+  document.getElementById('ndPlanSearch').addEventListener('input', e => {
+    const t = e.target.value.toLowerCase();
+    document.querySelectorAll('#ndPlanList label').forEach(l => { l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none"; });
+  });
+  document.getElementById('ndPlanAll').onclick = () => { document.querySelectorAll('.nd-plan-check').forEach(c => c.checked = true); ndPlanLabel(); };
+  document.getElementById('ndPlanNone').onclick = () => { document.querySelectorAll('.nd-plan-check').forEach(c => c.checked = false); ndPlanLabel(); };
+})();
+
 document.getElementById('ndBtnCargarPlantilla').onclick = () => {
-  const selNom = document.getElementById('ndPlantillaSelect').value;
-  if(!selNom){ alert("Selecciona una sublínea primero."); return; }
-  const plan = (bdData.plantillas||[]).find(p => p.nombre === selNom);
-  if(!plan) return;
+  const nombres = ndPlanSeleccion();
+  if(!nombres.length){ alert("Selecciona al menos una sublínea primero."); return; }
+  // Se cargan en el orden en que aparecen en la lista; al terminar se desmarcan para no repetirlas por accidente
+  const planes = (bdData.plantillas||[]).filter(p => nombres.indexOf(p.nombre) !== -1);
+  planes.forEach(plan => {
 
   /* Sintaxis de cada código en la plantilla (todo opcional, lo anterior sigue igual):
        110431044            -> catálogo, cantidad de la columna I
@@ -4124,7 +4181,11 @@ document.getElementById('ndBtnCargarPlantilla').onclick = () => {
     }
     ndItems.push({ codigo: cod, descripcion: desc, set: cant });
   });
+  });
 
+  document.querySelectorAll('.nd-plan-check').forEach(c => c.checked = false);
+  ndPlanLabel();
+  document.getElementById('ndPlanPop').classList.add('hidden');
   renderNdTable();
   renderNdSheet();
 };
@@ -4173,11 +4234,12 @@ function renderNdTable(){
 }
 
 function renderNdSheet(){
-  const num = document.getElementById('ndNumero').value || ndSeq;
+  const numRaw = document.getElementById('ndNumero').value;
+  const num = (!numRaw || numRaw === 'Reservando…') ? '—' : numRaw;
   const fecha = document.getElementById('ndFecha').value || new Date().toLocaleDateString('es-ES');
-  const clinica = (document.getElementById('ndClinica').value || "").toUpperCase();
-  const doctor = (document.getElementById('ndDoctor').value || "").toUpperCase();
-  const cirugia = (document.getElementById('ndCirugia').value || "").toUpperCase();
+  const clinica = (document.getElementById('ndClinica').value || "CM EL VALLE").toUpperCase();
+  const doctor = (document.getElementById('ndDoctor').value || "EDUARDO BUSTILLO").toUpperCase();
+  const cirugia = (document.getElementById('ndCirugia').value || "LCA INFINITY + ARTROSCOPIA").toUpperCase();
   const paciente = (document.getElementById('ndPaciente').value || "").toUpperCase();
   const realizado = (document.getElementById('ndRealizadoPor').value || "").toUpperCase();
 
@@ -4304,16 +4366,17 @@ if(window.ResizeObserver){ const ro = new ResizeObserver(ndFit); ro.observe(docu
   if(el) el.addEventListener('input', () => renderNdSheet());
 });
 
-document.getElementById('ndBtnImprimir').onclick = () => {
+document.getElementById('ndBtnImprimir').onclick = async () => {
   if(!ndItems.length){ alert("Agrega al menos un artículo antes de imprimir."); return; }
-  ndConfirmarNumero();
-  const num = document.getElementById('ndNumero').value || ndSeq;
+  const inp = document.getElementById('ndNumero');
+  if(!inp.value.trim()){ const n = await ndReservarNumero(); if(!n) return; }   // nota sin número: se reserva ahora
+  const num = inp.value;
+  const g = ndGuardado(); if(g && String(g.num) === String(num)) ndGuardar({ num: g.num, impreso: true });
   const doc = document.getElementById('ndDoctor').value || "DR";
   const orig = document.title;
   document.title = `ND ${num} - ${doc}`;
   imprimirRaiz(document.getElementById('ndPagesContainer'));
   setTimeout(() => { document.title = orig; }, 1000);
-  setTimeout(ndProximoNumero, 1200);
 };
 
 /* Lógica Acta de Entrega */
@@ -4411,13 +4474,17 @@ document.getElementById('ndBtnNuevo').onclick = () => {
   const hayDatos = ndItems.length || ['ndClinica','ndDoctor','ndPaciente','ndRealizadoPor','ndCirugia'].some(id => (document.getElementById(id).value||'').trim());
   if(hayDatos && !confirm("¿Iniciar una nota nueva? Se borrarán los datos y artículos actuales.")) return;
   ['ndClinica','ndDoctor','ndPaciente','ndRealizadoPor','ndCirugia'].forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('ndPlantillaSelect').value = '';
+  document.querySelectorAll('.nd-plan-check').forEach(c => c.checked = false); ndPlanLabel();
   document.getElementById('ndFecha').value = new Date().toLocaleDateString('es-ES');
   const num = document.getElementById('ndNumero');
   num.dataset.manual = "false"; num.setAttribute('readonly', true);
   document.getElementById('ndEditNumBtn').textContent = "✏️";
   ndItems = [];
-  renderNdTable(); renderNdSheet(); ndProximoNumero();
+  renderNdTable(); renderNdSheet();
+  // Se reserva un número nuevo, salvo que la nota anterior estuviera vacía y con número sin usar (así no se gastan números)
+  const g = ndGuardado();
+  if(g && !g.impreso && !hayDatos){ num.value = g.num; renderNdSheet(); }
+  else ndReservarNumero();
 };
 
 document.getElementById('actaBtnNuevo').onclick = () => {
