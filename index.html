@@ -730,26 +730,31 @@
   .nd-num-row{font-size:14px;font-weight:800;color:#1B3550;}
   .nd-num-row span{font-size:16px;color:#0B3B5C;}
   .nd-fecha-row{margin-top:9px;font-size:10px;font-weight:700;color:#222;}
-  .nd-cirugia-bar{background:#C2D9F2;color:#082B44;padding:4px 10px;font-size:10.5px;font-weight:800;margin:20px 0 14px;border:0.5px solid #A4C2E2;}
+  .nd-cirugia-bar{background:#C2D9F2;color:#082B44;padding:4px 10px;font-size:10.5px;font-weight:800;margin:20px 0 14px;box-shadow:inset 0 0 0 0.4px #8FAEC9;}
   .nd-meta-table{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:9.5px;}
   .nd-meta-table td{padding:5px 4px;vertical-align:top;}
   .nd-meta-table td b{color:#082B44;}
   .nd-table{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:4px;}
-  .nd-table th{background:#C2D9F2;color:#082B44;border:0.5px solid #8FAEC9;padding:4px 5px;text-align:center;font-weight:800;}
-  .nd-table td{border:0.5px solid #BFD1E2;padding:3.2px 5px;height:18px;vertical-align:middle;}
-  .nd-table tbody tr:nth-child(even){background:#EDF4FC;}
+  .nd-table{border-collapse:separate;border-spacing:0;}
+  .nd-table th{background:#C2D9F2;color:#082B44;border:0;box-shadow:inset 0 0.4px 0 #8FAEC9, inset -0.4px 0 0 #8FAEC9, inset 0 -0.4px 0 #8FAEC9;padding:4px 5px;text-align:center;font-weight:800;}
+  .nd-table th:first-child, .nd-table td:first-child{box-shadow:inset 0.4px 0 0 #8FAEC9, inset -0.4px 0 0 #8FAEC9, inset 0 -0.4px 0 #BFD1E2;}
+  .nd-table th:first-child{box-shadow:inset 0.4px 0 0 #8FAEC9, inset 0 0.4px 0 #8FAEC9, inset -0.4px 0 0 #8FAEC9, inset 0 -0.4px 0 #8FAEC9;}
+  .nd-table td{border:0;box-shadow:inset -0.4px 0 0 #BFD1E2, inset 0 -0.4px 0 #BFD1E2;padding:3.2px 5px;height:18px;vertical-align:middle;}
+  .nd-table tbody tr:nth-child(even){background:#F5F9FD;}
   .nd-table td:first-child{text-align:center;width:34px;}
   .nd-table td:nth-child(2){text-align:center;width:95px;font-weight:600;}
   .nd-table td:nth-child(4){text-align:center;width:55px;font-weight:700;}
   .nd-table td:nth-child(5){text-align:center;width:55px;}
-  .nd-total-row td{font-weight:800;background:#D4E5F7 !important;border-top:1px solid #082B44;}
+  .nd-total-row td{font-weight:800;background:#D4E5F7 !important;box-shadow:inset 0 0.5px 0 #082B44, inset -0.4px 0 0 #8FAEC9, inset 0 -0.4px 0 #8FAEC9;}
+  .nd-total-row td:first-child{box-shadow:inset 0.4px 0 0 #8FAEC9, inset 0 0.5px 0 #082B44, inset -0.4px 0 0 #8FAEC9, inset 0 -0.4px 0 #8FAEC9;}
   .nd-footer-block{margin-top:auto;padding-top:6px;}
-  .nd-legal-notes{font-size:8px;font-style:italic;color:#333;margin-bottom:14px;line-height:1.4;}
+  .nd-legal-notes{font-size:8px;font-style:italic;color:#333;margin-bottom:38px;line-height:1.4;}
   .nd-signatures{display:flex;justify-content:space-between;margin-bottom:14px;padding:0 20px;}
   .nd-sig{text-align:center;width:150px;font-size:9px;font-weight:700;}
-  .nd-sig-line{border-top:0.5px solid #222;margin-bottom:3px;height:38px;}
-  .nd-foot-address{border-top:0.5px solid #C2D9F2;padding-top:4px;display:flex;justify-content:space-between;font-size:8px;color:#285172;font-weight:700;}
+  .nd-sig-line{height:1px;background:#222;transform:scaleY(.4);transform-origin:top;margin-bottom:4px;}
+  .nd-foot-address{position:relative;padding-top:6px;display:flex;justify-content:center;text-align:center;font-size:8px;color:#285172;font-weight:700;}
   
+  .nd-foot-address::before{content:'';position:absolute;left:0;right:0;top:0;height:1px;background:#7FA6CC;transform:scaleY(.4);transform-origin:top;}
   .acta-sheet{
     background:#ffffff;border:1px solid #d0d0d0;box-shadow:0 4px 18px rgba(0,0,0,.08);
     width:215.9mm;min-height:279.4mm;margin:0 auto 24px;padding:16mm 18mm;
@@ -4116,7 +4121,7 @@ function renderNdSheet(){
 
           <div class="nd-foot-address">
             <span>Dirección: Los Chorros, cruce con 7ma Av. Quinta Villa Garcia. Telf. (0212) 232.17.93 - Caracas</span>
-            <span>${p + 1}</span>
+            <span style="position:absolute;right:0;top:6px;">${p + 1}</span>
           </div>
         </div>
       </div>
