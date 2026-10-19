@@ -765,17 +765,25 @@
   .acta-table tbody tr:nth-child(even){background:#FAF6FC;}
   .acta-obs-box{border:0.5px solid #999;border-radius:4px;min-height:55px;padding:6px;margin-top:4px;}
 
+  /* Impresión Nota de Despacho / Acta: hoja carta, margen cero en @page; los márgenes los controla el padding de cada hoja (iguales en pantalla y papel) */
+  @page nd { size: letter portrait; margin: 0; }
+  .nd-sheet-page, .acta-sheet { page: nd; }
+  .nd-sheet-page{ padding:14mm 16mm 12mm !important; height:279.4mm; }
+  .acta-sheet{ padding:14mm 16mm 12mm !important; }
+  .nd-head, .nd-cirugia-bar, .nd-meta-table, .nd-table, .nd-footer-block, .nd-legal-notes{ width:100%; box-sizing:border-box; }
+  .nd-signatures{ padding:0 !important; }
+  .nd-table{ table-layout:fixed; }
+  .nd-table th:nth-child(1){width:34px;} .nd-table th:nth-child(2){width:95px;}
+  .nd-table th:nth-child(4), .nd-table th:nth-child(5){width:55px;}
   @media print {
     .nd-preview-container, .nd-preview-container *, .acta-sheet, .acta-sheet * { visibility:visible !important; }
-    .nd-preview-container, .acta-sheet {
-      position:absolute; top:0; left:0; width:100%; margin:0 !important; padding:8mm 12mm !important;
-      border:none !important; box-shadow:none !important;
-    }
+    .nd-preview-container { position:absolute; top:0; left:0; width:215.9mm; margin:0 !important; padding:0 !important; }
+    .acta-sheet { position:absolute; top:0; left:0; margin:0 !important; border:none !important; box-shadow:none !important; }
     .nd-sheet-page {
-      page-break-after:always; break-after:page; height:279.4mm; max-height:279.4mm; margin:0 !important;
-      padding:10mm 14mm 8mm !important; border:none !important; box-shadow:none !important;
+      width:215.9mm; height:279.4mm; max-height:279.4mm; margin:0 !important; overflow:hidden;
+      border:none !important; box-shadow:none !important; break-after:page; page-break-after:always;
     }
-    .nd-sheet-page:last-child { page-break-after:avoid; break-after:avoid; }
+    .nd-sheet-page:last-child { break-after:auto; page-break-after:auto; }
   }
 
 </style>
