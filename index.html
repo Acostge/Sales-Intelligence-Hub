@@ -4175,9 +4175,9 @@ function renderNdTable(){
 function renderNdSheet(){
   const num = document.getElementById('ndNumero').value || ndSeq;
   const fecha = document.getElementById('ndFecha').value || new Date().toLocaleDateString('es-ES');
-  const clinica = (document.getElementById('ndClinica').value || "CM EL VALLE").toUpperCase();
-  const doctor = (document.getElementById('ndDoctor').value || "EDUARDO BUSTILLO").toUpperCase();
-  const cirugia = (document.getElementById('ndCirugia').value || "LCA INFINITY + ARTROSCOPIA").toUpperCase();
+  const clinica = (document.getElementById('ndClinica').value || "").toUpperCase();
+  const doctor = (document.getElementById('ndDoctor').value || "").toUpperCase();
+  const cirugia = (document.getElementById('ndCirugia').value || "").toUpperCase();
   const paciente = (document.getElementById('ndPaciente').value || "").toUpperCase();
   const realizado = (document.getElementById('ndRealizadoPor').value || "").toUpperCase();
 
