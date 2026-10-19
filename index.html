@@ -529,6 +529,14 @@
   .dash-hint{font-size:12.5px;color:var(--gray);padding:20px 0;text-align:center;width:100%;}
 
   /* Vista Inventario */
+  .inv-prov{position:relative;min-width:230px;}
+  .inv-prov-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:9px 12px;border:1px solid var(--gray-line);border-radius:8px;background:#fff;font-size:13.5px;color:inherit;cursor:pointer;height:36px;box-sizing:border-box;}
+  .inv-prov-btn span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .inv-prov-pop{position:absolute;top:calc(100% + 6px);left:0;width:300px;z-index:70;background:#fff;border:1px solid var(--gray-line);border-radius:10px;box-shadow:0 10px 30px rgba(8,43,68,.25);padding:14px;}
+  .inv-controls .inv-prov-pop .prov-list label{text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:#1c2b39;display:flex;gap:8px;align-items:center;margin:0;}
+  .inv-controls .inv-prov-pop .prov-list input[type=checkbox]{width:16px;height:16px;padding:0;margin:0;flex:0 0 auto;border-radius:3px;}
+  .inv-controls .inv-prov-pop .panel-actions{display:flex;justify-content:space-between;margin-top:10px;}
+  .inv-prov-pop input[type=text]{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--gray-line);border-radius:8px;margin-bottom:10px;font-size:13px;}
   .inv-controls{
     display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
     background:var(--white);border:1px solid var(--gray-line);border-radius:12px;padding:16px;margin-bottom:16px;
@@ -1042,7 +1050,17 @@
     <div class="inv-controls no-print">
       <div class="field">
         <label>Proveedor</label>
-        <select id="invProveedor"><option value="">Todos</option></select>
+        <div class="inv-prov">
+          <button type="button" id="invProvBtn" class="inv-prov-btn"><span id="invProvLabel">Todos</span><span class="inv-prov-caret">▾</span></button>
+          <div class="inv-prov-pop hidden" id="invProvPop">
+            <input type="text" id="invProvSearch" placeholder="Buscar Proveedor...">
+            <div class="prov-list" id="invProvList"></div>
+            <div class="panel-actions">
+              <button type="button" class="link-btn" id="invProvAll">Seleccionar todos</button>
+              <button type="button" class="link-btn" id="invProvNone">Limpiar</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>Almacén</label>
@@ -2914,15 +2932,51 @@ function buildProviderPanel(){
 }
 
 /* ============ INVENTARIO ============ */
+let invSelProv = new Set(); // vacío = todos los proveedores
+
+function invProvLabel(){
+  const n = invSelProv.size;
+  document.getElementById('invProvLabel').textContent =
+    n === 0 ? "Todos" : n === 1 ? [...invSelProv][0] : n + " proveedores seleccionados";
+}
+
 function buildInventarioSelectors(){
-  const provSel = document.getElementById('invProveedor');
-  provSel.innerHTML = `<option value="">Todos</option>` + providers.map(p=>`<option value="${p}">${p}</option>`).join("");
+  const list = document.getElementById('invProvList');
+  list.innerHTML = providers.map(p => `<label><input type="checkbox" value="${p.replace(/"/g,'&quot;')}" class="inv-prov-check"${invSelProv.has(p) ? ' checked' : ''}> ${p}</label>`).join("");
+  list.querySelectorAll('.inv-prov-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if(cb.checked) invSelProv.add(cb.value); else invSelProv.delete(cb.value);
+      invProvLabel(); renderInventario();
+    });
+  });
+  invProvLabel();
   document.getElementById('invFecha').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+(function(){
+  const btn = document.getElementById('invProvBtn');
+  const pop = document.getElementById('invProvPop');
+  btn.addEventListener('click', e => { e.stopPropagation(); pop.classList.toggle('hidden'); if(!pop.classList.contains('hidden')) document.getElementById('invProvSearch').focus(); });
+  pop.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => pop.classList.add('hidden'));
+  document.getElementById('invProvSearch').addEventListener('input', e => {
+    const t = e.target.value.toLowerCase();
+    document.querySelectorAll('#invProvList label').forEach(l => { l.style.display = l.textContent.toLowerCase().includes(t) ? "flex" : "none"; });
+  });
+  document.getElementById('invProvAll').onclick = () => {
+    invSelProv = new Set(providers);
+    document.querySelectorAll('.inv-prov-check').forEach(cb => cb.checked = true);
+    invProvLabel(); renderInventario();
+  };
+  document.getElementById('invProvNone').onclick = () => {
+    invSelProv.clear();
+    document.querySelectorAll('.inv-prov-check').forEach(cb => cb.checked = false);
+    invProvLabel(); renderInventario();
+  };
+})();
+
 function renderInventario(){
-  const provFilter = document.getElementById('invProveedor').value;
-  const rows = provFilter ? rawData.filter(r => r.proveedor === provFilter) : rawData;
+  const rows = invSelProv.size ? rawData.filter(r => invSelProv.has(r.proveedor)) : rawData;
 
   document.getElementById('invAlmacenOut').textContent = document.getElementById('invAlmacen').value;
   document.getElementById('invResponsableOut').textContent = document.getElementById('invResponsable').value;
@@ -3752,7 +3806,6 @@ document.querySelectorAll('.tab').forEach(tab => {
   };
 });
 
-document.getElementById('invProveedor').addEventListener('change', renderInventario);
 document.getElementById('invAlmacen').addEventListener('input', () => { saveUserPrefs(); renderInventario(); });
 document.getElementById('invResponsable').addEventListener('input', () => { saveUserPrefs(); renderInventario(); });
 document.getElementById('invPrint').addEventListener('click', () => window.print());
