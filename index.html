@@ -463,9 +463,18 @@
   .rvp-sec th{background:#0B3B5C;color:#fff;padding:5px 6px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .rvp-sec td{padding:4px 6px;text-align:center;border-top:1px solid #DCE3E8;}
   .rvp-sec .rv-l{text-align:left;}
+  .rvp-sec tfoot{display:table-row-group;}
   .rvp-sec tfoot td{font-weight:800;border-top:2px solid #0B3B5C;}
   .rvp-sec tr.rv-hl td{background:#FFF3EA;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .rvp-foot{margin-top:12px;font-size:9px;color:#5B6B78;text-align:center;}
+  /* PDF del cierre (Resumen de Ventas): hoja carta HORIZONTAL con 10 mm de margen. Página con nombre para no afectar otras impresiones. */
+  @page rv{size:letter landscape;margin:10mm;}
+  @media print{
+    body.rv-printing > *:not(#rvReport){display:none !important;}
+    body.rv-printing #rvReport{display:block !important;page:rv;}
+    body.rv-printing #rvReport, body.rv-printing #rvReport *{visibility:visible !important;}
+    body.rv-printing{background:#fff !important;margin:0 !important;padding:0 !important;}
+  }
   
   .rv-overlay, #rvReport{--rv-font:"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif;}
   .rv-overlay *, #rvReport *{font-family:var(--rv-font) !important;font-weight:400 !important;}
@@ -1557,7 +1566,7 @@ const bvVar = (a, b) => b ? (a - b) / b * 100 : null;
 function bvParse(rows){
   const head = (rows[0] || []).map(bvNorm);
   const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
-  const ix = { anio:col('ano'), fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), tipo:col('tipo'),
+  const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), tipo:col('tipo'),
                genero:col('genero'), edad:col('edad'), talla:col('talla'), cant:col('cant') };
   const faltan = ['fecha', 'doctor', 'genero', 'talla', 'cant'].filter(k => ix[k] < 0);
   if(faltan.length) return { error:'La pestaña Biobrace no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
@@ -2048,12 +2057,12 @@ function lgParse(rows){
   const nombres = { fecha:'Fecha', doctor:'Doctor', clinica:'Clínica', cant:'Cant.', sini:'Stock inicial', sfin:'Stock final' };
   const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
   if(faltan.length) return { error:'La pestaña Lipogems no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
-  const ancho = head.length >= 23;
+  const ancho = head.length >= 22;   // A:V (la columna AÑO ya no existe: todo año se toma de la FECHA)
   const cc = (pos, ...names) => { const i = col(...names); return i >= 0 ? i : (ancho ? pos : -1); };
   const fechas2 = head.map((h, i) => h.startsWith('fecha') ? i : -1).filter(i => i >= 0);
-  const cx = { fechaFac:fechas2.length > 1 ? fechas2[fechas2.length - 1] : (ancho ? 13 : -1),
-    monto:cc(14, 'monto'), desc:cc(15, 'descuento'), flete:cc(16, 'flete'), seguro:cc(17, 'seguro'), manejo:cc(18, 'manejo'),
-    arancel:cc(19, 'arancel'), aduanal:cc(20, 'ag. aduanal', 'ag aduanal', 'ag.', 'agente'), otros:cc(21, 'otros'), total:cc(22, 'total') };
+  const cx = { fechaFac:fechas2.length > 1 ? fechas2[fechas2.length - 1] : (ancho ? 12 : -1),
+    monto:cc(13, 'monto'), desc:cc(14, 'descuento'), flete:cc(15, 'flete'), seguro:cc(16, 'seguro'), manejo:cc(17, 'manejo'),
+    arancel:cc(18, 'arancel'), aduanal:cc(19, 'ag. aduanal', 'ag aduanal', 'ag.', 'agente'), otros:cc(20, 'otros'), total:cc(21, 'total') };
   const tieneCostos = cx.monto >= 0 || cx.total >= 0;
   const regs = [];
   let stockActual = null;
@@ -2067,14 +2076,16 @@ function lgParse(rows){
     ['monto', 'desc', 'flete', 'seguro', 'manejo', 'arancel', 'aduanal', 'otros', 'total'].forEach(k => { c[k] = cx[k] >= 0 ? (rvNum(r[cx[k]]) || 0) : 0; });
     const hayCosto = Object.keys(c).some(k => c[k] !== 0);
     if(!doctor && !compra && cant === null && !f && !hayCosto) return;
-    let anio = ix.anio >= 0 ? parseInt(String(r[ix.anio]).replace(/\D/g, ''), 10) : NaN;
-    if(isNaN(anio) && f) anio = f.getFullYear();
-    if(isNaN(anio)) return;
+    // El año sale siempre de la FECHA (col. B); si una fila de compra no la trae, de la FECHA de la factura (col. M)
+    const fFac = cx.fechaFac >= 0 ? bvFecha(r[cx.fechaFac]) : null;
+    const fAnio = f || fFac;
+    if(!fAnio) return;
+    const anio = fAnio.getFullYear();
     regs.push({
       anio, fecha:f, mes:f ? f.getMonth() : null, doctor, clinica:String(r[ix.clinica] || '').trim(),
       kit:ix.kit >= 0 ? String(r[ix.kit] || '').trim() : '',
       venta:cant !== null ? cant : (doctor ? 1 : 0), compra, stockFin:sfin,
-      fechaFac:cx.fechaFac >= 0 ? bvFecha(r[cx.fechaFac]) : null, c, hayCosto
+      fechaFac:fFac, c, hayCosto
     });
     if(sfin !== null) stockActual = sfin;
   });
