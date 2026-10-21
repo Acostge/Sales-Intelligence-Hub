@@ -1396,7 +1396,8 @@ const RESUMEN_LINEAS = [
     opciones:[
       { id:'cierre',    label:'Cierre del mes',    render:bioRender('cierre') },
       { id:'modelos',   label:'Modelos del año',   render:bioRender('modelos') },
-      { id:'doctores',  label:'Doctores',          render:bioRender('doctores') },
+      { id:'anios',     label:'Ventas por año',    render:bioRender('anios') },
+      { id:'doctores',  label:'Top 10 doctores',   render:bioRender('doctores') },
       { id:'genero',    label:'Género',            render:bioRender('genero') },
       { id:'general',   label:'General (histórico)', render:bioRender('general') }
     ] },
@@ -1576,9 +1577,8 @@ function bvParse(rows){
     const talla = String(r[ix.talla] || '').trim();
     if(!doctor && !talla) return;
     const f = bvFecha(r[ix.fecha]);
-    let anio = ix.anio >= 0 ? parseInt(String(r[ix.anio]).replace(/\D/g, ''), 10) : NaN;
-    if(isNaN(anio) && f) anio = f.getFullYear();
-    if(isNaN(anio)) return;
+    if(!f) return;                     // el año sale siempre de la FECHA
+    const anio = f.getFullYear();
     const cant = rvNum(r[ix.cant]);
     const g = bvNorm(r[ix.genero]).charAt(0);
     regs.push({
@@ -1716,7 +1716,7 @@ function bvVistaModelosAnio(d, s){
     kpis:[
       { l:'Total ' + s.anio, v:rvFmt(total) },
       { l:'Mejor mes', v:total ? BV_MESES[mejor] + ' · ' + rvFmt(totM[mejor]) : '—' },
-      { l:'Promedio mensual', v:rvFmt(total / activos) },
+      { l:'Promedio mensual', v:rvFmt(Math.round(total / activos)) },
       { l:'Modelo líder', v:li >= 0 ? mod[li].label + ' · ' + bvShare(totMod[li], total) : '—' },
       { l:'Vs mismo tramo ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') }
     ],
@@ -1731,14 +1731,18 @@ function bvVistaModelosAnio(d, s){
 }
 
 function bvVistaDoctores(d, s){
-  const regs = d.regs.filter(r => r.anio === s.anio), total = bvSum(regs), mapa = {};
-  regs.forEach(r => {
-    const x = mapa[r.doctor] || (mapa[r.doctor] = { nombre:r.doctor, n:0, cli:{} });
-    x.n += r.cant; if(r.clinica) x.cli[r.clinica] = (x.cli[r.clinica] || 0) + r.cant;
+  const p = s.periodo === undefined ? 'todo' : s.periodo, an = d.anios;
+  const mapa = {};
+  d.regs.forEach(r => {
+    const x = mapa[r.doctor] || (mapa[r.doctor] = { nombre:r.doctor, años:{}, cli:{}, n:0 });
+    x.años[r.anio] = (x.años[r.anio] || 0) + r.cant;
+    if(p === 'todo' || r.anio === p){ x.n += r.cant; if(r.clinica) x.cli[r.clinica] = (x.cli[r.clinica] || 0) + r.cant; }
   });
-  const lista = Object.values(mapa).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+  const lista = Object.values(mapa).filter(x => x.n > 0).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
   lista.forEach(x => { x.cl = Object.keys(x.cli).sort((a, b) => x.cli[b] - x.cli[a])[0] || '—'; });
-  const top = lista.slice(0, 10), top3 = bvSum(lista.slice(0, 3).map(x => ({ cant:x.n })));
+  const total = lista.reduce((t, x) => t + x.n, 0), top = lista.slice(0, 10);
+  const top3 = lista.slice(0, 3).reduce((t, x) => t + x.n, 0);
+  const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
   const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
   const o = bvOpts({ top:4 });
   o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
@@ -1747,15 +1751,19 @@ function bvVistaDoctores(d, s){
     x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
     y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
   };
+  const totAn = an.map(a => lista.reduce((t, x) => t + (x.años[a] || 0), 0));
+  const hist = x => an.reduce((t, a) => t + (x.años[a] || 0), 0);
+  const histTot = lista.reduce((t, x) => t + hist(x), 0);
+  const pct = n => total ? (n / total * 100).toFixed(1).replace('.', ',') + '%' : '';
   return {
-    id:'doctores', file:'Biobrace_doctores_' + s.anio,
-    title:'Ventas por doctor · Año ' + s.anio, sub:'Top 10 de ' + lista.length + ' doctores',
+    id:'doctores', file:'Biobrace_doctores_' + (p === 'todo' ? 'historico' : p),
+    title:'Ventas por doctor · ' + per, sub:'Top 10 de ' + lista.length + ' doctores',
     kpis:[
-      { l:'Total ' + s.anio, v:rvFmt(total) },
+      { l:'Total ' + (p === 'todo' ? 'histórico' : p), v:rvFmt(total) },
       { l:'Doctores activos', v:rvFmt(lista.length) },
       { l:'Doctor líder', v:lista.length ? lista[0].nombre + ' · ' + rvFmt(lista[0].n) : '—' },
-      { l:'Top 3 del año', v:bvShare(top3, total) },
-      { l:'Promedio por doctor', v:lista.length ? rvFmt(total / lista.length) : '—' }
+      { l:'Top 3', v:bvShare(top3, total) },
+      { l:'Promedio por doctor', v:lista.length ? rvFmt(Math.round(total / lista.length)) : '—' }
     ],
     charts:[{ h:Math.max(200, 46 + top.length * 34), pdfH:290, cfg:{
       type:'bar',
@@ -1765,10 +1773,50 @@ function bvVistaDoctores(d, s){
       options:o
     } }],
     table:{
-      head:['#', 'Doctor', 'Clínica principal', 'Ventas', '% del año'], left:[1, 2],
-      rows:lista.map((x, i) => [i + 1, x.nombre, x.cl, x.n, bvShare(x.n, total)]),
-      foot:['', 'Total', '', total, total ? '100%' : '—']
+      head:['#', 'Doctor', 'Clínica principal'].concat(an.map(String), p === 'todo' ? ['Histórico', '% del total'] : ['Histórico', 'Total ' + p, '% ' + p]), left:[1, 2], hl:10,
+      rows:lista.map((x, i) => [i + 1, x.nombre, x.cl].concat(an.map(a => x.años[a] || ''), p === 'todo' ? [x.n, pct(x.n)] : [hist(x), x.n, pct(x.n)])),
+      foot:['', 'Total', ''].concat(totAn.map(x => x || ''), p === 'todo' ? [total, '100%'] : [histTot, total, '100%'])
     },
+    nota:'Los 10 primeros están resaltados en el cuadro. El porcentaje es la parte de cada doctor en el total del período.',
+    detail:d.regs.filter(r => p === 'todo' || r.anio === p)
+  };
+}
+
+function bvVistaAnios(d, s){
+  const an = d.anios, regs = d.regs;
+  const ven = an.map(a => bvSum(regs.filter(r => r.anio === a)));
+  const act = an.map(a => bvMesesConDatos(d, a).length);
+  const prom = ven.map((v, i) => act[i] ? Math.round(v / act[i]) : 0);
+  const total = ven.reduce((x, y) => x + y, 0), mejor = ven.indexOf(Math.max(...ven));
+  const ult = an.length - 1, ultAnio = an[ult];
+  const ms = bvMesesConDatos(d, ultAnio), ultM = ms.length ? ms[ms.length - 1] : -1;
+  const tramoAnt = bvSum(regs.filter(r => r.anio === ultAnio - 1 && r.mes !== null && r.mes <= ultM));
+  const vT = ultM >= 0 && tramoAnt ? bvVar(ven[ult], tramoAnt) : null;
+  const totAct = act.reduce((x, y) => x + y, 0) || 1;
+  const labels = an.map(String);
+  const barra = (data, color, label) => ({ type:'bar', data:{ labels, datasets:[{
+    label, data, backgroundColor:color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
+    datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v ? rvFmt(v) : '' }) }] }, options:bvOpts({}) });
+  return {
+    id:'anios', file:'Biobrace_por_anio',
+    title:'Ventas por año · Promedio mensual', sub:'Ventas anuales y promedio mensual de cada año',
+    kpis:[
+      { l:'Total histórico', v:rvFmt(total) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(ven[mejor]) },
+      { l:'Promedio mensual', v:rvFmt(Math.round(total / totAct)) },
+      { l:'Promedio por año', v:rvFmt(Math.round(total / an.length)) },
+      { l:ultAnio + ' vs mismo tramo ' + (ultAnio - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[
+      { h:320, half:true, cfg:barra(ven, BV.cat[0], 'Ventas por año') },
+      { h:320, half:true, cfg:barra(prom, BV.cat[2], 'Promedio mensual') }
+    ],
+    table:{
+      head:['Año', 'Ventas', 'Meses con ventas', 'Promedio mensual', 'Variación'],
+      rows:an.map((a, i) => [String(a), ven[i], act[i], prom[i], i && ven[i - 1] ? bvPctTxt(bvVar(ven[i], ven[i - 1])) : '—']),
+      foot:['Total', total, act.reduce((x, y) => x + y, 0), Math.round(total / totAct), '']
+    },
+    nota:'El promedio mensual se calcula sobre los meses en que hubo ventas. El promedio por año es el total histórico entre los años con datos.',
     detail:regs
   };
 }
@@ -1848,7 +1896,7 @@ function bvVistaGeneral(d, s){
     detail:d.regs
   };
 }
-const BV_VISTAS = { cierre:bvVistaCierre, modelos:bvVistaModelosAnio, doctores:bvVistaDoctores, genero:bvVistaGenero, general:bvVistaGeneral };
+const BV_VISTAS = { cierre:bvVistaCierre, modelos:bvVistaModelosAnio, anios:bvVistaAnios, doctores:bvVistaDoctores, genero:bvVistaGenero, general:bvVistaGeneral };
 
 function bvMesesConDatos(d, anio){
   return [...new Set(d.regs.filter(r => r.anio === anio && r.mes !== null).map(r => r.mes))].sort((a, b) => a - b);
@@ -1856,6 +1904,7 @@ function bvMesesConDatos(d, anio){
 function bvSel(d){
   const st = rvState.bio || (rvState.bio = {});
   if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
   const ms = bvMesesConDatos(d, st.anio);
   if(!ms.length) st.mes = 0;
   else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
@@ -2036,9 +2085,9 @@ function vizPdf(cfg, d, s){
 const VIZ_BIO = {
   clave:'bio', nombre:'BIOBRACE', parse:bvParse, vistas:BV_VISTAS, sel:bvSel,
   estado:() => rvState.bio || (rvState.bio = {}),
-  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], doctores:['anio'], genero:['anio'], general:[] },
-  pdf:['cierre', 'modelos', 'doctores', 'genero', 'general'],
-  pdfSel:s => s,
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], anios:[], doctores:['periodo'], genero:['anio'], general:[] },
+  pdf:['cierre', 'modelos', 'anios', 'doctores', 'genero', 'general'],
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
   cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
   anioTxt:s => 'Año fiscal ' + s.anio,
   vacio:'La pestaña Biobrace no tiene registros todavía.',
