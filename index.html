@@ -1414,7 +1414,7 @@ const RESUMEN_LINEAS = [
       { id:'importacion',label:'Costo de importación',  render:lipoRender('importacion') }
     ] },
   // gid de la pestaña MTF publicada en CSV: pégalo entre las comillas (mientras esté vacío, la app muestra "pendiente de conectar")
-  { id:'mtf', nombre:'MTF', gid:'',
+  { id:'mtf', nombre:'MTF', gid:'1777016182',
     opciones:[
       { id:'cierre',     label:'Cierre del mes',      render:mtfRender('cierre') },
       { id:'modelos',    label:'Modelos del año',     render:mtfRender('modelos') },
@@ -1422,6 +1422,18 @@ const RESUMEN_LINEAS = [
       { id:'aloinjerto', label:'Tipo de aloinjerto',  render:mtfRender('aloinjerto') },
       { id:'doctores',   label:'Top 10 doctores',     render:mtfRender('doctores') },
       { id:'general',    label:'General (histórico)', render:mtfRender('general') }
+    ] },
+  // gid de la pestaña Hemaclear (mientras esté vacío, la app muestra "pendiente de conectar")
+  { id:'hemaclear', nombre:'HEMACLEAR', gid:'1234445465',
+    opciones:[
+      { id:'cierre',    label:'Cierre del mes',      render:hcRender('cierre') },
+      { id:'modelos',   label:'Modelos del año',     render:hcRender('modelos') },
+      { id:'anios',     label:'Ventas por año',      render:hcRender('anios') },
+      { id:'doctores',  label:'Top 10 doctores',     render:hcRender('doctores') },
+      { id:'genero',    label:'Género',              render:hcRender('genero') },
+      { id:'tallas',    label:'Modelo / talla',      render:hcRender('tallas') },
+      { id:'lineas',    label:'Modelo y línea',      render:hcRender('lineas') },
+      { id:'clinicas',  label:'Uso por clínica',     render:hcRender('clinicas') }
     ] }
 ];
 
@@ -2237,6 +2249,171 @@ const VIZ_MTF = {
   detalle:regs => ({
     head:['Fecha', 'Doctor', 'Clínica', 'MTF', 'Clasificación', 'Cantidad'],
     rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.modelo.label, MTF_CLASES[r.clase], r.cant])
+  })
+};
+
+/* ============ HEMACLEAR VIZ (azul y rojo) ============ */
+const HC_CAT = ['#2a78d6','#E34948','#E34948','#5FA0EA','#F08A89','#0B4DA8','#B02A2A','#9CC3F2'];
+const HC_COL_MOD = ['#2a78d6','#E34948','#0B4DA8','#F08A89','#5FA0EA','#B02A2A','#9CC3F2','#7A1F1F'];
+const HC_COL_LIN = ['#2a78d6','#E34948','#5FA0EA','#F08A89','#0B4DA8','#B02A2A','#9CC3F2','#7A1F1F'];
+
+function hcParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
+  const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), linea:col('linea'), genero:col('genero'), talla:col('talla'), cant:col('cant') };
+  const nombres = { fecha:'Fecha', doctor:'Doctor', linea:'Línea', genero:'Género', talla:'Talla', cant:'Cant.' };
+  const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
+  if(faltan.length) return { error:'La pestaña Hemaclear no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  rows.slice(1).forEach(r => {
+    const doctor = String(r[ix.doctor] || '').trim(), talla = String(r[ix.talla] || '').trim();
+    if(!doctor && !talla) return;
+    const f = bvFecha(r[ix.fecha]);
+    if(!f) return;                                   // el año sale siempre de la FECHA
+    const cant = rvNum(r[ix.cant]), g = bvNorm(r[ix.genero]).charAt(0);
+    regs.push({
+      anio:f.getFullYear(), fecha:f, mes:f.getMonth(), doctor:doctor || 'Sin doctor',
+      clinica:ix.clinica >= 0 ? String(r[ix.clinica] || '').trim() : '',
+      linea:String(r[ix.linea] || '').trim() || 'Sin línea',
+      genero:g === 'f' ? 'F' : (g === 'm' ? 'M' : '?'), edad:null,
+      modelo:{ key:bvNorm(talla) || 'sin talla', label:talla || 'Sin talla' }, cant:cant === null ? 1 : cant
+    });
+  });
+  const info = {}, lin = {};
+  regs.forEach(r => { info[r.modelo.key] = r.modelo; lin[r.linea] = (lin[r.linea] || 0) + r.cant; });
+  const modelos = Object.keys(info).sort((a, b) => info[a].label.localeCompare(info[b].label, 'es', { numeric:true }))
+    .map((k, i) => ({ key:k, label:info[k].label, color:HC_COL_MOD[i % HC_COL_MOD.length] }));
+  const lineas = Object.keys(lin).sort((a, b) => lin[b] - lin[a] || a.localeCompare(b, 'es'))
+    .map((k, i) => ({ key:k, label:k, color:HC_COL_LIN[i % HC_COL_LIN.length] }));
+  const fechas = regs.map(r => r.fecha.getTime());
+  return { regs, modelos, lineas, anios:[...new Set(regs.map(r => r.anio))].sort((a, b) => a - b),
+    ultima:fechas.length ? new Date(Math.max(...fechas)) : null };
+}
+function hcSel(d){
+  const st = rvState.hc || (rvState.hc = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
+  const ms = bvMesesConDatos(d, st.anio);
+  if(!ms.length) st.mes = 0;
+  else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
+  return st;
+}
+function hcConPaleta(fn){ const old = BV.cat; BV.cat = HC_CAT; try{ return fn(); } finally { BV.cat = old; } }
+function hcVista(fn, ajuste){
+  return (d, s) => {
+    const v = hcConPaleta(() => fn(d, s));
+    v.file = v.file.replace('Biobrace', 'Hemaclear');
+    return ajuste ? ajuste(v, d, s) : v;
+  };
+}
+// Top por doctor o por clínica (año o histórico), con el cuadro año por año y los 10 primeros resaltados
+function hcVistaTop(campo){
+  const esDoc = campo === 'doctor';
+  return function(d, s){
+    const p = s.periodo, an = d.anios;
+    const nom = r => (esDoc ? r.doctor : r.clinica) || (esDoc ? 'Sin doctor' : 'Sin clínica');
+    const otro = r => (esDoc ? r.clinica : r.doctor) || '—';
+    const mapa = {};
+    d.regs.forEach(r => {
+      const k = nom(r), x = mapa[k] || (mapa[k] = { nombre:k, años:{}, otros:{}, n:0 });
+      x.años[r.anio] = (x.años[r.anio] || 0) + r.cant;
+      if(p === 'todo' || r.anio === p){ x.n += r.cant; x.otros[otro(r)] = (x.otros[otro(r)] || 0) + r.cant; }
+    });
+    const lista = Object.values(mapa).filter(x => x.n > 0).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+    lista.forEach(x => { x.ot = Object.keys(x.otros).sort((a, b) => x.otros[b] - x.otros[a])[0] || '—'; });
+    const total = lista.reduce((t, x) => t + x.n, 0), top = lista.slice(0, 10);
+    const top3 = lista.slice(0, 3).reduce((t, x) => t + x.n, 0);
+    const ent = esDoc ? 'doctor' : 'clínica', ents = esDoc ? 'doctores' : 'clínicas';
+    const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
+    const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
+    const o = bvOpts({ top:4 });
+    o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
+    o.layout.padding = { top:4, right:34 };
+    o.scales = {
+      x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
+      y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+    };
+    const totAn = an.map(a => lista.reduce((t, x) => t + (x.años[a] || 0), 0));
+    const hist = x => an.reduce((t, a) => t + (x.años[a] || 0), 0);
+    const histTot = lista.reduce((t, x) => t + hist(x), 0);
+    const pct = n => total ? (n / total * 100).toFixed(1).replace('.', ',') + '%' : '';
+    return {
+      id:esDoc ? 'doctores' : 'clinicas', file:'Hemaclear_' + (esDoc ? 'doctores' : 'clinicas') + '_' + (p === 'todo' ? 'historico' : p),
+      title:(esDoc ? 'Ventas por doctor' : 'Uso por clínica') + ' · ' + per,
+      sub:'Top 10 de ' + lista.length + ' ' + ents,
+      kpis:[
+        { l:'Total ' + (p === 'todo' ? 'histórico' : p), v:rvFmt(total) },
+        { l:esDoc ? 'Doctores activos' : 'Clínicas activas', v:rvFmt(lista.length) },
+        { l:(esDoc ? 'Doctor' : 'Clínica') + ' líder', v:lista.length ? lista[0].nombre + ' · ' + rvFmt(lista[0].n) : '—' },
+        { l:'Top 3', v:bvShare(top3, total) },
+        { l:'Promedio por ' + ent, v:lista.length ? rvFmt(Math.round(total / lista.length)) : '—' }
+      ],
+      charts:[{ h:Math.max(200, 46 + top.length * 34), pdfH:290, cfg:{
+        type:'bar',
+        data:{ labels:top.map(x => x.nombre), datasets:[{ label:'Ventas', data:top.map(x => x.n), backgroundColor:HC_CAT[0], borderRadius:4, borderSkipped:'start', maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) }] },
+        options:o } }],
+      table:{
+        head:['#', esDoc ? 'Doctor' : 'Clínica', esDoc ? 'Clínica principal' : 'Doctor principal'].concat(an.map(String), p === 'todo' ? ['Histórico', '% del total'] : ['Histórico', 'Total ' + p, '% ' + p]), left:[1, 2], hl:10,
+        rows:lista.map((x, i) => [i + 1, x.nombre, x.ot].concat(an.map(a => x.años[a] || ''), p === 'todo' ? [x.n, pct(x.n)] : [hist(x), x.n, pct(x.n)])),
+        foot:['', 'Total', ''].concat(totAn.map(x => x || ''), p === 'todo' ? [total, '100%'] : [histTot, total, '100%'])
+      },
+      nota:'Los 10 primeros están resaltados en el cuadro. El porcentaje es la parte de cada ' + ent + ' en el total del período.',
+      detail:d.regs.filter(r => p === 'todo' || r.anio === p)
+    };
+  };
+}
+// Modelo (talla) contra línea: barras apiladas por talla, una serie por línea
+function hcVistaLineas(d, s){
+  const p = s.periodo, regs = d.regs.filter(r => p === 'todo' || r.anio === p);
+  const mod = d.modelos, lin = d.lineas, total = bvSum(regs);
+  const matriz = lin.map(l => mod.map(m => bvSum(regs.filter(r => r.linea === l.key && r.modelo.key === m.key))));
+  const totLin = matriz.map(f => f.reduce((a, b) => a + b, 0));
+  const totMod = mod.map((_, j) => matriz.reduce((a, f) => a + f[j], 0));
+  const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
+  const li = total ? totLin.indexOf(Math.max(...totLin)) : -1, mi = total ? totMod.indexOf(Math.max(...totMod)) : -1;
+  return {
+    id:'lineas', file:'Hemaclear_modelo_linea_' + (p === 'todo' ? 'historico' : p),
+    title:'Ventas por modelo y línea · ' + per, sub:'Unidades de cada talla, separadas por línea',
+    kpis:[
+      { l:'Total ' + (p === 'todo' ? 'histórico' : p), v:rvFmt(total) },
+      { l:'Líneas', v:rvFmt(lin.length) },
+      { l:'Línea líder', v:li >= 0 ? lin[li].label + ' · ' + bvShare(totLin[li], total) : '—' },
+      { l:'Modelo líder', v:mi >= 0 ? mod[mi].label + ' · ' + bvShare(totMod[mi], total) : '—' }
+    ],
+    charts:[{ h:340, cfg:bvStackedCfg(mod.map(m => m.label), lin, matriz) }],
+    table:{
+      head:['Modelo / talla'].concat(lin.map(l => l.label), ['Total', '% del total']),
+      rows:mod.map((m, j) => [m.label].concat(lin.map((_, i) => matriz[i][j] || ''), [totMod[j], bvShare(totMod[j], total)])),
+      foot:['Total'].concat(totLin.map(x => x || ''), [total, total ? '100%' : '—'])
+    },
+    detail:regs
+  };
+}
+const HC_VISTAS = {
+  cierre:hcVista(bvVistaCierre), modelos:hcVista(bvVistaModelosAnio), anios:hcVista(bvVistaAnios),
+  doctores:hcVistaTop('doctor'),
+  genero:hcVista(bvVistaGenero, (v, d, s) => {
+    // Hemaclear no mide la edad: en su lugar se muestra la talla más usada por cada género
+    const lider = col => { const r = v.table.rows.slice().sort((a, b) => b[col] - a[col])[0]; return r && r[col] ? r[0] + ' · ' + rvFmt(r[col]) : '—'; };
+    v.kpis = v.kpis.filter(k => !/^Edad/.test(k.l)).concat([{ l:'Talla líder F', v:lider(1) }, { l:'Talla líder M', v:lider(2) }]);
+    return v;
+  }),
+  tallas:hcVista(bvVistaGeneral, v => { v.title = 'Ventas por modelo / talla · Histórico general'; v.sub = 'Unidades por talla, año por año' + v.sub.replace(/^Desde/, ' · desde'); return v; }),
+  lineas:hcVistaLineas, clinicas:hcVistaTop('clinica')
+};
+function hcRender(id){ return (rows, el, linea) => vizRender(VIZ_HC, id, rows, el, linea); }
+const VIZ_HC = {
+  clave:'hc', nombre:'HEMACLEAR', parse:hcParse, vistas:HC_VISTAS, sel:hcSel,
+  estado:() => rvState.hc || (rvState.hc = {}),
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], anios:[], doctores:['periodo'], genero:['anio'], tallas:[], lineas:['periodo'], clinicas:['periodo'] },
+  pdf:['cierre', 'modelos', 'anios', 'doctores', 'genero', 'tallas', 'lineas', 'clinicas'],
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña Hemaclear no tiene registros todavía.',
+  detalle:regs => ({
+    head:['Fecha', 'Doctor', 'Clínica', 'Línea', 'Género', 'Talla', 'Cantidad'],
+    rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.linea, r.genero === '?' ? '' : r.genero, r.modelo.label, r.cant])
   })
 };
 
