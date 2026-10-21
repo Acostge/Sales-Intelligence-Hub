@@ -480,6 +480,9 @@
   .rv-overlay *, #rvReport *{font-family:var(--rv-font) !important;font-weight:400 !important;}
   .rv-overlay code{font-family:Consolas,monospace !important;}
   .rv-overlay .dash-kpi-label, .rv-overlay .rv-band-label, .rv-controls label{letter-spacing:.6px;}
+  /* Textos largos (nombres de modelo, doctor…) se ajustan dentro de su cuadro en vez de salirse */
+  .rv-overlay .dash-kpi{min-width:0;}
+  .rv-overlay .dash-kpi-value{white-space:normal;overflow-wrap:anywhere;line-height:1.2;font-size:15px;}
 
   /* Cinta 2: Top proveedores por venta */
   .dash-ribbon2{
@@ -2007,7 +2010,7 @@ function vizRender(cfg, id, rows, el, linea){
         <div class="rv-card-top"><div><h3>Cuadro de datos</h3><p>Los números de arriba salen de esta tabla.</p></div></div>
         <div class="rv-table-wrap rv-scroll">${bvTablaHtml(v.table)}</div>
       </div>`;
-    v.charts.forEach((c, i) => rvState.bioCharts.push(new Chart(document.getElementById('bvCv' + i), c.cfg)));
+    v.charts.forEach((c, i) => rvState.bioCharts.push(new Chart(document.getElementById('bvCv' + i), bvSinEjes(c.cfg))));
 
     const st = cfg.estado();
     const sa = document.getElementById('bvAnio'), sm = document.getElementById('bvMes'), sp = document.getElementById('bvPeriodo');
@@ -2045,10 +2048,19 @@ function vizExcel(cfg, v){
   bvDescargar(new Blob([csv], { type:'text/csv;charset=utf-8' }), v.file + '.csv');
 }
 
+// Sin ejes de valores en ninguna gráfica: los números ya van sobre cada barra (así se gana espacio)
+function bvSinEjes(cfg){
+  const sc = cfg && cfg.options && cfg.options.scales;
+  if(!sc) return cfg;
+  const horiz = cfg.options.indexAxis === 'y';
+  const v = sc[horiz ? 'x' : 'y'];
+  if(v) v.display = false;
+  return cfg;
+}
 function bvChartImg(cfg, w, h){
   const cv = document.createElement('canvas');
   cv.width = w; cv.height = h;
-  const ch = new Chart(cv, Object.assign({}, cfg, { options:Object.assign({}, cfg.options, { animation:false, responsive:false, devicePixelRatio:2 }) }));
+  const ch = new Chart(cv, Object.assign({}, bvSinEjes(cfg), { options:Object.assign({}, cfg.options, { animation:false, responsive:false, devicePixelRatio:2 }) }));
   ch.update('none');
   const url = cv.toDataURL('image/png');
   ch.destroy();
@@ -2234,7 +2246,8 @@ function mtfTablaGrupos(d, regs, cols, o){
   });
   const T = tot.lio + tot.fc, rows = [];
   const hlIdx = [];
-  filas.forEach(f => {
+  filas.forEach((f, gi) => {
+    if(gi) rows.push([''].concat(cols.map(() => ''), ['', '']));                       // línea en blanco que separa un grupo del otro
     hlIdx.push(rows.length);
     rows.push([f.g.nombre.toUpperCase()].concat(f.vals.map(x => x || ''), [f.T, bvShare(f.T, T)]));
     f.mods.forEach(x => rows.push([x.m.label].concat(x.vals.map(v => v || ''), [x.T, bvShare(x.T, f.T)])));
@@ -2254,19 +2267,14 @@ function mtfVistaCierre(d, s){
   const t = mtfTablaGrupos(d, d.regs, cols, { total:v => v[2] });
   // En este cuadro "Total" es el acumulado; se reemplaza por la variación del mes
   const filaVar = (P, C) => P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—');
-  const rows = t.rows.map(r => { const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', filaVar(P, C), r[3] || '']; });
+  const rows = t.rows.map(r => { if(r[0] === '') return ['', '', '', '', '']; const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', filaVar(P, C), r[3] || '']; });
   const tP = bvSum(d.regs.filter(fP)), tC = bvSum(d.regs.filter(fC)), tA = bvSum(d.regs.filter(fA)), v = bvVar(tC, tP);
   const nG = (k, f) => bvSum(d.regs.filter(r => r.clase === k && f(r)));
-  const charts = MTF_GRUPOS.map(g => {
-    const mods = mtfMods(d, g.k).map(m => ({ m, c:bvSum(d.regs.filter(r => r.modelo.key === m.key && fC(r))), p:bvSum(d.regs.filter(r => r.modelo.key === m.key && fP(r))) }))
-      .filter(x => x.c + x.p > 0).sort((a, b) => (b.c + b.p) - (a.c + a.p)).slice(0, 10);
-    const o = bvOpts({ legend:true });
-    o.scales.x.ticks = Object.assign({}, o.scales.x.ticks, { maxRotation:35, font:{ family:BV_FONT, size:10 } });
-    const corto = x => x.length > 22 ? x.slice(0, 21) + '…' : x;
-    return { h:340, pdfH:260, half:true, cfg:mtfTit({ type:'bar', data:{ labels:mods.map(x => corto(x.m.label)), datasets:[
-      { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:mods.map(x => x.p), backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22 },
-      { label:BV_MES3[s.mes] + ' ' + s.anio, data:mods.map(x => x.c), backgroundColor:g.color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:bvLabelEnd }] }, options:o }, g.nombre, g.color) };
-  });
+  const sg = (k, f) => bvSum(d.regs.filter(r => r.clase === k && f(r)));
+  const charts = [{ h:320, pdfH:250, cfg:{ type:'bar', data:{ labels:MTF_GRUPOS.map(g => g.nombre), datasets:[
+    { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:MTF_GRUPOS.map(g => sg(g.k, fP)), backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:70, datalabels:bvLabelEnd },
+    { label:BV_MES3[s.mes] + ' ' + s.anio, data:MTF_GRUPOS.map(g => sg(g.k, fC)), backgroundColor:MTF_GRUPOS.map(g => g.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:70, datalabels:bvLabelEnd }] },
+    options:bvOpts({ legend:true }) } }];
   return {
     id:'cierre', file:'MTF_cierre_' + s.anio + '-' + bvPad(s.mes + 1),
     title:'Aloinjertos vendidos · Cierre de ' + BV_MESES[s.mes] + ' ' + s.anio, sub:'Liofilizados y fresco congelados (F/C): ' + BV_MESES[s.mes] + ' contra ' + BV_MESES[prev.mes] + ' y acumulado del año',
@@ -2294,7 +2302,7 @@ function mtfVistaMensual(d, s){
   const v = ant.length && ultM >= 0 ? bvVar(total, bvSum(ant)) : null;
   return {
     id:'modelos', file:'MTF_mensual_' + s.anio,
-    title:'Aloinjertos · Análisis mensual ' + s.anio, sub:'Unidades por mes, apiladas por modelo, separadas por tipo',
+    title:'Aloinjertos · Análisis mensual ' + s.anio, sub:'Unidades por mes de cada tipo; el detalle por modelo está en el cuadro',
     kpis:[
       { l:'Total ' + s.anio, v:rvFmt(total) },
       { l:'Mejor mes', v:total ? BV_MESES[mejor] + ' · ' + rvFmt(totM[mejor]) : '—' },
@@ -2302,7 +2310,11 @@ function mtfVistaMensual(d, s){
       mtfKpiGrupos(regs),
       { l:'Vs mismo tramo ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') }
     ],
-    charts:MTF_GRUPOS.map(g => mtfApilado(d, regs, g, BV_MES3, cols.map(c => c.f))),
+    charts:MTF_GRUPOS.map(g => {
+      const datos = BV_MES3.map((_, j) => bvSum(regs.filter(r => r.clase === g.k && r.mes === j)));
+      return { h:320, pdfH:250, half:true, cfg:mtfTit({ type:'bar', data:{ labels:BV_MES3, datasets:[{
+        label:g.nombre, data:datos, backgroundColor:g.color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:34, datalabels:bvLabelEnd }] }, options:bvOpts({}) }, g.nombre, g.color) };
+    }),
     table:t, detail:regs
   };
 }
@@ -2346,7 +2358,7 @@ function mtfVistaTipo(d, s){
   const regs = d.regs.filter(r => r.anio === s.anio), prev = d.regs.filter(r => r.anio === s.anio - 1);
   const cols = [{ label:String(s.anio - 1), f:r => r.anio === s.anio - 1 }, { label:String(s.anio), f:r => r.anio === s.anio }];
   const t0 = mtfTablaGrupos(d, d.regs, cols, { total:v => v[1] });
-  const rows = t0.rows.map(r => { const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—'), r[4]]; });
+  const rows = t0.rows.map(r => { if(r[0] === '') return ['', '', '', '', '']; const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—'), r[4]]; });
   const T = bvSum(regs), Tp = bvSum(prev), tL = bvSum(regs.filter(r => r.clase === 'lio')), tF = T - tL;
   return {
     id:'aloinjerto', file:'MTF_por_tipo_' + s.anio,
