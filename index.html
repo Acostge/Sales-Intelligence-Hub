@@ -1548,6 +1548,8 @@ const BV = {
   ink:'#1E2A32', ink2:'#5B6B78', grid:'#E3E9ED', surface:'#FFFFFF', muted:'#C3CDD5',
   cat:['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948']
 };
+// Colores fijos de género en todas las gráficas (actuales y futuras): femenino rosado, masculino azul rey
+const BV_GENERO = { F:'#E8679A', M:'#1F4FD8' };
 const BV_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const BV_MES3 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const BV_FIJOS = { '5x250':0, '23x30':1, 'rc23x25':2, '40x60':3 };
@@ -1837,7 +1839,7 @@ function bvVistaGenero(d, s){
   const nF = bvSum(g('F')), nM = bvSum(g('M')), nX = bvSum(g('?'));
   const edad = list => { const e = list.filter(r => r.edad !== null); return e.length ? bvSum(e.map(r => ({ cant:r.edad * r.cant }))) / bvSum(e) : null; };
   const eF = edad(g('F')), eM = edad(g('M'));
-  const COL = { F:BV.cat[1], M:BV.cat[0], X:BV.muted };
+  const COL = { F:BV_GENERO.F, M:BV_GENERO.M, X:BV.muted };
   const labels = ['Femenino · ' + rvFmt(nF) + ' (' + bvShare(nF, total) + ')', 'Masculino · ' + rvFmt(nM) + ' (' + bvShare(nM, total) + ')'];
   const vals = [nF, nM], cols = [COL.F, COL.M];
   if(nX){ labels.push('Sin dato · ' + rvFmt(nX)); vals.push(nX); cols.push(COL.X); }
