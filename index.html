@@ -1417,9 +1417,9 @@ const RESUMEN_LINEAS = [
   { id:'mtf', nombre:'MTF', gid:'1777016182',
     opciones:[
       { id:'cierre',     label:'Cierre del mes',      render:mtfRender('cierre') },
-      { id:'modelos',    label:'Modelos del año',     render:mtfRender('modelos') },
+      { id:'modelos',    label:'Análisis mensual',    render:mtfRender('modelos') },
       { id:'anios',      label:'Ventas por año',      render:mtfRender('anios') },
-      { id:'aloinjerto', label:'Tipo de aloinjerto',  render:mtfRender('aloinjerto') },
+      { id:'aloinjerto', label:'Ventas anuales por tipo', render:mtfRender('aloinjerto') },
       { id:'doctores',   label:'Top 10 doctores',     render:mtfRender('doctores') },
       { id:'general',    label:'General (histórico)', render:mtfRender('general') }
     ] },
@@ -1434,6 +1434,16 @@ const RESUMEN_LINEAS = [
       { id:'tallas',    label:'Modelo / talla',      render:hcRender('tallas') },
       { id:'lineas',    label:'Modelo y línea',      render:hcRender('lineas') },
       { id:'clinicas',  label:'Uso por clínica',     render:hcRender('clinicas') }
+    ] },
+  { id:'suturas', nombre:'SUTURAS', gid:'2033656794',
+    opciones:[
+      { id:'cierre',     label:'Cierre del mes',      render:spRender('cierre') },
+      { id:'modelos',    label:'Modelos del año',     render:spRender('modelos') },
+      { id:'lineas',     label:'Modelo vs línea',     render:spRender('lineas') },
+      { id:'anios',      label:'Ventas por año',      render:spRender('anios') },
+      { id:'doctores',   label:'Top 10 doctores',     render:spRender('doctores') },
+      { id:'general',    label:'General (histórico)', render:spRender('general') },
+      { id:'cotizadas',  label:'Cotizadas vs usadas', render:spRender('cotizadas') }
     ] }
 ];
 
@@ -1940,7 +1950,7 @@ function bvTablaHtml(t){
   const money = t.money || [];
   const cell = (c, i, tag) => `<${tag}${left.includes(i) ? ' class="rv-l"' : ''}>${typeof c === 'number' ? (money.includes(i) ? (c === 0 && tag === 'td' ? '–' : rvUsd2(c)) : rvFmt(c)) : rvEsc(c)}</${tag}>`;
   return `<table class="rv-table"><thead><tr>${t.head.map((h, i) => cell(h, i, 'th')).join('')}</tr></thead>` +
-    `<tbody>${t.rows.map((r, k) => `<tr${t.hl && k < t.hl ? ' class="rv-hl"' : ''}>` + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>').join('')}</tbody>` +
+    `<tbody>${t.rows.map((r, k) => `<tr${(t.hl && k < t.hl) || (t.hlRows && t.hlRows.includes(k)) ? ' class="rv-hl"' : ''}>` + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>').join('')}</tbody>` +
     (t.foot ? `<tfoot><tr>${t.foot.map((c, i) => cell(c, i, 'td')).join('')}</tr></tfoot>` : '') + '</table>';
 }
 function bvKpiHtml(kpis){
@@ -2046,7 +2056,7 @@ function bvChartImg(cfg, w, h){
 }
 function vizReporteHtml(cfg, d, s){
   const hoy = new Date(), s2 = cfg.pdfSel(s);
-  const ALTO = 690, MAX_FILAS = 12;
+  const ALTO = 690, MAX_FILAS = cfg.maxFilas || 12;
   let n = 0;
   const secs = cfg.pdf.map(id => {
     const v = cfg.vistas[id](d, s2);
@@ -2122,9 +2132,10 @@ const VIZ_BIO = {
 };
 
 /* ============ MTF VIZ (aloinjertos: liofilizados y fresco congelados "F/C") ============ */
-const MTF_CAT = ['#D9A400','#6EC1E8','#6EC1E8','#EDC24B','#3FA9D9','#B88700','#9AD8F2','#8F6A00'];
-const MTF_COL_LIO = ['#D9A400','#B88700','#EDC24B','#8F6A00','#F3D987','#7A5A00','#C99A1B','#E5B93C'];   // mostaza (liofilizados)
-const MTF_COL_FC  = ['#3FA9D9','#6EC1E8','#2B88B8','#9AD8F2','#1F6C93','#BFE7F8','#5BB5E0','#8CCBEA'];   // azul claro (fresco congelados)
+const MTF_CL = { lio:'#0070C0', fc:'#BF9000' };                                                       // azul = liofilizados · mostaza = fresco congelados
+const MTF_CAT = ['#0070C0','#BF9000','#BF9000','#5FAEE6','#D9A400','#005A9C','#E5B93C','#8CC8F0'];
+const MTF_COL_LIO = ['#0070C0','#2F8FD8','#005A9C','#5FAEE6','#004378','#8CC8F0','#3A7DBA','#A9D6F5'];   // tonos azules (liofilizados)
+const MTF_COL_FC  = ['#BF9000','#D9A400','#8F6A00','#E5B93C','#A87C00','#EDC24B','#CFA21F','#F3D987'];   // tonos mostaza (fresco congelados)
 const MTF_CLASES = { lio:'Liofilizados', fc:'Fresco congelados (F/C)' };
 const mtfEsFC = raw => /(^|[^a-z0-9])f\s*\/\s*c(?![a-z0-9])/i.test(String(raw || ''));
 
@@ -2174,74 +2185,262 @@ function mtfSel(d){
   else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
   return st;
 }
-function mtfConPaleta(fn){ const old = BV.cat; BV.cat = MTF_CAT; try{ return fn(); } finally { BV.cat = old; } }
-// Toma una vista de Biobrace (misma estructura), la pinta con los colores de MTF, le agrega la clasificación
-// (subtotales de liofilizados y F/C al inicio del cuadro) y un indicador con el reparto de unidades.
-function mtfVista(fn, conSubtotales){
-  return (d, s) => {
-    const v = mtfConPaleta(() => fn(d, s));
-    v.file = v.file.replace('Biobrace', 'MTF');
-    if(conSubtotales){
-      const vc = mtfConPaleta(() => fn(d.porClase, s));
-      v.table.rows = vc.table.rows.concat(v.table.rows);
-      v.table.hl = 2;
-    }
-    const n = c => bvSum((v.detail || []).filter(r => r.clase === c));
-    const tot = n('lio') + n('fc');
-    v.kpis = v.kpis.concat([{ l:'Liofilizados · F/C', v:rvFmt(n('lio')) + ' · ' + rvFmt(n('fc')) + (tot ? ' (' + bvShare(n('fc'), tot) + ' F/C)' : '') }]);
-    return v;
+/* Cada lámina de MTF se divide en dos paneles: Liofilizados (azul) a la izquierda y Fresco congelados F/C (mostaza) a la derecha */
+const MTF_GRUPOS = [{ k:'lio', nombre:'Liofilizados', color:MTF_CL.lio }, { k:'fc', nombre:'Fresco congelados (F/C)', color:MTF_CL.fc }];
+const mtfMods = (d, k) => d.modelos.filter(m => m.clase === k);
+const mtfTit = (cfg, texto, color) => {
+  cfg.options.plugins.title = { display:true, text:texto, align:'center', color, font:{ family:BV_FONT, size:15, weight:'bold' }, padding:{ bottom:24 } };
+  return cfg;
+};
+// Gráfica de barras horizontales: los 10 modelos de mayor venta de un grupo
+function mtfBarrasH(d, regs, g, valor){
+  const mods = mtfMods(d, g.k).map(m => ({ m, n:valor ? valor(m) : bvSum(regs.filter(r => r.modelo.key === m.key)) })).filter(x => x.n > 0)
+    .sort((a, b) => b.n - a.n).slice(0, 10);
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:11 } };
+  const o = bvOpts({ top:4 });
+  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:30 };
+  o.scales = {
+    x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
+    y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+  };
+  const corto = t => t.length > 34 ? t.slice(0, 33) + '…' : t;
+  return { h:360, pdfH:280, half:true, cfg:mtfTit({ type:'bar', data:{ labels:mods.map(x => corto(x.m.label)), datasets:[{
+    label:g.nombre, data:mods.map(x => x.n), backgroundColor:g.color, borderRadius:4, borderSkipped:'start', maxBarThickness:20, datalabels:bvLabelEnd }] }, options:o }, g.nombre, g.color) };
+}
+// Barras apiladas de un grupo (8 modelos principales + "Otros") sobre categorías (meses, años...)
+function mtfApilado(d, regs, g, labels, preds){
+  const tot = {}; regs.filter(r => r.clase === g.k).forEach(r => { tot[r.modelo.key] = (tot[r.modelo.key] || 0) + r.cant; });
+  const todos = mtfMods(d, g.k).filter(m => tot[m.key]).sort((a, b) => tot[b.key] - tot[a.key]);
+  const top = todos.slice(0, 8), keys = top.map(m => m.key);
+  const por = f => bvSum(regs.filter(r => r.clase === g.k && f(r)));
+  const mods = top.slice(), matriz = top.map(m => preds.map(c => por(r => r.modelo.key === m.key && c(r))));
+  if(todos.length > 8){ mods.push({ label:'Otros modelos', color:'#C3CDD5' }); matriz.push(preds.map(c => por(r => !keys.includes(r.modelo.key) && c(r)))); }
+  const cfg = bvStackedCfg(labels, mods, matriz);
+  return { h:340, pdfH:260, half:true, cfg:mtfTit(cfg, g.nombre, g.color) };
+}
+// Cuadro agrupado: una fila de subtotal por grupo (resaltada) seguida de sus modelos
+function mtfTablaGrupos(d, regs, cols, o){
+  o = o || {};
+  const filas = [], hlRows = [];
+  const tot = { lio:0, fc:0 }, sumCols = cols.map(() => 0);
+  MTF_GRUPOS.forEach(g => {
+    const mods = mtfMods(d, g.k);
+    const val = (m, c) => bvSum(regs.filter(r => r.clase === g.k && (m ? r.modelo.key === m.key : true) && c.f(r)));
+    const tg = cols.map(c => val(null, c)), Tg = o.total ? o.total(tg) : tg.reduce((a, b) => a + b, 0);
+    tot[g.k] = Tg;
+    hlRows.push(filas.length);
+    filas.push({ g, head:true, vals:tg, T:Tg, mods:mods.map(m => { const v = cols.map(c => val(m, c)); return { m, vals:v, T:o.total ? o.total(v) : v.reduce((a, b) => a + b, 0) }; }).filter(x => x.T > 0 || x.vals.some(Boolean)) });
+    tg.forEach((v, i) => { sumCols[i] += v; });
+  });
+  const T = tot.lio + tot.fc, rows = [];
+  const hlIdx = [];
+  filas.forEach(f => {
+    hlIdx.push(rows.length);
+    rows.push([f.g.nombre.toUpperCase()].concat(f.vals.map(x => x || ''), [f.T, bvShare(f.T, T)]));
+    f.mods.forEach(x => rows.push([x.m.label].concat(x.vals.map(v => v || ''), [x.T, bvShare(x.T, f.T)])));
+  });
+  return { head:[o.rotulo || 'Modelo'].concat(cols.map(c => c.label), ['Total', '% del grupo / total']), rows, hlRows:hlIdx,
+    foot:['Total'].concat(sumCols.map(x => x || ''), [T, T ? '100%' : '—']), tot };
+}
+const mtfKpiGrupos = (regs) => {
+  const n = k => bvSum(regs.filter(r => r.clase === k)), t = n('lio') + n('fc');
+  return { l:'Liofilizados · F/C', v:rvFmt(n('lio')) + ' · ' + rvFmt(n('fc')) + (t ? ' (' + bvShare(n('fc'), t) + ' F/C)' : '') };
+};
+
+function mtfVistaCierre(d, s){
+  const prev = bvPrev(s.anio, s.mes);
+  const fC = r => r.anio === s.anio && r.mes === s.mes, fP = r => r.anio === prev.anio && r.mes === prev.mes, fA = r => r.anio === s.anio && r.mes <= s.mes;
+  const cols = [{ label:BV_MESES[prev.mes] + ' ' + prev.anio, f:fP }, { label:BV_MESES[s.mes] + ' ' + s.anio, f:fC }, { label:'Acumulado ' + s.anio, f:fA }];
+  const t = mtfTablaGrupos(d, d.regs, cols, { total:v => v[2] });
+  // En este cuadro "Total" es el acumulado; se reemplaza por la variación del mes
+  const filaVar = (P, C) => P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—');
+  const rows = t.rows.map(r => { const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', filaVar(P, C), r[3] || '']; });
+  const tP = bvSum(d.regs.filter(fP)), tC = bvSum(d.regs.filter(fC)), tA = bvSum(d.regs.filter(fA)), v = bvVar(tC, tP);
+  const nG = (k, f) => bvSum(d.regs.filter(r => r.clase === k && f(r)));
+  const charts = MTF_GRUPOS.map(g => {
+    const mods = mtfMods(d, g.k).map(m => ({ m, c:bvSum(d.regs.filter(r => r.modelo.key === m.key && fC(r))), p:bvSum(d.regs.filter(r => r.modelo.key === m.key && fP(r))) }))
+      .filter(x => x.c + x.p > 0).sort((a, b) => (b.c + b.p) - (a.c + a.p)).slice(0, 10);
+    const o = bvOpts({ legend:true });
+    o.scales.x.ticks = Object.assign({}, o.scales.x.ticks, { maxRotation:35, font:{ family:BV_FONT, size:10 } });
+    const corto = x => x.length > 22 ? x.slice(0, 21) + '…' : x;
+    return { h:340, pdfH:260, half:true, cfg:mtfTit({ type:'bar', data:{ labels:mods.map(x => corto(x.m.label)), datasets:[
+      { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:mods.map(x => x.p), backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22 },
+      { label:BV_MES3[s.mes] + ' ' + s.anio, data:mods.map(x => x.c), backgroundColor:g.color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:bvLabelEnd }] }, options:o }, g.nombre, g.color) };
+  });
+  return {
+    id:'cierre', file:'MTF_cierre_' + s.anio + '-' + bvPad(s.mes + 1),
+    title:'Aloinjertos vendidos · Cierre de ' + BV_MESES[s.mes] + ' ' + s.anio, sub:'Liofilizados y fresco congelados (F/C): ' + BV_MESES[s.mes] + ' contra ' + BV_MESES[prev.mes] + ' y acumulado del año',
+    kpis:[
+      { l:'Ventas de ' + BV_MESES[s.mes].toLowerCase(), v:rvFmt(tC) },
+      { l:'Liofilizados', v:rvFmt(nG('lio', fC)) + ' · mes anterior ' + rvFmt(nG('lio', fP)) },
+      { l:'Fresco congelados', v:rvFmt(nG('fc', fC)) + ' · mes anterior ' + rvFmt(nG('fc', fP)) },
+      { l:'Variación total', v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') },
+      { l:'Acumulado ' + s.anio, v:rvFmt(tA) }
+    ],
+    charts,
+    table:{ head:['Modelo', cols[0].label, cols[1].label, 'Variación', cols[2].label], rows, hlRows:t.hlRows, foot:['Total', tP || '', tC || '', bvPctTxt(v), tA || ''] },
+    detail:d.regs.filter(fC)
   };
 }
-function mtfVistaAloinjerto(d, s){
-  const an = d.anios;
-  const lio = an.map(a => bvSum(d.regs.filter(r => r.anio === a && r.clase === 'lio')));
-  const fc = an.map(a => bvSum(d.regs.filter(r => r.anio === a && r.clase === 'fc')));
-  const tot = an.map((_, i) => lio[i] + fc[i]), T = tot.reduce((x, y) => x + y, 0);
-  const tL = lio.reduce((x, y) => x + y, 0), tF = fc.reduce((x, y) => x + y, 0);
-  const mejor = tot.indexOf(Math.max(...tot));
-  const ult = an.length - 1, vT = ult > 0 && tot[ult - 1] ? bvVar(tot[ult], tot[ult - 1]) : null;
-  const ds = (label, data, color) => ({ label, data, backgroundColor:color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:34, datalabels:bvLabelEnd });
+
+function mtfVistaMensual(d, s){
+  const regs = d.regs.filter(r => r.anio === s.anio);
+  const cols = BV_MES3.map((m, j) => ({ label:m, f:r => r.mes === j }));
+  const t = mtfTablaGrupos(d, regs, cols);
+  const totM = BV_MES3.map((_, j) => bvSum(regs.filter(r => r.mes === j)));
+  const total = bvSum(regs), activos = totM.filter(x => x > 0).length || 1, mejor = totM.indexOf(Math.max(...totM));
+  const ultM = totM.reduce((u, x, j) => x > 0 ? j : u, -1);
+  const ant = d.regs.filter(r => r.anio === s.anio - 1 && r.mes <= ultM);
+  const v = ant.length && ultM >= 0 ? bvVar(total, bvSum(ant)) : null;
   return {
-    id:'aloinjerto', file:'MTF_aloinjertos_por_anio',
-    title:'Ventas anuales por tipo de aloinjerto', sub:'Liofilizados y fresco congelados (F/C), año por año',
+    id:'modelos', file:'MTF_mensual_' + s.anio,
+    title:'Aloinjertos · Análisis mensual ' + s.anio, sub:'Unidades por mes, apiladas por modelo, separadas por tipo',
     kpis:[
-      { l:'Total histórico', v:rvFmt(T) },
-      { l:'Liofilizados', v:rvFmt(tL) + ' · ' + bvShare(tL, T) },
-      { l:'Fresco congelados', v:rvFmt(tF) + ' · ' + bvShare(tF, T) },
-      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(tot[mejor]) },
-      { l:an[ult] + ' vs ' + (an[ult] - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') }
+      { l:'Total ' + s.anio, v:rvFmt(total) },
+      { l:'Mejor mes', v:total ? BV_MESES[mejor] + ' · ' + rvFmt(totM[mejor]) : '—' },
+      { l:'Promedio mensual', v:rvFmt(Math.round(total / activos)) },
+      mtfKpiGrupos(regs),
+      { l:'Vs mismo tramo ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v >= 0 ? 'dash-good' : 'dash-bad') }
     ],
-    charts:[{ h:320, cfg:{ type:'bar', data:{ labels:an.map(String), datasets:[ds('Liofilizados', lio, MTF_CAT[0]), ds('Fresco congelados (F/C)', fc, MTF_CAT[1])] }, options:bvOpts({ legend:true }) } }],
+    charts:MTF_GRUPOS.map(g => mtfApilado(d, regs, g, BV_MES3, cols.map(c => c.f))),
+    table:t, detail:regs
+  };
+}
+
+function mtfVistaAnios(d, s){
+  const an = d.anios, reg = a => d.regs.filter(r => r.anio === a);
+  const meses = (a, k) => new Set(reg(a).filter(r => !k || r.clase === k).map(r => r.mes)).size;
+  const v = (a, k) => bvSum(reg(a).filter(r => !k || r.clase === k));
+  const L = an.map(a => v(a, 'lio')), F = an.map(a => v(a, 'fc')), T = an.map((_, i) => L[i] + F[i]);
+  const act = an.map(a => meses(a)), pm = (x, i) => act[i] ? Math.round(x / act[i]) : 0;
+  const pL = L.map(pm), pF = F.map(pm);
+  const total = T.reduce((a, b) => a + b, 0), totAct = act.reduce((a, b) => a + b, 0) || 1, mejor = T.indexOf(Math.max(...T));
+  const ult = an.length - 1, ms = bvMesesConDatos(d, an[ult]), ultM = ms.length ? ms[ms.length - 1] : -1;
+  const tramo = bvSum(d.regs.filter(r => r.anio === an[ult] - 1 && r.mes <= ultM)), vT = ultM >= 0 && tramo ? bvVar(T[ult], tramo) : null;
+  const grp = (titulo, a, b) => ({ type:'bar', data:{ labels:an.map(String), datasets:[
+    { label:'Liofilizados', data:a, backgroundColor:MTF_CL.lio, borderRadius:4, borderSkipped:'bottom', maxBarThickness:30, datalabels:bvLabelEnd },
+    { label:'Fresco congelados (F/C)', data:b, backgroundColor:MTF_CL.fc, borderRadius:4, borderSkipped:'bottom', maxBarThickness:30, datalabels:bvLabelEnd }] }, options:bvOpts({ legend:true }) });
+  return {
+    id:'anios', file:'MTF_por_anio',
+    title:'Aloinjertos · Ventas por año y promedio mensual', sub:'Liofilizados y fresco congelados (F/C), año por año',
+    kpis:[
+      { l:'Total histórico', v:rvFmt(total) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(T[mejor]) },
+      { l:'Promedio mensual', v:rvFmt(Math.round(total / totAct)) },
+      { l:'Promedio por año', v:rvFmt(Math.round(total / an.length)) },
+      { l:an[ult] + ' vs mismo tramo ' + (an[ult] - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[{ h:320, pdfH:250, half:true, cfg:mtfTit(grp('', L, F), 'Ventas por año', BV.ink) }, { h:320, pdfH:250, half:true, cfg:mtfTit(grp('', pL, pF), 'Promedio mensual', BV.ink) }],
     table:{
-      head:['Año', 'Liofilizados', 'Fresco congelados (F/C)', 'Total', '% F/C', 'Variación'],
-      rows:an.map((a, i) => [String(a), lio[i], fc[i], tot[i], bvShare(fc[i], tot[i]), i && tot[i - 1] ? bvPctTxt(bvVar(tot[i], tot[i - 1])) : '—']),
-      foot:['Total', tL, tF, T, bvShare(tF, T), '']
+      head:['Año', 'Liofilizados', 'Fresco congelados (F/C)', 'Total', '% F/C', 'Meses con ventas', 'Prom. mensual lio.', 'Prom. mensual F/C', 'Prom. mensual total', 'Variación'],
+      rows:an.map((a, i) => [String(a), L[i], F[i], T[i], bvShare(F[i], T[i]), act[i], pL[i], pF[i], pm(T[i], i), i && T[i - 1] ? bvPctTxt(bvVar(T[i], T[i - 1])) : '—']),
+      foot:['Total', L.reduce((x, y) => x + y, 0), F.reduce((x, y) => x + y, 0), total, bvShare(F.reduce((x, y) => x + y, 0), total), totAct, Math.round(L.reduce((x, y) => x + y, 0) / totAct), Math.round(F.reduce((x, y) => x + y, 0) / totAct), Math.round(total / totAct), '']
     },
+    nota:'El promedio mensual se calcula sobre los meses en que hubo ventas, sin decimales.',
     detail:d.regs
   };
 }
-// Unidades por modelo en todo el histórico + el cuadro año por año
-function mtfVistaGeneral(d, s){
-  const v = mtfVista(bvVistaGeneral, true)(d, s);
-  const mod = d.modelos, tot = mod.map(m => bvSum(d.regs.filter(r => r.modelo.key === m.key)));
-  const orden = mod.map((m, i) => i).sort((a, b) => tot[b] - tot[a]).slice(0, 12);
-  const o = bvOpts({ top:22 });
-  o.plugins.legend = { display:false }; o.scales.x.ticks = Object.assign({}, o.scales.x.ticks, { maxRotation:40, minRotation:0 });
-  v.charts = [{ h:300, half:true, cfg:{ type:'bar', data:{ labels:orden.map(i => mod[i].label), datasets:[{
-      label:'Unidades', data:orden.map(i => tot[i]), backgroundColor:orden.map(i => mod[i].color), borderRadius:4, borderSkipped:'bottom',
-      maxBarThickness:34, datalabels:bvLabelEnd }] }, options:o } }].concat(v.charts.map(c => Object.assign({}, c, { half:true, h:300 })));
-  v.title = 'Unidades vendidas por modelo · Histórico general';
-  v.sub = 'Total por modelo (mostaza: liofilizados · azul: fresco congelados) y evolución por año';
-  return v;
+
+// Ventas anuales por tipo de aloinjerto: unidades de cada modelo en el año, separadas en liofilizados y F/C
+function mtfVistaTipo(d, s){
+  const regs = d.regs.filter(r => r.anio === s.anio), prev = d.regs.filter(r => r.anio === s.anio - 1);
+  const cols = [{ label:String(s.anio - 1), f:r => r.anio === s.anio - 1 }, { label:String(s.anio), f:r => r.anio === s.anio }];
+  const t0 = mtfTablaGrupos(d, d.regs, cols, { total:v => v[1] });
+  const rows = t0.rows.map(r => { const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—'), r[4]]; });
+  const T = bvSum(regs), Tp = bvSum(prev), tL = bvSum(regs.filter(r => r.clase === 'lio')), tF = T - tL;
+  return {
+    id:'aloinjerto', file:'MTF_por_tipo_' + s.anio,
+    title:'Ventas anuales por tipo de aloinjerto · ' + s.anio, sub:'Los 10 modelos de mayor venta de cada tipo, enero a diciembre',
+    kpis:[
+      { l:'Total ' + s.anio, v:rvFmt(T) },
+      { l:'Liofilizados', v:rvFmt(tL) + ' · ' + bvShare(tL, T) },
+      { l:'Fresco congelados', v:rvFmt(tF) + ' · ' + bvShare(tF, T) },
+      { l:'Modelos vendidos', v:rvFmt(new Set(regs.map(r => r.modelo.key)).size) },
+      { l:'Vs ' + (s.anio - 1), v:bvPctTxt(Tp ? bvVar(T, Tp) : null), cls:!Tp ? '' : (T >= Tp ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:MTF_GRUPOS.map(g => mtfBarrasH(d, regs, g)),
+    table:{ head:['Modelo', cols[0].label, cols[1].label, 'Variación', '% del grupo / total'], rows, hlRows:t0.hlRows, foot:['Total', Tp || '', T || '', Tp ? bvPctTxt(bvVar(T, Tp)) : '—', T ? '100%' : '—'] },
+    detail:regs
+  };
 }
-const MTF_VISTAS = { cierre:mtfVista(bvVistaCierre, true), modelos:mtfVista(bvVistaModelosAnio, true), anios:mtfVista(bvVistaAnios, false),
-  aloinjerto:mtfVistaAloinjerto, doctores:mtfVista(bvVistaDoctores, false), general:mtfVistaGeneral };
+
+// Top 10 por doctor (año o histórico): un panel para liofilizados y otro para F/C
+function mtfVistaDoctores(d, s){
+  const p = s.periodo, an = d.anios, en = r => p === 'todo' || r.anio === p;
+  const mapa = {};
+  d.regs.forEach(r => {
+    const x = mapa[r.doctor] || (mapa[r.doctor] = { nombre:r.doctor, hist:0, lio:0, fc:0, cli:{} });
+    x.hist += r.cant;
+    if(en(r)){ x[r.clase] += r.cant; if(r.clinica) x.cli[r.clinica] = (x.cli[r.clinica] || 0) + r.cant; }
+  });
+  const lista = Object.values(mapa).map(x => Object.assign(x, { n:x.lio + x.fc, cl:Object.keys(x.cli).sort((a, b) => x.cli[b] - x.cli[a])[0] || '—' }))
+    .filter(x => x.n > 0).sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre));
+  const total = lista.reduce((t, x) => t + x.n, 0), tL = lista.reduce((t, x) => t + x.lio, 0), top3 = lista.slice(0, 3).reduce((t, x) => t + x.n, 0);
+  const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
+  const panel = g => {
+    const top = lista.filter(x => x[g.k] > 0).sort((a, b) => b[g.k] - a[g.k] || a.nombre.localeCompare(b.nombre)).slice(0, 10);
+    const tick = { color:BV.ink2, font:{ family:BV_FONT, size:11 } };
+    const o = bvOpts({ top:4 });
+    o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:30 };
+    o.scales = {
+      x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:Object.assign({ precision:0, padding:6 }, tick) },
+      y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+    };
+    return { h:360, pdfH:280, half:true, cfg:mtfTit({ type:'bar', data:{ labels:top.map(x => x.nombre), datasets:[{
+      label:g.nombre, data:top.map(x => x[g.k]), backgroundColor:g.color, borderRadius:4, borderSkipped:'start', maxBarThickness:20, datalabels:bvLabelEnd }] }, options:o }, g.nombre, g.color) };
+  };
+  const pct = n => total ? (n / total * 100).toFixed(1).replace('.', ',') + '%' : '';
+  return {
+    id:'doctores', file:'MTF_doctores_' + (p === 'todo' ? 'historico' : p),
+    title:'Aloinjertos por doctor · ' + per, sub:'Top 10 de ' + lista.length + ' doctores (separados en liofilizados y F/C)',
+    kpis:[
+      { l:'Total ' + (p === 'todo' ? 'histórico' : p), v:rvFmt(total) },
+      { l:'Doctores activos', v:rvFmt(lista.length) },
+      { l:'Doctor líder', v:lista.length ? lista[0].nombre + ' · ' + rvFmt(lista[0].n) : '—' },
+      { l:'Top 3', v:bvShare(top3, total) },
+      { l:'Liofilizados · F/C', v:rvFmt(tL) + ' · ' + rvFmt(total - tL) }
+    ],
+    charts:MTF_GRUPOS.map(panel),
+    table:{
+      head:['#', 'Doctor', 'Clínica principal', 'Liofilizados', 'Fresco congelados (F/C)', 'Total ' + (p === 'todo' ? 'histórico' : p), '% del total', 'Histórico'], left:[1, 2], hl:10,
+      rows:lista.map((x, i) => [i + 1, x.nombre, x.cl, x.lio || '', x.fc || '', x.n, pct(x.n), x.hist]),
+      foot:['', 'Total', '', tL, total - tL, total, total ? '100%' : '—', lista.reduce((t, x) => t + x.hist, 0)]
+    },
+    nota:'Los 10 primeros (por total) están resaltados en el cuadro. El porcentaje es la parte de cada doctor en el total del período.',
+    detail:d.regs.filter(en)
+  };
+}
+
+// Unidades vendidas por modelo en todo el histórico
+function mtfVistaGeneral(d, s){
+  const an = d.anios, cols = an.map(a => ({ label:String(a), f:r => r.anio === a }));
+  const t = mtfTablaGrupos(d, d.regs, cols);
+  const T = bvSum(d.regs), tL = bvSum(d.regs.filter(r => r.clase === 'lio'));
+  const totA = an.map(a => bvSum(d.regs.filter(r => r.anio === a))), mejor = totA.indexOf(Math.max(...totA));
+  const todos = d.modelos.map(m => ({ m, n:bvSum(d.regs.filter(r => r.modelo.key === m.key)) })).sort((a, b) => b.n - a.n);
+  return {
+    id:'general', file:'MTF_modelos_historico',
+    title:'Unidades vendidas por modelo · Histórico general',
+    sub:'Desde ' + an[0] + ' hasta la última carga' + (d.ultima ? ' (' + bvFechaTxt(d.ultima) + ')' : '') + ' · los 10 modelos de mayor venta de cada tipo',
+    kpis:[
+      { l:'Total histórico', v:rvFmt(T) },
+      { l:'Años con datos', v:an.length > 1 ? an[0] + ' – ' + an[an.length - 1] : String(an[0]) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(totA[mejor]) },
+      { l:'Modelo líder', v:todos.length ? todos[0].m.label + ' · ' + bvShare(todos[0].n, T) : '—' },
+      { l:'Liofilizados · F/C', v:rvFmt(tL) + ' · ' + rvFmt(T - tL) }
+    ],
+    charts:MTF_GRUPOS.map(g => mtfBarrasH(d, d.regs, g)),
+    table:t, detail:d.regs
+  };
+}
+const MTF_VISTAS = { cierre:mtfVistaCierre, modelos:mtfVistaMensual, anios:mtfVistaAnios, aloinjerto:mtfVistaTipo, doctores:mtfVistaDoctores, general:mtfVistaGeneral };
 function mtfRender(id){ return (rows, el, linea) => vizRender(VIZ_MTF, id, rows, el, linea); }
 const VIZ_MTF = {
   clave:'mtf', nombre:'MTF', parse:mtfParse, vistas:MTF_VISTAS, sel:mtfSel,
   estado:() => rvState.mtf || (rvState.mtf = {}),
-  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], anios:[], aloinjerto:[], doctores:['periodo'], general:[] },
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], anios:[], aloinjerto:['anio'], doctores:['periodo'], general:[] },
   pdf:['cierre', 'modelos', 'anios', 'aloinjerto', 'doctores', 'general'],
+  maxFilas:30,
   pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
   cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
   anioTxt:s => 'Año fiscal ' + s.anio,
@@ -2380,9 +2579,14 @@ function hcVistaLineas(d, s){
       { l:'Línea líder', v:li >= 0 ? lin[li].label + ' · ' + bvShare(totLin[li], total) : '—' },
       { l:'Modelo líder', v:mi >= 0 ? mod[mi].label + ' · ' + bvShare(totMod[mi], total) : '—' }
     ],
-    charts:[{ h:340, cfg:bvStackedCfg(mod.map(m => m.label), lin, matriz) }],
+    charts:[{ h:340, cfg:(() => {
+      // Si hay muchísimos modelos, la gráfica muestra los de mayor venta (el cuadro conserva todos)
+      const ord = mod.map((_, j) => j).sort((x, y) => totMod[y] - totMod[x]).slice(0, d.maxCats || mod.length);
+      const idx = d.maxCats ? ord : mod.map((_, j) => j);
+      return bvStackedCfg(idx.map(j => mod[j].label), lin, matriz.map(f => idx.map(j => f[j])));
+    })() }],
     table:{
-      head:['Modelo / talla'].concat(lin.map(l => l.label), ['Total', '% del total']),
+      head:[d.rotuloModelo || 'Modelo / talla'].concat(lin.map(l => l.label), ['Total', '% del total']),
       rows:mod.map((m, j) => [m.label].concat(lin.map((_, i) => matriz[i][j] || ''), [totMod[j], bvShare(totMod[j], total)])),
       foot:['Total'].concat(totLin.map(x => x || ''), [total, total ? '100%' : '—'])
     },
@@ -2414,6 +2618,180 @@ const VIZ_HC = {
   detalle:regs => ({
     head:['Fecha', 'Doctor', 'Clínica', 'Línea', 'Género', 'Talla', 'Cantidad'],
     rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.linea, r.genero === '?' ? '' : r.genero, r.modelo.label, r.cant])
+  })
+};
+
+/* ============ SUTURAS VIZ (azul claro) ============ */
+const SP_CAT = ['#3FA9D9','#0B3B5C','#2B88B8','#6EC1E8','#9AD8F2','#1F6C93','#5B6B78','#BFE7F8'];
+const SP_COL_MOD = ['#3FA9D9','#0B3B5C','#6EC1E8','#2B88B8','#9AD8F2','#1F6C93','#5B6B78','#BFE7F8'];
+const SP_OTROS = '#C3CDD5';
+const SP_TOP = 8;   // modelos que se dibujan por separado en las gráficas apiladas; el resto se agrupa en "Otros" (el cuadro los lista todos)
+
+function spParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
+  const ix = { fecha:col('fecha'), doctor:col('doctor'), linea:col('linea'), desc:col('descripcion'), cot:col('cotizadas'), usa:col('usadas') };
+  const nombres = { fecha:'Fecha', doctor:'Doctor', linea:'Línea', desc:'Descripción', cot:'Cotizadas', usa:'Usadas' };
+  const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
+  if(faltan.length) return { error:'La pestaña Suturas no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  rows.slice(1).forEach(r => {
+    const desc = String(r[ix.desc] || '').trim().replace(/\s+/g, ' '), doctor = String(r[ix.doctor] || '').trim();
+    if(!desc && !doctor) return;
+    const f = bvFecha(r[ix.fecha]);
+    if(!f) return;                                   // el año sale siempre de la FECHA
+    const linea = String(r[ix.linea] || '').trim() || 'Sin línea', usa = rvNum(r[ix.usa]), cot = rvNum(r[ix.cot]);
+    regs.push({
+      anio:f.getFullYear(), fecha:f, mes:f.getMonth(), doctor:doctor || 'Sin doctor',
+      clinica:linea, linea,                           // "clinica" = línea: así se reutiliza el Top de doctores (su columna secundaria es la línea)
+      modelo:{ key:bvNorm(desc) || 'sin descripcion', label:desc || 'Sin descripción' },
+      cant:usa === null ? 0 : usa, cot:cot === null ? 0 : cot, genero:'?', edad:null
+    });
+  });
+  const info = {}, tot = {}, lin = {};
+  regs.forEach(r => { info[r.modelo.key] = r.modelo; tot[r.modelo.key] = (tot[r.modelo.key] || 0) + r.cant; lin[r.linea] = (lin[r.linea] || 0) + r.cant; });
+  const modelos = Object.keys(info).sort((a, b) => tot[b] - tot[a] || info[a].label.localeCompare(info[b].label, 'es'))
+    .map((k, i) => ({ key:k, label:info[k].label, color:SP_COL_MOD[i % SP_COL_MOD.length] }));
+  const lineas = Object.keys(lin).sort((a, b) => lin[b] - lin[a] || a.localeCompare(b, 'es'))
+    .map((k, i) => ({ key:k, label:k, color:SP_COL_MOD[i % SP_COL_MOD.length] }));
+  const fechas = regs.map(r => r.fecha.getTime());
+  return { regs, modelos, lineas, anios:[...new Set(regs.map(r => r.anio))].sort((a, b) => a - b),
+    ultima:fechas.length ? new Date(Math.max(...fechas)) : null, maxCats:10, rotuloModelo:'Modelo (descripción)' };
+}
+function spSel(d){
+  const st = rvState.sp || (rvState.sp = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
+  const ms = bvMesesConDatos(d, st.anio);
+  if(!ms.length) st.mes = 0;
+  else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
+  return st;
+}
+function spConPaleta(fn){ const old = BV.cat; BV.cat = SP_CAT; try{ return fn(); } finally { BV.cat = old; } }
+// Barras apiladas con los SP_TOP modelos de mayor venta y el resto como "Otros"
+function spApilado(d, regs, labels, cats){
+  const tot = {};
+  regs.forEach(r => { tot[r.modelo.key] = (tot[r.modelo.key] || 0) + r.cant; });
+  const top = d.modelos.filter(m => tot[m.key]).slice(0, SP_TOP), keys = top.map(m => m.key);
+  const por = f => bvSum(regs.filter(f));
+  const mods = top.slice(), matriz = top.map(m => cats.map(c => por(r => r.modelo.key === m.key && c(r))));
+  if(d.modelos.filter(m => tot[m.key]).length > SP_TOP){
+    mods.push({ label:'Otros modelos', color:SP_OTROS });
+    matriz.push(cats.map(c => por(r => !keys.includes(r.modelo.key) && c(r))));
+  }
+  return bvStackedCfg(labels, mods, matriz);
+}
+function spVista(fn, ajuste){
+  return (d, s) => {
+    const v = spConPaleta(() => fn(d, s));
+    v.file = v.file.replace('Biobrace', 'Suturas').replace('Hemaclear', 'Suturas');
+    const w = ajuste ? spConPaleta(() => ajuste(v, d, s)) : v;
+    // Las descripciones de las suturas suelen ser largas: en las gráficas se acortan (el cuadro y el Excel traen el nombre completo)
+    w.charts.forEach(c => { const l = c.cfg.data.labels; if(l) c.cfg.data.labels = l.map(t => String(t).length > 30 ? String(t).slice(0, 29) + '…' : t); });
+    return w;
+  };
+}
+const spVistaCierre = spVista(bvVistaCierre, (v, d, s) => {
+  v.title = v.title.replace('Ventas por modelo', 'Suturas usadas por modelo');
+  const cfg = v.charts[0].cfg, ant = cfg.data.datasets[0].data, act = cfg.data.datasets[1].data;
+  const idx = act.map((_, i) => i).sort((a, b) => (act[b] + ant[b]) - (act[a] + ant[a])).slice(0, 10);
+  cfg.data.labels = idx.map(i => cfg.data.labels[i]);
+  cfg.data.datasets.forEach(ds => { ds.data = idx.map(i => ds.data[i]); });
+  v.sub += idx.length < act.length ? ' · se grafican los 10 modelos de mayor uso' : '';
+  return v;
+});
+const spVistaModelos = spVista(bvVistaModelosAnio, (v, d, s) => {
+  const regs = d.regs.filter(r => r.anio === s.anio);
+  v.charts[0].cfg = spApilado(d, regs, BV_MES3, BV_MES3.map((_, j) => r => r.mes === j));
+  return v;
+});
+function spVistaGeneral(d, s){
+  const v = spVista(bvVistaGeneral, (w, dd) => {
+    w.charts[0].cfg = spApilado(dd, dd.regs, dd.anios.map(String), dd.anios.map(a => r => r.anio === a));
+    return w;
+  })(d, s);
+  const mod = d.modelos, tot = mod.map(m => bvSum(d.regs.filter(r => r.modelo.key === m.key)));
+  const orden = mod.map((m, i) => i).sort((a, b) => tot[b] - tot[a]).slice(0, 10);
+  const o = bvOpts({ top:4 });
+  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
+  o.layout.padding = { top:4, right:34 };
+  o.scales = {
+    x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:{ precision:0, padding:6, color:BV.ink2, font:{ family:BV_FONT, size:12 } } },
+    y:{ grid:{ display:false }, border:{ display:false }, ticks:{ autoSkip:false, color:BV.ink2, font:{ family:BV_FONT, size:12 } } }
+  };
+  v.charts.unshift({ h:Math.max(200, 46 + orden.length * 34), pdfH:290, cfg:{ type:'bar', data:{ labels:orden.map(i => mod[i].label), datasets:[{
+    label:'Unidades', data:orden.map(i => tot[i]), backgroundColor:SP_CAT[0], borderRadius:4, borderSkipped:'start', maxBarThickness:22, datalabels:bvLabelEnd }] }, options:o } });
+  v.title = 'Unidades vendidas por modelo · Histórico general';
+  v.sub = 'Los 10 modelos de mayor venta y la evolución por año' + (mod.length > 10 ? ' · el cuadro lista los ' + mod.length + ' modelos' : '');
+  return v;
+}
+// Cotizadas (despachadas) contra usadas: por año y por modelo
+function spVistaCotizadas(d, s){
+  const p = s.periodo, an = d.anios, regs = d.regs.filter(r => p === 'todo' || r.anio === p);
+  const cot = a => d.regs.filter(r => r.anio === a).reduce((t, r) => t + r.cot, 0);
+  const usa = a => bvSum(d.regs.filter(r => r.anio === a));
+  const cA = an.map(cot), uA = an.map(usa);
+  const mapa = {};
+  regs.forEach(r => { const x = mapa[r.modelo.key] || (mapa[r.modelo.key] = { n:r.modelo.label, c:0, u:0 }); x.c += r.cot; x.u += r.cant; });
+  const lista = Object.values(mapa).sort((a, b) => b.c - a.c || b.u - a.u || a.n.localeCompare(b.n, 'es'));
+  const C = lista.reduce((t, x) => t + x.c, 0), U = lista.reduce((t, x) => t + x.u, 0);
+  const pc = (u, c) => c ? Math.round(u / c * 100) + '%' : '—';
+  const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
+  const top = lista.slice(0, 10);
+  const grupo = (labels, c, u, horiz) => {
+    const o = bvOpts({ legend:true, top:horiz ? 4 : 22 });
+    if(horiz){
+      o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:34 };
+      o.scales = {
+        x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:{ precision:0, padding:6, color:BV.ink2, font:{ family:BV_FONT, size:12 } } },
+        y:{ grid:{ display:false }, border:{ display:false }, ticks:{ autoSkip:false, color:BV.ink2, font:{ family:BV_FONT, size:12 } } }
+      };
+    }
+    const ds = (label, data, color) => ({ label, data, backgroundColor:color, borderRadius:4, borderSkipped:horiz ? 'start' : 'bottom', maxBarThickness:horiz ? 14 : 28, datalabels:bvLabelEnd });
+    return { type:'bar', data:{ labels, datasets:[ds('Cotizadas (despachadas)', c, SP_CAT[1]), ds('Usadas', u, SP_CAT[0])] }, options:o };
+  };
+  return {
+    id:'cotizadas', file:'Suturas_cotizadas_vs_usadas_' + (p === 'todo' ? 'historico' : p),
+    title:'Suturas cotizadas (despachadas) vs usadas · ' + per, sub:'Cuántas se despacharon y cuántas se usaron realmente',
+    kpis:[
+      { l:'Cotizadas', v:rvFmt(C) },
+      { l:'Usadas', v:rvFmt(U) },
+      { l:'Sin usar', v:rvFmt(C - U) },
+      { l:'% de uso', v:pc(U, C) },
+      { l:'Modelos', v:rvFmt(lista.length) }
+    ],
+    nota:'Izquierda: totales por año (todo el histórico). Derecha: los 10 modelos más cotizados del período elegido. "Sin usar" = cotizadas − usadas.',
+    charts:[
+      { h:340, half:true, pdfH:300, cfg:grupo(an.map(String), cA, uA, false) },
+      { h:340, half:true, pdfH:300, cfg:grupo(top.map(x => x.n), top.map(x => x.c), top.map(x => x.u), true) }
+    ],
+    table:{
+      head:['#', 'Modelo (descripción)', 'Cotizadas', 'Usadas', 'Sin usar', '% de uso'], left:[1], hl:10,
+      rows:lista.map((x, i) => [i + 1, x.n, x.c, x.u, x.c - x.u, pc(x.u, x.c)]),
+      foot:['', 'Total', C, U, C - U, pc(U, C)]
+    },
+    detail:regs
+  };
+}
+const SP_VISTAS = {
+  cierre:spVistaCierre, modelos:spVistaModelos, lineas:spVista(hcVistaLineas, v => { v.title = v.title.replace('Ventas por modelo y línea', 'Ventas por modelo vs línea'); v.sub = 'Unidades usadas de cada modelo, separadas por línea'; return v; }),
+  anios:spVista(bvVistaAnios),
+  doctores:spVista(hcVistaTop('doctor'), v => { v.title = v.title.replace('Ventas por doctor', 'Usos por doctor'); v.table.head[2] = 'Línea principal'; v.charts[0].cfg.data.datasets[0].backgroundColor = SP_CAT[0]; return v; }),
+  general:spVista(spVistaGeneral), cotizadas:spVista(spVistaCotizadas)
+};
+function spRender(id){ return (rows, el, linea) => vizRender(VIZ_SP, id, rows, el, linea); }
+const VIZ_SP = {
+  clave:'sp', nombre:'SUTURAS', parse:spParse, vistas:SP_VISTAS, sel:spSel,
+  estado:() => rvState.sp || (rvState.sp = {}),
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], lineas:['periodo'], anios:[], doctores:['periodo'], general:[], cotizadas:['periodo'] },
+  pdf:['cierre', 'modelos', 'lineas', 'anios', 'doctores', 'general', 'cotizadas'],
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña Suturas no tiene registros todavía.',
+  detalle:regs => ({
+    head:['Fecha', 'Doctor', 'Línea', 'Descripción', 'Cotizadas', 'Usadas'],
+    rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.linea, r.modelo.label, r.cot, r.cant])
   })
 };
 
