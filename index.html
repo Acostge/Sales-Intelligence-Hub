@@ -1412,6 +1412,16 @@ const RESUMEN_LINEAS = [
       { id:'costos',     label:'Unidades vs costos',    render:lipoRender('costos') },
       { id:'costokit',   label:'Costo por kit',         render:lipoRender('costokit') },
       { id:'importacion',label:'Costo de importación',  render:lipoRender('importacion') }
+    ] },
+  // gid de la pestaña MTF publicada en CSV: pégalo entre las comillas (mientras esté vacío, la app muestra "pendiente de conectar")
+  { id:'mtf', nombre:'MTF', gid:'',
+    opciones:[
+      { id:'cierre',     label:'Cierre del mes',      render:mtfRender('cierre') },
+      { id:'modelos',    label:'Modelos del año',     render:mtfRender('modelos') },
+      { id:'anios',      label:'Ventas por año',      render:mtfRender('anios') },
+      { id:'aloinjerto', label:'Tipo de aloinjerto',  render:mtfRender('aloinjerto') },
+      { id:'doctores',   label:'Top 10 doctores',     render:mtfRender('doctores') },
+      { id:'general',    label:'General (histórico)', render:mtfRender('general') }
     ] }
 ];
 
@@ -2094,6 +2104,137 @@ const VIZ_BIO = {
   detalle:regs => ({
     head:['Fecha', 'Doctor', 'Clínica', 'Tipo de cirugía', 'Género', 'Edad', 'Modelo', 'Cantidad'],
     rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.tipo, r.genero === '?' ? '' : r.genero, r.edad === null ? '' : r.edad, r.modelo.label, r.cant])
+  })
+};
+
+/* ============ MTF VIZ (aloinjertos: liofilizados y fresco congelados "F/C") ============ */
+const MTF_CAT = ['#D9A400','#6EC1E8','#6EC1E8','#EDC24B','#3FA9D9','#B88700','#9AD8F2','#8F6A00'];
+const MTF_COL_LIO = ['#D9A400','#B88700','#EDC24B','#8F6A00','#F3D987','#7A5A00','#C99A1B','#E5B93C'];   // mostaza (liofilizados)
+const MTF_COL_FC  = ['#3FA9D9','#6EC1E8','#2B88B8','#9AD8F2','#1F6C93','#BFE7F8','#5BB5E0','#8CCBEA'];   // azul claro (fresco congelados)
+const MTF_CLASES = { lio:'Liofilizados', fc:'Fresco congelados (F/C)' };
+const mtfEsFC = raw => /(^|[^a-z0-9])f\s*\/\s*c(?![a-z0-9])/i.test(String(raw || ''));
+
+function mtfParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
+  const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), mtf:col('mtf'), cant:col('cant') };
+  const nombres = { fecha:'Fecha', doctor:'Doctor', mtf:'MTF', cant:'Cant.' };
+  const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
+  if(faltan.length) return { error:'La pestaña MTF no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  rows.slice(1).forEach(r => {
+    const raw = String(r[ix.mtf] || '').trim(), doctor = String(r[ix.doctor] || '').trim();
+    if(!raw && !doctor) return;
+    const f = bvFecha(r[ix.fecha]);
+    if(!f) return;                                   // el año sale siempre de la FECHA
+    const cant = rvNum(r[ix.cant]), fc = mtfEsFC(raw);
+    regs.push({
+      anio:f.getFullYear(), fecha:f, mes:f.getMonth(), doctor:doctor || 'Sin doctor',
+      clinica:ix.clinica >= 0 ? String(r[ix.clinica] || '').trim() : '',
+      clase:fc ? 'fc' : 'lio',
+      modelo:{ key:bvNorm(raw).replace(/\s+/g, ' ') || 'sin dato', label:raw || 'Sin dato' },
+      cant:cant === null ? 1 : cant
+    });
+  });
+  const tot = {}, info = {};
+  regs.forEach(r => { tot[r.modelo.key] = (tot[r.modelo.key] || 0) + r.cant; info[r.modelo.key] = { label:r.modelo.label, clase:r.clase }; });
+  const orden = k => Object.keys(info).filter(x => info[x].clase === k).sort((a, b) => tot[b] - tot[a] || info[a].label.localeCompare(info[b].label));
+  const lio = orden('lio'), fc = orden('fc');
+  const modelos = lio.map((k, i) => ({ key:k, label:info[k].label, clase:'lio', color:MTF_COL_LIO[i % MTF_COL_LIO.length] }))
+    .concat(fc.map((k, i) => ({ key:k, label:info[k].label, clase:'fc', color:MTF_COL_FC[i % MTF_COL_FC.length] })));
+  const anios = [...new Set(regs.map(r => r.anio))].sort((a, b) => a - b);
+  const fechas = regs.map(r => r.fecha.getTime());
+  const d = { regs, modelos, anios, ultima:fechas.length ? new Date(Math.max(...fechas)) : null };
+  // Mismos datos, pero con solo dos "modelos": las dos clases (para los subtotales de cada cuadro)
+  d.porClase = { regs:regs.map(r => Object.assign({}, r, { modelo:{ key:r.clase, label:'Total ' + MTF_CLASES[r.clase].toLowerCase() } })),
+    modelos:[{ key:'lio', label:'Total ' + MTF_CLASES.lio.toLowerCase(), color:MTF_CAT[0] }, { key:'fc', label:'Total ' + MTF_CLASES.fc.toLowerCase(), color:MTF_CAT[1] }],
+    anios, ultima:d.ultima };
+  return d;
+}
+function mtfSel(d){
+  const st = rvState.mtf || (rvState.mtf = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
+  const ms = bvMesesConDatos(d, st.anio);
+  if(!ms.length) st.mes = 0;
+  else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
+  return st;
+}
+function mtfConPaleta(fn){ const old = BV.cat; BV.cat = MTF_CAT; try{ return fn(); } finally { BV.cat = old; } }
+// Toma una vista de Biobrace (misma estructura), la pinta con los colores de MTF, le agrega la clasificación
+// (subtotales de liofilizados y F/C al inicio del cuadro) y un indicador con el reparto de unidades.
+function mtfVista(fn, conSubtotales){
+  return (d, s) => {
+    const v = mtfConPaleta(() => fn(d, s));
+    v.file = v.file.replace('Biobrace', 'MTF');
+    if(conSubtotales){
+      const vc = mtfConPaleta(() => fn(d.porClase, s));
+      v.table.rows = vc.table.rows.concat(v.table.rows);
+      v.table.hl = 2;
+    }
+    const n = c => bvSum((v.detail || []).filter(r => r.clase === c));
+    const tot = n('lio') + n('fc');
+    v.kpis = v.kpis.concat([{ l:'Liofilizados · F/C', v:rvFmt(n('lio')) + ' · ' + rvFmt(n('fc')) + (tot ? ' (' + bvShare(n('fc'), tot) + ' F/C)' : '') }]);
+    return v;
+  };
+}
+function mtfVistaAloinjerto(d, s){
+  const an = d.anios;
+  const lio = an.map(a => bvSum(d.regs.filter(r => r.anio === a && r.clase === 'lio')));
+  const fc = an.map(a => bvSum(d.regs.filter(r => r.anio === a && r.clase === 'fc')));
+  const tot = an.map((_, i) => lio[i] + fc[i]), T = tot.reduce((x, y) => x + y, 0);
+  const tL = lio.reduce((x, y) => x + y, 0), tF = fc.reduce((x, y) => x + y, 0);
+  const mejor = tot.indexOf(Math.max(...tot));
+  const ult = an.length - 1, vT = ult > 0 && tot[ult - 1] ? bvVar(tot[ult], tot[ult - 1]) : null;
+  const ds = (label, data, color) => ({ label, data, backgroundColor:color, borderRadius:4, borderSkipped:'bottom', maxBarThickness:34, datalabels:bvLabelEnd });
+  return {
+    id:'aloinjerto', file:'MTF_aloinjertos_por_anio',
+    title:'Ventas anuales por tipo de aloinjerto', sub:'Liofilizados y fresco congelados (F/C), año por año',
+    kpis:[
+      { l:'Total histórico', v:rvFmt(T) },
+      { l:'Liofilizados', v:rvFmt(tL) + ' · ' + bvShare(tL, T) },
+      { l:'Fresco congelados', v:rvFmt(tF) + ' · ' + bvShare(tF, T) },
+      { l:'Mejor año', v:an[mejor] + ' · ' + rvFmt(tot[mejor]) },
+      { l:an[ult] + ' vs ' + (an[ult] - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[{ h:320, cfg:{ type:'bar', data:{ labels:an.map(String), datasets:[ds('Liofilizados', lio, MTF_CAT[0]), ds('Fresco congelados (F/C)', fc, MTF_CAT[1])] }, options:bvOpts({ legend:true }) } }],
+    table:{
+      head:['Año', 'Liofilizados', 'Fresco congelados (F/C)', 'Total', '% F/C', 'Variación'],
+      rows:an.map((a, i) => [String(a), lio[i], fc[i], tot[i], bvShare(fc[i], tot[i]), i && tot[i - 1] ? bvPctTxt(bvVar(tot[i], tot[i - 1])) : '—']),
+      foot:['Total', tL, tF, T, bvShare(tF, T), '']
+    },
+    detail:d.regs
+  };
+}
+// Unidades por modelo en todo el histórico + el cuadro año por año
+function mtfVistaGeneral(d, s){
+  const v = mtfVista(bvVistaGeneral, true)(d, s);
+  const mod = d.modelos, tot = mod.map(m => bvSum(d.regs.filter(r => r.modelo.key === m.key)));
+  const orden = mod.map((m, i) => i).sort((a, b) => tot[b] - tot[a]).slice(0, 12);
+  const o = bvOpts({ top:22 });
+  o.plugins.legend = { display:false }; o.scales.x.ticks = Object.assign({}, o.scales.x.ticks, { maxRotation:40, minRotation:0 });
+  v.charts = [{ h:300, half:true, cfg:{ type:'bar', data:{ labels:orden.map(i => mod[i].label), datasets:[{
+      label:'Unidades', data:orden.map(i => tot[i]), backgroundColor:orden.map(i => mod[i].color), borderRadius:4, borderSkipped:'bottom',
+      maxBarThickness:34, datalabels:bvLabelEnd }] }, options:o } }].concat(v.charts.map(c => Object.assign({}, c, { half:true, h:300 })));
+  v.title = 'Unidades vendidas por modelo · Histórico general';
+  v.sub = 'Total por modelo (mostaza: liofilizados · azul: fresco congelados) y evolución por año';
+  return v;
+}
+const MTF_VISTAS = { cierre:mtfVista(bvVistaCierre, true), modelos:mtfVista(bvVistaModelosAnio, true), anios:mtfVista(bvVistaAnios, false),
+  aloinjerto:mtfVistaAloinjerto, doctores:mtfVista(bvVistaDoctores, false), general:mtfVistaGeneral };
+function mtfRender(id){ return (rows, el, linea) => vizRender(VIZ_MTF, id, rows, el, linea); }
+const VIZ_MTF = {
+  clave:'mtf', nombre:'MTF', parse:mtfParse, vistas:MTF_VISTAS, sel:mtfSel,
+  estado:() => rvState.mtf || (rvState.mtf = {}),
+  ctrl:{ cierre:['anio', 'mes'], modelos:['anio'], anios:[], aloinjerto:[], doctores:['periodo'], general:[] },
+  pdf:['cierre', 'modelos', 'anios', 'aloinjerto', 'doctores', 'general'],
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña MTF no tiene registros todavía.',
+  detalle:regs => ({
+    head:['Fecha', 'Doctor', 'Clínica', 'MTF', 'Clasificación', 'Cantidad'],
+    rows:regs.map(r => [bvFechaTxt(r.fecha), r.doctor, r.clinica, r.modelo.label, MTF_CLASES[r.clase], r.cant])
   })
 };
 
