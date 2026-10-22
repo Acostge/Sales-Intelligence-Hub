@@ -2054,7 +2054,22 @@ function bvSinEjes(cfg){
   if(!sc) return cfg;
   const horiz = cfg.options.indexAxis === 'y';
   const v = sc[horiz ? 'x' : 'y'];
-  if(v) v.display = false;
+  if(v){
+    v.display = false;
+    // Holgura arriba: el valor más alto nunca llega al título ni al borde (mínimo 5 unidades, o 15 % si las cifras son grandes)
+    const ds = (cfg.data && cfg.data.datasets) || [], apil = !!v.stacked;
+    const n = Math.max(0, ...ds.map(d => (d.data || []).length));
+    let max = 0;
+    for(let i = 0; i < n; i++){
+      let suma = 0;
+      ds.forEach(d => {
+        const x = Number(d.data && d.data[i]) || 0;
+        if(apil && (d.type || cfg.type) === 'bar') suma += x; else max = Math.max(max, x);
+      });
+      max = Math.max(max, suma);
+    }
+    if(max > 0) v.max = Math.ceil(max + Math.max(5, max * 0.15));
+  }
   return cfg;
 }
 function bvChartImg(cfg, w, h){
@@ -2693,48 +2708,77 @@ function spApilado(d, regs, labels, cats){
   }
   return bvStackedCfg(labels, mods, matriz);
 }
+// Nombres largos de modelo: se parten en hasta 2 líneas dentro de la gráfica (el nombre completo siempre está en el cuadro)
+function spWrap(t, ancho){
+  t = String(t); ancho = ancho || 36;
+  if(t.length <= ancho) return t;
+  const lineas = [''];
+  t.split(' ').forEach(w => {
+    const k = lineas.length - 1;
+    if((lineas[k] + ' ' + w).trim().length <= ancho) lineas[k] = (lineas[k] + ' ' + w).trim();
+    else lineas.push(w);
+  });
+  if(lineas.length > 2){ const r = lineas.slice(1).join(' '); lineas.length = 1; lineas.push(r.length > ancho ? r.slice(0, ancho - 1) + '…' : r); }
+  return lineas;
+}
+// Barras horizontales con el nombre completo a la izquierda (como en tus láminas de Suturas)
+function spHBar(labels, datasets, extra){
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:11 } };
+  const o = bvOpts({ legend:datasets.length > 1, top:4 });
+  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:38 };
+  o.scales = {
+    x:{ beginAtZero:true, grid:{ display:false }, border:{ display:false }, ticks:{ display:false } },
+    y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) }
+  };
+  return { type:'bar', data:{ labels:labels.map(t => spWrap(t)), datasets:datasets.map(ds => Object.assign({
+    borderRadius:4, borderSkipped:'start', maxBarThickness:datasets.length > 1 ? 13 : 20, datalabels:bvLabelEnd }, ds)) }, options:o };
+}
+const spAltoH = (n, k) => 50 + n * (k > 1 ? 46 : 34);
 function spVista(fn, ajuste){
   return (d, s) => {
     const v = spConPaleta(() => fn(d, s));
     v.file = v.file.replace('Biobrace', 'Suturas').replace('Hemaclear', 'Suturas');
     const w = ajuste ? spConPaleta(() => ajuste(v, d, s)) : v;
     // Las descripciones de las suturas suelen ser largas: en las gráficas se acortan (el cuadro y el Excel traen el nombre completo)
-    w.charts.forEach(c => { const l = c.cfg.data.labels; if(l) c.cfg.data.labels = l.map(t => String(t).length > 30 ? String(t).slice(0, 29) + '…' : t); });
+    w.charts.forEach(c => { const l = c.cfg.data.labels; if(l) c.cfg.data.labels = l.map(t => Array.isArray(t) ? t : spWrap(t)); });
     return w;
   };
 }
 const spVistaCierre = spVista(bvVistaCierre, (v, d, s) => {
   v.title = v.title.replace('Ventas por modelo', 'Suturas usadas por modelo');
   const cfg = v.charts[0].cfg, ant = cfg.data.datasets[0].data, act = cfg.data.datasets[1].data;
-  const idx = act.map((_, i) => i).sort((a, b) => (act[b] + ant[b]) - (act[a] + ant[a])).slice(0, 10);
-  cfg.data.labels = idx.map(i => cfg.data.labels[i]);
-  cfg.data.datasets.forEach(ds => { ds.data = idx.map(i => ds.data[i]); });
-  v.sub += idx.length < act.length ? ' · se grafican los 10 modelos de mayor uso' : '';
+  const idx = act.map((_, i) => i).sort((a, b) => (act[b] + ant[b]) - (act[a] + ant[a])).slice(0, 10).filter(i => act[i] + ant[i] > 0);
+  const lab = idx.map(i => d.modelos[i].label);
+  const dsP = cfg.data.datasets[0].label, dsC = cfg.data.datasets[1].label;
+  v.charts[0] = { h:spAltoH(idx.length, 2), pdfH:Math.min(330, 40 + idx.length * 30), cfg:spHBar(lab, [
+    { label:dsP, data:idx.map(i => ant[i]), backgroundColor:BV.muted },
+    { label:dsC, data:idx.map(i => act[i]), backgroundColor:SP_CAT[0] }]) };
+  v.sub += d.modelos.length > idx.length ? ' · se grafican los modelos de mayor uso' : '';
   return v;
 });
 const spVistaModelos = spVista(bvVistaModelosAnio, (v, d, s) => {
   const regs = d.regs.filter(r => r.anio === s.anio);
-  v.charts[0].cfg = spApilado(d, regs, BV_MES3, BV_MES3.map((_, j) => r => r.mes === j));
+  const datos = BV_MES3.map((_, j) => bvSum(regs.filter(r => r.mes === j)));
+  const act = datos.filter(x => x > 0).length || 1, prom = Math.round(bvSum(regs) / act);
+  v.title = 'Suturas usadas por mes · Año ' + s.anio;
+  v.sub = 'Consumo mensual; el detalle por modelo está en el cuadro';
+  v.nota = 'Promedio de consumo por mes: ' + rvFmt(prom) + ' unidades (aproximado, ' + rvFmt(Math.round(prom / 12 * 10) / 10) + ' box de 12 unidades).';
+  v.charts = [{ h:320, pdfH:250, cfg:{ type:'bar', data:{ labels:BV_MES3, datasets:[{ label:'Suturas usadas', data:datos, backgroundColor:SP_CAT[0],
+    borderRadius:4, borderSkipped:'bottom', maxBarThickness:40, datalabels:bvLabelEnd }] }, options:bvOpts({}) } }];
   return v;
 });
 function spVistaGeneral(d, s){
   const v = spVista(bvVistaGeneral, (w, dd) => {
-    w.charts[0].cfg = spApilado(dd, dd.regs, dd.anios.map(String), dd.anios.map(a => r => r.anio === a));
+    const tot = dd.anios.map(a => bvSum(dd.regs.filter(r => r.anio === a)));
+    w.charts[0] = { h:300, pdfH:230, cfg:{ type:'bar', data:{ labels:dd.anios.map(String), datasets:[{ label:'Suturas usadas', data:tot, backgroundColor:SP_CAT[0],
+      borderRadius:4, borderSkipped:'bottom', maxBarThickness:50, datalabels:bvLabelEnd }] }, options:bvOpts({}) } };
     return w;
   })(d, s);
   const mod = d.modelos, tot = mod.map(m => bvSum(d.regs.filter(r => r.modelo.key === m.key)));
-  const orden = mod.map((m, i) => i).sort((a, b) => tot[b] - tot[a]).slice(0, 10);
-  const o = bvOpts({ top:4 });
-  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false };
-  o.layout.padding = { top:4, right:34 };
-  o.scales = {
-    x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:{ precision:0, padding:6, color:BV.ink2, font:{ family:BV_FONT, size:12 } } },
-    y:{ grid:{ display:false }, border:{ display:false }, ticks:{ autoSkip:false, color:BV.ink2, font:{ family:BV_FONT, size:12 } } }
-  };
-  v.charts.unshift({ h:Math.max(200, 46 + orden.length * 34), pdfH:290, cfg:{ type:'bar', data:{ labels:orden.map(i => mod[i].label), datasets:[{
-    label:'Unidades', data:orden.map(i => tot[i]), backgroundColor:SP_CAT[0], borderRadius:4, borderSkipped:'start', maxBarThickness:22, datalabels:bvLabelEnd }] }, options:o } });
+  const orden = mod.map((m, i) => i).sort((a, b) => tot[b] - tot[a]).slice(0, 10).filter(i => tot[i] > 0);
+  v.charts.unshift({ h:spAltoH(orden.length, 1), pdfH:Math.min(300, 30 + orden.length * 26), cfg:spHBar(orden.map(i => mod[i].label), [{ label:'Unidades', data:orden.map(i => tot[i]), backgroundColor:SP_CAT[0] }]) });
   v.title = 'Unidades vendidas por modelo · Histórico general';
-  v.sub = 'Los 10 modelos de mayor venta y la evolución por año' + (mod.length > 10 ? ' · el cuadro lista los ' + mod.length + ' modelos' : '');
+  v.sub = 'Los 10 modelos de mayor venta y el total por año' + (mod.length > 10 ? ' · el cuadro lista los ' + mod.length + ' modelos' : '');
   return v;
 }
 // Cotizadas (despachadas) contra usadas: por año y por modelo
@@ -2750,18 +2794,9 @@ function spVistaCotizadas(d, s){
   const pc = (u, c) => c ? Math.round(u / c * 100) + '%' : '—';
   const per = p === 'todo' ? 'Histórico general' : 'Año ' + p;
   const top = lista.slice(0, 10);
-  const grupo = (labels, c, u, horiz) => {
-    const o = bvOpts({ legend:true, top:horiz ? 4 : 22 });
-    if(horiz){
-      o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:34 };
-      o.scales = {
-        x:{ beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false }, ticks:{ precision:0, padding:6, color:BV.ink2, font:{ family:BV_FONT, size:12 } } },
-        y:{ grid:{ display:false }, border:{ display:false }, ticks:{ autoSkip:false, color:BV.ink2, font:{ family:BV_FONT, size:12 } } }
-      };
-    }
-    const ds = (label, data, color) => ({ label, data, backgroundColor:color, borderRadius:4, borderSkipped:horiz ? 'start' : 'bottom', maxBarThickness:horiz ? 14 : 28, datalabels:bvLabelEnd });
-    return { type:'bar', data:{ labels, datasets:[ds('Cotizadas (despachadas)', c, SP_CAT[1]), ds('Usadas', u, SP_CAT[0])] }, options:o };
-  };
+  const anual = { type:'bar', data:{ labels:an.map(String), datasets:[
+    { label:'Cotizadas (despachadas)', data:cA, backgroundColor:SP_CAT[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:36, datalabels:bvLabelEnd },
+    { label:'Usadas', data:uA, backgroundColor:SP_CAT[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:36, datalabels:bvLabelEnd }] }, options:bvOpts({ legend:true }) };
   return {
     id:'cotizadas', file:'Suturas_cotizadas_vs_usadas_' + (p === 'todo' ? 'historico' : p),
     title:'Suturas cotizadas (despachadas) vs usadas · ' + per, sub:'Cuántas se despacharon y cuántas se usaron realmente',
@@ -2772,10 +2807,12 @@ function spVistaCotizadas(d, s){
       { l:'% de uso', v:pc(U, C) },
       { l:'Modelos', v:rvFmt(lista.length) }
     ],
-    nota:'Izquierda: totales por año (todo el histórico). Derecha: los 10 modelos más cotizados del período elegido. "Sin usar" = cotizadas − usadas.',
+    nota:'Arriba: los 10 modelos más cotizados del período elegido. Abajo: totales por año. "Sin usar" = cotizadas − usadas.',
     charts:[
-      { h:340, half:true, pdfH:300, cfg:grupo(an.map(String), cA, uA, false) },
-      { h:340, half:true, pdfH:300, cfg:grupo(top.map(x => x.n), top.map(x => x.c), top.map(x => x.u), true) }
+      { h:spAltoH(top.length, 2), pdfH:Math.min(330, 40 + top.length * 30), cfg:spHBar(top.map(x => x.n), [
+        { label:'Cotizadas (despachadas)', data:top.map(x => x.c), backgroundColor:SP_CAT[1] },
+        { label:'Usadas', data:top.map(x => x.u), backgroundColor:SP_CAT[0] }]) },
+      { h:280, pdfH:200, cfg:anual }
     ],
     table:{
       head:['#', 'Modelo (descripción)', 'Cotizadas', 'Usadas', 'Sin usar', '% de uso'], left:[1], hl:10,
@@ -2786,7 +2823,14 @@ function spVistaCotizadas(d, s){
   };
 }
 const SP_VISTAS = {
-  cierre:spVistaCierre, modelos:spVistaModelos, lineas:spVista(hcVistaLineas, v => { v.title = v.title.replace('Ventas por modelo y línea', 'Ventas por modelo vs línea'); v.sub = 'Unidades usadas de cada modelo, separadas por línea'; return v; }),
+  cierre:spVistaCierre, modelos:spVistaModelos, lineas:spVista(hcVistaLineas, (v, d) => {
+    v.title = v.title.replace('Ventas por modelo y línea', 'Consumo por línea');
+    v.sub = 'Unidades usadas en cada línea; el cuadro las separa por modelo';
+    const tot = d.lineas.map(l => bvSum(v.detail.filter(r => r.linea === l.key)));
+    v.charts = [{ h:320, pdfH:250, cfg:{ type:'bar', data:{ labels:d.lineas.map(l => l.label), datasets:[{ label:'Suturas usadas', data:tot,
+      backgroundColor:d.lineas.map(l => l.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:bvLabelEnd }] }, options:bvOpts({}) } }];
+    return v;
+  }),
   anios:spVista(bvVistaAnios),
   doctores:spVista(hcVistaTop('doctor'), v => { v.title = v.title.replace('Ventas por doctor', 'Usos por doctor'); v.table.head[2] = 'Línea principal'; v.charts[0].cfg.data.datasets[0].backgroundColor = SP_CAT[0]; return v; }),
   general:spVista(spVistaGeneral), cotizadas:spVista(spVistaCotizadas)
