@@ -1570,8 +1570,9 @@ document.addEventListener('keydown', e => {
 
 /* ============ BIOBRACE VIZ ============ */
 const BV = {
-  ink:'#0F172A', ink2:'#64748B', grid:'#E2E8F0', surface:'#FFFFFF', muted:'#CBD5E1',
-  cat:['#4F46E5','#0D9488','#F59E0B','#E11D48','#0284C7','#8B5CF6','#10B981','#EA580C']
+  ink:'#0C2340', ink2:'#5A6E85', grid:'#E2E8F0', surface:'#FFFFFF', muted:'#CBD5E1',
+  // Paleta oficial BioBrace: Verde Lima BioRez (#6EBA25), Azul Marino (#0B3B60), Teal, Esmeralda y acentos
+  cat:['#6EBA25', '#0B3B60', '#10B981', '#0284C7', '#84CC16', '#0369A1', '#059669', '#38BDF8']
 };
 // Colores fijos de género en todas las gráficas (actuales y futuras): femenino rosado, masculino azul rey
 const BV_GENERO = { F:'#E8679A', M:'#1F4FD8' };
@@ -2944,7 +2945,7 @@ function lgVistaMensual(d, s){
   const lbl = Object.assign({}, bvLabelEnd, { formatter:(v, ctx) => ctx.dataIndex <= ultM ? rvFmt(v || 0) : '' });
   const datasets = [];
   if(hayPre) datasets.push({ label:String(s.anio - 1), data:pre, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:18 });
-  datasets.push({ label:String(s.anio), data:cur, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:hayPre ? 18 : 30, datalabels:lbl });
+  datasets.push({ label:String(s.anio), data:cur, backgroundColor:'#D9822B', borderRadius:5, borderSkipped:'bottom', maxBarThickness:hayPre ? 18 : 30, datalabels:lbl });
   const cls = x => x === null ? '' : (x >= 0 ? 'dash-good' : 'dash-bad');
   return {
     id:'mensual', file:'Lipogems_mensual_' + s.anio,
@@ -2995,9 +2996,9 @@ function lgVistaAnios(d, s){
       { l:'Promedio por año', v:rvFmt(Math.round(total / an.length)) },
       { l:ultAnio + ' vs mismo tramo ' + (ultAnio - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT >= 0 ? 'dash-good' : 'dash-bad') },
     ],
-    charts:[
-      { h:320, half:true, cfg:barra(ven, BV.cat[0], 'Ventas por año') },
-      { h:320, half:true, cfg:barra(prom, BV.cat[1], 'Promedio mensual') }
+charts:[
+      { h:320, half:true, cfg:barra(ven, '#D9822B', 'Ventas por año') },
+      { h:320, half:true, cfg:barra(prom, '#213D5A', 'Promedio mensual') }
     ],
     table:{
       head:['Año', 'Ventas', 'Meses con ventas', 'Promedio mensual', 'Variación'],
@@ -3052,7 +3053,7 @@ function lgVistaInventario(d, s){
     ],
     charts:[
       { h:320, half:true, pdfH:200, cfg:{ type:'doughnut', plugins:[bvCenterPlugin],
-        data:{ labels:['Vendido · ' + rvFmt(tVentas), 'Disponible · ' + rvFmt(actual)], datasets:[{ data:[tVentas, actual], backgroundColor:[BV.cat[0], BV.muted], borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] },
+        data:{ labels:['Vendido · ' + rvFmt(tVentas), 'Disponible · ' + rvFmt(actual)], datasets:[{ data:[tVentas, actual], backgroundColor:['#D9822B', '#E2E8F0'], borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] },
         options:po } },
       { h:320, half:true, pdfH:200, cfg:{ type:'bar', data:{ labels:an.map(String), datasets:[
           { label:'Compradas', data:compras, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:22, datalabels:Object.assign({}, bvLabelEnd) },
@@ -4485,16 +4486,15 @@ function renderChart(){
   const axisMax = Math.max(1, Math.ceil(maxVal * 1.3) + 2);
   const stepSize = Math.max(1, Math.ceil(axisMax / 6));
 
-  // Paleta moderna con degradados armónicos
-  const PALETA_DASH = [
-    ['#4F46E5', '#818CF8'], // 1. Índigo vibrante
-    ['#0D9488', '#2DD4BF'], // 2. Esmeralda / Teal
-    ['#F59E0B', '#FCD34D'], // 3. Ámbar dorado
-    ['#E11D48', '#FB7185'], // 4. Coral rosado
-    ['#0284C7', '#38BDF8'], // 5. Celeste cielo
-    ['#7C3AED', '#A78BFA'], // 6. Violeta real
-    ['#059669', '#34D399'], // 7. Verde menta
-    ['#EA580C', '#FDBA74']  // 8. Naranja cálido
+  // Paleta insignia de tus 5 marcas (con gradientes elegantes)
+  const PALETA_MARCAS = [
+    ['#D9822B', '#F5A623'], // 1. Lipogems (Ámbar Ocre)
+    ['#6EBA25', '#8EE03A'], // 2. Biobrace (Verde Lima BioRez)
+    ['#F7941D', '#FFB84D'], // 3. MTF Biologics (Naranja Dorado)
+    ['#E31B23', '#FF4D55'], // 4. HemaClear (Rojo Quirúrgico)
+    ['#004F8C', '#2563EB'], // 5. Parcus Suturas (Azul Cobalto)
+    ['#0D9488', '#2DD4BF'], // 6. Acento Teal / Implantes
+    ['#7C3AED', '#A78BFA']  // 7. Acento Púrpura Torre
   ];
 
   chartInstance = new Chart(ctx, {
@@ -4505,7 +4505,7 @@ function renderChart(){
         label: `Unidades vendidas ${yearLabel}`,
         data: entries.map(([,v]) => v),
         backgroundColor: entries.map((_, i) => {
-          const par = PALETA_DASH[i % PALETA_DASH.length];
+          const par = PALETA_MARCAS[i % PALETA_MARCAS.length];
           const grad = ctx.createLinearGradient(0, 0, 500, 0);
           grad.addColorStop(0, par[0]);
           grad.addColorStop(1, par[1]);
@@ -4513,7 +4513,7 @@ function renderChart(){
         }),
         borderRadius: 6,
         borderSkipped: false,
-        maxBarThickness: 26,
+        maxBarThickness: 24,
       }]
     },
     options: {
@@ -4526,10 +4526,10 @@ function renderChart(){
           anchor: 'end',
           align: 'end',
           clip: false,
-          font: { weight: '600', size: 14, family: '"Segoe UI", sans-serif' },
+          font: { weight: '700', size: 13, family: '"Segoe UI", sans-serif' },
           labels: {
             qty: {
-              color: '#0F172A',
+              color: '#0B2545',
               offset: 6,
               formatter: (value) => value ? `${value}` : null
             },
@@ -4538,7 +4538,7 @@ function renderChart(){
               offset: (ctx) => {
                 const value = ctx.dataset.data[ctx.dataIndex];
                 if(!value) return 6;
-                const font = '600 14px "Segoe UI", sans-serif';
+                const font = '700 13px "Segoe UI", sans-serif';
                 const qtyWidth = measureTextWidth(`${value}`, font);
                 return 6 + qtyWidth + 8;
               },
@@ -4552,8 +4552,8 @@ function renderChart(){
         },
         tooltip: {
           backgroundColor: '#0F172A',
-          titleFont: { size: 13, weight: '700' },
-          bodyFont: { size: 12 },
+          titleFont: { size: 12, weight: '700' },
+          bodyFont: { size: 11.5 },
           padding: 10,
           cornerRadius: 8
         }
