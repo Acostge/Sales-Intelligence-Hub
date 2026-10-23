@@ -1570,8 +1570,8 @@ document.addEventListener('keydown', e => {
 
 /* ============ BIOBRACE VIZ ============ */
 const BV = {
-  ink:'#1E2A32', ink2:'#5B6B78', grid:'#E3E9ED', surface:'#FFFFFF', muted:'#C3CDD5',
-  cat:['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948']
+  ink:'#0F172A', ink2:'#64748B', grid:'#E2E8F0', surface:'#FFFFFF', muted:'#CBD5E1',
+  cat:['#4F46E5','#0D9488','#F59E0B','#E11D48','#0284C7','#8B5CF6','#10B981','#EA580C']
 };
 // Colores fijos de género en todas las gráficas (actuales y futuras): femenino rosado, masculino azul rey
 const BV_GENERO = { F:'#E8679A', M:'#1F4FD8' };
@@ -1642,25 +1642,35 @@ function bvParse(rows){
 
 function bvOpts(o){
   o = o || {};
-  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:12 } };
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:11.5 } };
   return {
     responsive:true, maintainAspectRatio:false,
-    animation:{ duration:600, easing:'easeOutQuart' },
+    animation:{ duration:550, easing:'easeOutQuart' },
     layout:{ padding:{ top:o.top !== undefined ? o.top : 22, right:8 } },
     interaction:{ mode:'index', intersect:false },
     plugins:{
       legend:{ display:!!o.legend, position:'bottom', labels:{
-        usePointStyle:true, pointStyle:'circle', boxWidth:8, boxHeight:8, padding:16, color:BV.ink2,
+        usePointStyle:true, pointStyle:'circle', boxWidth:7, boxHeight:7, padding:14, color:BV.ink,
         font:{ family:BV_FONT, size:12 }, filter:it => !String(it.text).startsWith('__') } },
-      tooltip:{ backgroundColor:'#082B44', titleColor:'#FFFFFF', bodyColor:'#DCEFF9', footerColor:'#8CF0C4', padding:10,
-        cornerRadius:8, boxPadding:4, usePointStyle:true, titleFont:{ family:BV_FONT, weight:'normal' }, bodyFont:{ family:BV_FONT },
+      tooltip:{
+        backgroundColor:'rgba(15, 23, 42, 0.92)',
+        titleColor:'#FFFFFF',
+        bodyColor:'#E2E8F0',
+        footerColor:'#34D399',
+        padding:10,
+        cornerRadius:8,
+        boxPadding:4,
+        usePointStyle:true,
+        titleFont:{ family:BV_FONT, weight:'600', size:12 },
+        bodyFont:{ family:BV_FONT, size:11.5 },
         filter:it => !String(it.dataset.label).startsWith('__'),
-        callbacks:o.stacked ? { footer:items => 'Total: ' + rvFmt(items.reduce((s, i) => s + (i.parsed.y || 0), 0)) } : {} },
+        callbacks:o.stacked ? { footer:items => 'Total: ' + rvFmt(items.reduce((s, i) => s + (i.parsed.y || 0), 0)) } : {}
+      },
       datalabels:{ display:false }
     },
     scales:{
       x:{ stacked:!!o.stacked, grid:{ display:false }, border:{ display:false }, ticks:tick },
-      y:{ stacked:!!o.stacked, beginAtZero:true, grid:{ color:BV.grid, drawTicks:false }, border:{ display:false },
+      y:{ stacked:!!o.stacked, beginAtZero:true, grid:{ color:BV.grid, borderDash:[4, 4], drawTicks:false }, border:{ display:false },
           ticks:Object.assign({ precision:0, padding:8 }, tick) }
     }
   };
