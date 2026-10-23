@@ -1591,6 +1591,27 @@ function bvFecha(v){
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
 }
+
+/* Detector automático de color según el nombre del modelo (ideal para HemaClear) */
+function getColorPorModelo(nombre, indexFallback = 0) {
+  const norm = String(nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  if (norm.includes('yellow') || norm.includes('amarill')) return '#EAB308';
+  if (norm.includes('orange') || norm.includes('naranj')) return '#EA580C';
+  if (norm.includes('brown') || norm.includes('marron') || norm.includes('cafe')) return '#78350F';
+  if (norm.includes('black') || norm.includes('white') || norm.includes('negro') || norm.includes('blanco')) return '#1E293B';
+  if (norm.includes('pink') || norm.includes('rosa')) return '#EC4899';
+  if (norm.includes('green') || norm.includes('verd')) return '#16A34A';
+  if (norm.includes('red') || norm.includes('roj')) return '#DC2626';
+  if (norm.includes('blue') || norm.includes('azul')) return '#2563EB';
+  if (norm.includes('turqu') || norm.includes('xxl')) return '#0D9488';
+  if (norm.includes('model a') || norm.includes('tobillo')) return '#0284C7';
+  if (norm.includes('model f') || norm.includes('mano')) return '#7C3AED';
+
+  // Si no coincide con ningún color (ej: Biobrace 5x250), usa la paleta normal
+  return BV.cat[indexFallback % BV.cat.length];
+}
+
 function bvModelo(talla){
   const raw = String(talla || '').trim();
   const m = raw.replace(/\s+/g, '').toLowerCase().match(/^(rc)?(\d+)x(\d+)(mm)?$/);
@@ -1632,9 +1653,9 @@ function bvParse(rows){
   regs.forEach(r => { if(!info[r.modelo.key]){ info[r.modelo.key] = r.modelo; keys.push(r.modelo.key); } });
   const fijos = Object.keys(BV_FIJOS).filter(k => info[k]);
   const otros = keys.filter(k => !(k in BV_FIJOS));
-  const modelos = fijos.concat(otros).map(k => ({
+const modelos = fijos.concat(otros).map((k, idx) => ({
     key:k, label:info[k].label,
-    color:BV.cat[(k in BV_FIJOS ? BV_FIJOS[k] : 4 + otros.indexOf(k)) % 8]
+    color: getColorPorModelo(info[k].label, (k in BV_FIJOS ? BV_FIJOS[k] : 4 + otros.indexOf(k)))
   }));
   const anios = [...new Set(regs.map(r => r.anio))].sort((a, b) => a - b);
   const fechas = regs.filter(r => r.fecha).map(r => r.fecha.getTime());
@@ -1735,7 +1756,15 @@ function bvVistaCierre(d, s){
       type:'bar',
       data:{ labels:mod.map(m => m.label), datasets:[
         { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:vP, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:24 },
-        { label:BV_MES3[s.mes] + ' ' + s.anio, data:vC, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:'bottom', maxBarThickness:24, datalabels:bvLabelEnd }
+        { 
+          label:BV_MES3[s.mes] + ' ' + s.anio, 
+          data:vC, 
+          backgroundColor: mod.map((m, i) => getColorPorModelo(m.label, i)), 
+          borderRadius: 6, 
+          borderSkipped: 'bottom', 
+          maxBarThickness: 24, 
+          datalabels: bvLabelEnd 
+        }
       ] },
       options:bvOpts({ legend:true })
     } }],
