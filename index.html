@@ -1463,6 +1463,18 @@ const RESUMEN_LINEAS = [
       { id:'costos',     label:'Unidades vs costos',    render:spRender('costos') },
       { id:'costokit',   label:'Costo por unidad',      render:spRender('costokit') },
       { id:'importacion',label:'Costo de importación',  render:spRender('importacion') }
+    ] },
+  { id:'esterilizacion', nombre:'ESTERILIZACIÓN', gid:'1556417137',
+    opciones:[
+      { id:'cierre',        label:'Gasto del mes',          render:esRender('cierre') },
+      { id:'mensual',       label:'Gasto por mes',          render:esRender('mensual') },
+      { id:'tipo',          label:'Gasto anual por tipo',   render:esRender('tipo') },
+      { id:'anios',         label:'Gasto por año',          render:esRender('anios') },
+      { id:'instituciones', label:'Top 10 instituciones',   render:esRender('instituciones') },
+      { id:'costocaja',     label:'Costo por caja',         render:esRender('costocaja') },
+      { id:'tipocx',        label:'Por tipo de cirugía',    render:esRender('tipocx') },
+      { id:'vg',            label:'Ahorro VG - PIEMCA',     render:esRender('vg') },
+      { id:'sinoficina',    label:'Si no se esteriliza en oficina', render:esRender('sinoficina') }
     ] }
 ];
 
@@ -2937,6 +2949,410 @@ function cmpAviso(d){
   if(!d.comprasInfo || !d.comprasInfo.conectada) return 'Falta conectar la pestaña ' + COMPRAS_PESTANA.nombre + ': pega su gid en COMPRAS_PESTANA (en el index) y publícala en la web como CSV.';
   return 'En la pestaña ' + COMPRAS_PESTANA.nombre + ' todavía no hay compras de esta línea con costos. La app las reconoce por el proveedor o la descripción (palabras en COMPRAS_LINEAS).';
 }
+
+/* ============ ESTERILIZACIÓN VIZ (gastos por esterilización externa; azul claro = Vapor, verde = Sterrad) ============ */
+const ES_COL = { vapor:'#3FA9D9', sterrad:'#4F9D3A' };
+const ES_EXTRA = ['#5B6B78', '#9AD8F2', '#8FBF7F', '#2B88B8'];
+const ES_CAT = ['#3FA9D9', '#4F9D3A', '#2B88B8', '#8FBF7F', '#9AD8F2', '#5B6B78', '#0B3B5C', '#BFE7F8'];
+const esUsd = n => '$' + Number(n || 0).toLocaleString('es-ES', { useGrouping:'always', maximumFractionDigits:0 });
+const esUsd2 = n => '$' + rvUsd2(n || 0);
+const esSum = (regs, k) => regs.reduce((t, r) => t + (r[k || 'monto'] || 0), 0);
+const esLblUsd = Object.assign({}, bvLabelEnd, { formatter:v => v ? esUsd(v) : '' });
+const esEsVG = r => { const k = r.instKey; return k.includes('vg') && k.includes('piemca'); };
+
+function esParse(rows){
+  const head = (rows[0] || []).map(bvNorm);
+  const col = (pos, ...names) => { const i = head.findIndex(h => names.some(n => h === n || h.startsWith(n))); return i >= 0 ? i : (head.length >= 11 ? pos : -1); };
+  const ix = { inst:col(2, 'institucion'), fecha:col(4, 'fecha'), monto:col(7, 'monto $', 'monto usd', 'monto $.'), tipo:col(8, 'tipo de cx', 'tipo'), cajas:col(9, 'cant'), metodo:col(10, 'metodo') };
+  const nombres = { inst:'Institución', fecha:'Fecha', monto:'Monto $', cajas:'Cant. cajas', metodo:'Método de esterilización' };
+  const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
+  if(faltan.length) return { error:'La pestaña Esterilización no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  const regs = [];
+  rows.slice(1).forEach(r => {
+    const inst = String(r[ix.inst] || '').trim().replace(/\s+/g, ' '), f = bvFecha(r[ix.fecha]);
+    const monto = rvNum(r[ix.monto]) || 0, cajas = rvNum(r[ix.cajas]);
+    if(!f || (!inst && !monto)) return;              // el año sale siempre de la FECHA
+    const mLab = String(r[ix.metodo] || '').trim().replace(/\s+/g, ' ') || 'Sin método';
+    const mKey = bvNorm(mLab).includes('vapor') ? 'vapor' : (bvNorm(mLab).includes('sterrad') ? 'sterrad' : bvNorm(mLab));
+    regs.push({ anio:f.getFullYear(), fecha:f, mes:f.getMonth(), inst:inst || 'Sin institución', instKey:bvNorm(inst), metodo:mKey,
+      tipoCx:ix.tipo >= 0 ? String(r[ix.tipo] || '').trim() : '', cajas:cajas === null ? 0 : cajas, monto });
+  });
+  const tot = {}, lab = {};
+  regs.forEach(r => { tot[r.metodo] = (tot[r.metodo] || 0) + r.monto; lab[r.metodo] = lab[r.metodo] || (r.metodo === 'vapor' ? 'Vapor' : (r.metodo === 'sterrad' ? 'Sterrad' : r.metodo.charAt(0).toUpperCase() + r.metodo.slice(1))); });
+  const orden = k => k === 'vapor' ? -2 : (k === 'sterrad' ? -1 : 0);
+  let n = 0;
+  const metodos = Object.keys(tot).sort((a, b) => orden(a) - orden(b) || tot[b] - tot[a]).map(k => ({ key:k, label:lab[k], color:ES_COL[k] || ES_EXTRA[n++ % ES_EXTRA.length] }));
+  const fechas = regs.map(r => r.fecha.getTime());
+  return { regs, metodos, anios:[...new Set(regs.map(r => r.anio))].sort((a, b) => a - b), ultima:fechas.length ? new Date(Math.max(...fechas)) : null };
+}
+function esSel(d){
+  const st = rvState.es || (rvState.es = {});
+  if(!d.anios.includes(st.anio)) st.anio = d.anios[d.anios.length - 1];
+  if(st.periodo === undefined || (st.periodo !== 'todo' && !d.anios.includes(st.periodo))) st.periodo = 'todo';
+  const ms = [...new Set(d.regs.filter(r => r.anio === st.anio).map(r => r.mes))].sort((a, b) => a - b);
+  if(!ms.length) st.mes = 0;
+  else if(st.mes === undefined || !ms.includes(st.mes)) st.mes = ms[ms.length - 1];
+  return st;
+}
+const esMesesAct = (d, a) => new Set(d.regs.filter(r => r.anio === a).map(r => r.mes)).size;
+const esPer = p => p === 'todo' ? 'Histórico general' : 'Año ' + p;
+const esEn = p => r => p === 'todo' || r.anio === p;
+function esOptsUsd(o){
+  const op = bvOpts(o);
+  const antes = op.plugins.tooltip.callbacks || {};
+  op.plugins.tooltip.callbacks = Object.assign({}, antes, { label:c => ' ' + c.dataset.label + ': ' + esUsd2(c.parsed.y !== undefined && !c.chart.options.indexAxis ? c.parsed.y : c.parsed.x) });
+  if(o && o.stacked) op.plugins.tooltip.callbacks.footer = items => 'Total: ' + esUsd2(items.reduce((t, i) => t + (i.parsed.y || 0), 0));
+  return op;
+}
+function esBarrasH(labels, datasets){
+  const tick = { color:BV.ink2, font:{ family:BV_FONT, size:11 } };
+  const o = bvOpts({ legend:datasets.length > 1, top:4 });
+  o.indexAxis = 'y'; o.interaction = { mode:'nearest', axis:'y', intersect:false }; o.layout.padding = { top:4, right:48 };
+  o.scales = { x:{ beginAtZero:true, grid:{ display:false }, border:{ display:false }, ticks:{ display:false } },
+    y:{ grid:{ display:false }, border:{ display:false }, ticks:Object.assign({ autoSkip:false }, tick) } };
+  o.plugins.tooltip.callbacks = { label:c => ' ' + c.dataset.label + ': ' + (c.dataset.esTxt ? c.dataset.esTxt(c.parsed.x) : esUsd2(c.parsed.x)) };
+  return { type:'bar', data:{ labels:labels.map(t => spWrap(t, 30)), datasets:datasets.map(ds => Object.assign({ borderRadius:4, borderSkipped:'start', maxBarThickness:datasets.length > 1 ? 13 : 20, datalabels:esLblUsd }, ds)) }, options:o };
+}
+const esAltoH = (n, k) => 50 + n * (k > 1 ? 44 : 32);
+// Cuadro agrupado por método (Vapor / Sterrad): una fila de subtotal resaltada y debajo sus instituciones, con una línea en blanco entre grupos
+function esTablaGrupos(d, regs, cols, o){
+  o = o || {};
+  const rows = [], hl = [], sumC = cols.map(() => 0);
+  let T = 0;
+  const grupos = d.metodos.map(m => {
+    const rs = regs.filter(r => r.metodo === m.key);
+    const insts = {};
+    rs.forEach(r => { insts[r.inst] = (insts[r.inst] || 0) + r.monto; });
+    const lista = Object.keys(insts).map(k => { const rr = rs.filter(r => r.inst === k); const v = cols.map(c => esSum(rr.filter(c.f))); return { nombre:k, v, t:o.total ? o.total(v) : v.reduce((a, b) => a + b, 0) }; })
+      .filter(x => x.t > 0 || x.v.some(Boolean)).sort((a, b) => b.t - a.t || a.nombre.localeCompare(b.nombre, 'es'));
+    const v = cols.map(c => esSum(rs.filter(c.f))), t = o.total ? o.total(v) : v.reduce((a, b) => a + b, 0);
+    return { m, v, t, lista };
+  });
+  T = grupos.reduce((a, g) => a + g.t, 0);
+  grupos.forEach((g, gi) => {
+    if(gi) rows.push([''].concat(cols.map(() => ''), ['', '']));
+    hl.push(rows.length);
+    rows.push([g.m.label.toUpperCase()].concat(g.v.map(x => x || ''), [g.t || '', bvShare(g.t, T)]));
+    g.v.forEach((x, i) => { sumC[i] += x; });
+    g.lista.forEach(x => rows.push([x.nombre].concat(x.v.map(y => y || ''), [x.t || '', bvShare(x.t, g.t)])));
+  });
+  const n = cols.length + 2;
+  return { head:['Institución'].concat(cols.map(c => c.label), ['Total', '% del grupo / total']), rows, hlRows:hl, money:Array.from({ length:cols.length + 1 }, (_, i) => i + 1),
+    foot:['Total'].concat(sumC.map(x => x || ''), [T || '', T ? '100%' : '—']), total:T, nCols:n };
+}
+const esKpiMetodos = regs => ({ l:'Vapor · Sterrad', v:esUsd(esSum(regs.filter(r => r.metodo === 'vapor'))) + ' · ' + esUsd(esSum(regs.filter(r => r.metodo === 'sterrad'))) });
+const esDetalle = regs => ({ head:['Fecha', 'Institución', 'Tipo de Cx', 'Método', 'Cajas', 'Monto $'],
+  rows:regs.map(r => [bvFechaTxt(r.fecha), r.inst, r.tipoCx, r.metodo === 'vapor' ? 'Vapor' : (r.metodo === 'sterrad' ? 'Sterrad' : r.metodo), r.cajas, r.monto]) });
+
+function esVistaCierre(d, s){
+  const prev = bvPrev(s.anio, s.mes);
+  const fC = r => r.anio === s.anio && r.mes === s.mes, fP = r => r.anio === prev.anio && r.mes === prev.mes, fA = r => r.anio === s.anio && r.mes <= s.mes;
+  const cols = [{ label:BV_MESES[prev.mes] + ' ' + prev.anio, f:fP }, { label:BV_MESES[s.mes] + ' ' + s.anio, f:fC }, { label:'Acumulado ' + s.anio, f:fA }];
+  const t = esTablaGrupos(d, d.regs, cols, { total:v => v[2] });
+  const filaVar = (P, C) => P ? bvPctTxt(bvVar(C, P)) : (C ? 'nuevo' : '—');
+  const rows = t.rows.map(r => { if(r[0] === '') return ['', '', '', '', '']; const P = r[1] || 0, C = r[2] || 0; return [r[0], P || '', C || '', filaVar(P, C), r[3] || '']; });
+  const tP = esSum(d.regs.filter(fP)), tC = esSum(d.regs.filter(fC)), tA = esSum(d.regs.filter(fA)), v = bvVar(tC, tP);
+  const mC = d.metodos.map(m => esSum(d.regs.filter(r => r.metodo === m.key && fC(r)))), mP = d.metodos.map(m => esSum(d.regs.filter(r => r.metodo === m.key && fP(r))));
+  const po = bvOpts({ legend:true, top:4 });
+  po.cutout = '66%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {}; po.layout.padding = { top:4, right:4 };
+  po.plugins.bvCenter = { valor:esUsd(tC), texto:'gasto del mes' };
+  po.plugins.tooltip.callbacks = { label:c => ' ' + c.label.split(' · ')[0] + ': ' + esUsd2(c.parsed) };
+  const cajas = d.regs.filter(fC).reduce((a, r) => a + r.cajas, 0);
+  return {
+    id:'cierre', file:'Esterilizacion_cierre_' + s.anio + '-' + bvPad(s.mes + 1),
+    title:'Gasto total del mes · ' + BV_MESES[s.mes] + ' ' + s.anio, sub:'Vapor y Sterrad: ' + BV_MESES[s.mes] + ' contra ' + BV_MESES[prev.mes] + ' y acumulado del año',
+    kpis:[
+      { l:'Gasto de ' + BV_MESES[s.mes].toLowerCase(), v:esUsd(tC) },
+      { l:'Mes anterior', v:esUsd(tP) },
+      { l:'Variación', v:bvPctTxt(v), cls:v === null ? '' : (v <= 0 ? 'dash-good' : 'dash-bad') },
+      { l:'Acumulado ' + s.anio, v:esUsd(tA) },
+      { l:'Cajas del mes', v:rvFmt(cajas) }
+    ],
+    charts:[
+      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:d.metodos.map(m => m.label), datasets:[
+        { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:mP, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:esLblUsd },
+        { label:BV_MES3[s.mes] + ' ' + s.anio, data:mC, backgroundColor:d.metodos.map(m => m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:esLblUsd }] }, options:esOptsUsd({ legend:true }) } },
+      { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:d.metodos.map((m, i) => m.label + ' · ' + esUsd(mC[i]) + ' (' + bvShare(mC[i], tC) + ')'),
+        datasets:[{ data:mC, backgroundColor:d.metodos.map(m => m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } }
+    ],
+    table:{ head:['Institución', cols[0].label, cols[1].label, 'Variación', cols[2].label], rows, hlRows:t.hlRows, money:[1, 2, 4], foot:['Total', tP || '', tC || '', bvPctTxt(v), tA || ''] },
+    detail:d.regs.filter(fC)
+  };
+}
+
+function esVistaMensual(d, s){
+  const regs = d.regs.filter(r => r.anio === s.anio);
+  const cols = BV_MES3.map((m, j) => ({ label:m, f:r => r.mes === j }));
+  const t = esTablaGrupos(d, regs, cols);
+  const matriz = d.metodos.map(m => BV_MES3.map((_, j) => esSum(regs.filter(r => r.metodo === m.key && r.mes === j))));
+  const totM = BV_MES3.map((_, j) => matriz.reduce((a, f) => a + f[j], 0));
+  const total = esSum(regs), activos = totM.filter(x => x > 0).length || 1, mejor = totM.indexOf(Math.max(...totM));
+  const cfg = bvStackedCfg(BV_MES3, d.metodos, matriz);
+  cfg.options = esOptsUsd({ legend:true, stacked:true });
+  cfg.data.datasets[cfg.data.datasets.length - 1].datalabels = Object.assign({}, esLblUsd, { align:'top', anchor:'end' });
+  return {
+    id:'mensual', file:'Esterilizacion_mensual_' + s.anio,
+    title:'Gasto general por mes · Año ' + s.anio, sub:'Gasto de cada mes, apilado por método; el detalle por institución está en el cuadro',
+    kpis:[
+      { l:'Gasto ' + s.anio, v:esUsd(total) },
+      { l:'Mes de mayor gasto', v:total ? BV_MESES[mejor] + ' · ' + esUsd(totM[mejor]) : '—' },
+      { l:'Promedio mensual', v:esUsd(Math.round(total / activos)) },
+      esKpiMetodos(regs),
+      { l:'Cajas', v:rvFmt(regs.reduce((a, r) => a + r.cajas, 0)) }
+    ],
+    charts:[{ h:340, pdfH:270, cfg }],
+    table:t, detail:regs
+  };
+}
+
+function esVistaTipo(d, s){
+  const regs = d.regs.filter(r => r.anio === s.anio), prev = d.regs.filter(r => r.anio === s.anio - 1);
+  const T = esSum(regs), Tp = esSum(prev), cajasT = regs.reduce((a, r) => a + r.cajas, 0);
+  const g = d.metodos.map(m => ({ m, v:esSum(regs.filter(r => r.metodo === m.key)), c:regs.filter(r => r.metodo === m.key).reduce((a, r) => a + r.cajas, 0), p:esSum(prev.filter(r => r.metodo === m.key)) }));
+  const po = bvOpts({ legend:true, top:4 });
+  po.cutout = '66%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {}; po.layout.padding = { top:4, right:4 };
+  po.plugins.bvCenter = { valor:esUsd(T), texto:'gasto ' + s.anio };
+  po.plugins.tooltip.callbacks = { label:c => ' ' + c.label.split(' · ')[0] + ': ' + esUsd2(c.parsed) };
+  const v = Tp ? bvVar(T, Tp) : null;
+  return {
+    id:'tipo', file:'Esterilizacion_por_tipo_' + s.anio,
+    title:'Gasto general anual por tipo · ' + s.anio, sub:'Cuánto se gastó en esterilización por Vapor y por Sterrad, enero a diciembre',
+    kpis:[
+      { l:'Gasto ' + s.anio, v:esUsd(T) },
+      ...g.slice(0, 2).map(x => ({ l:x.m.label, v:esUsd(x.v) + ' · ' + bvShare(x.v, T) })),
+      { l:'Cajas', v:rvFmt(cajasT) },
+      { l:'Vs ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v <= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[
+      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:g.map(x => x.m.label), datasets:[{ label:'Gasto ' + s.anio, data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:80, datalabels:esLblUsd }] }, options:esOptsUsd({}) } },
+      { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:g.map(x => x.m.label + ' · ' + esUsd(x.v) + ' (' + bvShare(x.v, T) + ')'),
+        datasets:[{ data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } }
+    ],
+    table:{
+      head:['Método', 'Gasto ' + s.anio, 'Cajas', 'Costo por caja', '% del gasto', String(s.anio - 1), 'Variación'], money:[1, 3, 5],
+      rows:g.map(x => [x.m.label, x.v, x.c, x.c ? Math.round(x.v / x.c * 100) / 100 : '', bvShare(x.v, T), x.p, x.p ? bvPctTxt(bvVar(x.v, x.p)) : (x.v ? 'nuevo' : '—')]),
+      foot:['Total', T, cajasT, cajasT ? Math.round(T / cajasT * 100) / 100 : '', T ? '100%' : '—', Tp, Tp ? bvPctTxt(bvVar(T, Tp)) : '—']
+    },
+    detail:regs
+  };
+}
+
+function esVistaAnios(d, s){
+  const an = d.anios, reg = a => d.regs.filter(r => r.anio === a);
+  const por = (a, k) => esSum(reg(a).filter(r => r.metodo === k));
+  const tot = an.map(a => esSum(reg(a))), act = an.map(a => esMesesAct(d, a)), prom = tot.map((t, i) => act[i] ? Math.round(t / act[i]) : 0);
+  const matriz = d.metodos.map(m => an.map(a => por(a, m.key)));
+  const total = tot.reduce((a, b) => a + b, 0), totAct = act.reduce((a, b) => a + b, 0) || 1, mejor = tot.indexOf(Math.max(...tot));
+  const ult = an.length - 1, vT = ult > 0 && tot[ult - 1] ? bvVar(tot[ult], tot[ult - 1]) : null;
+  const cfg = bvStackedCfg(an.map(String), d.metodos, matriz);
+  cfg.options = esOptsUsd({ legend:true, stacked:true });
+  cfg.data.datasets[cfg.data.datasets.length - 1].datalabels = Object.assign({}, esLblUsd, { align:'top', anchor:'end' });
+  return {
+    id:'anios', file:'Esterilizacion_por_anio',
+    title:'Gasto en esterilización por año · Promedio mensual', sub:'Gasto anual por método y cuánto se gasta en promedio cada mes',
+    kpis:[
+      { l:'Gasto histórico', v:esUsd(total) },
+      { l:'Mejor año (más gasto)', v:an[mejor] + ' · ' + esUsd(tot[mejor]) },
+      { l:'Promedio mensual', v:esUsd(Math.round(total / totAct)) },
+      { l:'Promedio por año', v:esUsd(Math.round(total / an.length)) },
+      { l:an[ult] + ' vs ' + (an[ult] - 1), v:bvPctTxt(vT), cls:vT === null ? '' : (vT <= 0 ? 'dash-good' : 'dash-bad') }
+    ],
+    charts:[
+      { h:320, half:true, pdfH:250, cfg:cfg },
+      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:an.map(String), datasets:[{ label:'Promedio mensual', data:prom, backgroundColor:ES_CAT[2], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40, datalabels:esLblUsd }] }, options:esOptsUsd({}) } }
+    ],
+    table:{
+      head:['Año'].concat(d.metodos.map(m => m.label), ['Gasto total', 'Meses con gasto', 'Promedio mensual', 'Variación']), money:Array.from({ length:d.metodos.length + 1 }, (_, i) => i + 1).concat([d.metodos.length + 3]),
+      rows:an.map((a, i) => [String(a)].concat(matriz.map(f => f[i]), [tot[i], act[i], prom[i], i && tot[i - 1] ? bvPctTxt(bvVar(tot[i], tot[i - 1])) : '—']).map((c, k, arr) => c)),
+      foot:['Total'].concat(matriz.map(f => f.reduce((a, b) => a + b, 0)), [total, totAct, Math.round(total / totAct), ''])
+    },
+    nota:'El promedio mensual se calcula sobre los meses en que hubo gasto, sin decimales.',
+    detail:d.regs
+  };
+}
+
+// Top 10 instituciones: un panel por método, con año o histórico
+function esVistaInstituciones(d, s){
+  const p = s.periodo, en = esEn(p), an = d.anios;
+  const mapa = {};
+  d.regs.forEach(r => {
+    const x = mapa[r.inst] || (mapa[r.inst] = { n:r.inst, vg:esEsVG(r), hist:0, cajas:0, tot:0, por:{} });
+    x.hist += r.monto;
+    if(en(r)){ x.tot += r.monto; x.cajas += r.cajas; x.por[r.metodo] = (x.por[r.metodo] || 0) + r.monto; }
+  });
+  const lista = Object.values(mapa).filter(x => x.tot > 0).sort((a, b) => b.tot - a.tot || a.n.localeCompare(b.n, 'es'));
+  const T = lista.reduce((t, x) => t + x.tot, 0), top3 = lista.slice(0, 3).reduce((t, x) => t + x.tot, 0);
+  const panel = m => {
+    const top = lista.filter(x => x.por[m.key] > 0).sort((a, b) => b.por[m.key] - a.por[m.key]).slice(0, 10);
+    return { h:esAltoH(Math.max(top.length, 4), 1), pdfH:270, half:true, cfg:(() => { const c = esBarrasH(top.map(x => x.n), [{ label:m.label, data:top.map(x => x.por[m.key]), backgroundColor:top.map(x => x.vg ? '#E8A317' : m.color) }]);
+      c.options.plugins.title = { display:true, text:m.label, color:m.color, font:{ family:BV_FONT, size:15, weight:'bold' }, padding:{ bottom:14 } }; return c; })() };
+  };
+  const hlRows = lista.map((x, i) => (i < 10 || x.vg) ? i : -1).filter(i => i >= 0);
+  const pct = n => T ? (n / T * 100).toFixed(1).replace('.', ',') + '%' : '';
+  const ms = d.metodos.slice(0, 2);
+  return {
+    id:'instituciones', file:'Esterilizacion_instituciones_' + (p === 'todo' ? 'historico' : p),
+    title:'Top 10 de gasto por institución · ' + esPer(p), sub:'Top 10 de ' + lista.length + ' instituciones, separadas por método',
+    kpis:[
+      { l:'Gasto ' + (p === 'todo' ? 'histórico' : p), v:esUsd(T) },
+      { l:'Instituciones', v:rvFmt(lista.length) },
+      { l:'Institución líder', v:lista.length ? lista[0].n + ' · ' + esUsd(lista[0].tot) : '—' },
+      { l:'Top 3', v:bvShare(top3, T) },
+      { l:'Promedio por institución', v:lista.length ? esUsd(Math.round(T / lista.length)) : '—' }
+    ],
+    charts:ms.map(panel),
+    table:{
+      head:['#', 'Institución'].concat(ms.map(m => m.label), ['Gasto total', '% del total', 'Cajas', 'Histórico']), left:[1], hlRows, money:[2, 3, 4, 7],
+      rows:lista.map((x, i) => [i + 1, x.n].concat(ms.map(m => x.por[m.key] || ''), [x.tot, pct(x.tot), x.cajas, x.hist])),
+      foot:['', 'Total'].concat(ms.map(m => lista.reduce((t, x) => t + (x.por[m.key] || 0), 0) || ''), [T, T ? '100%' : '—', lista.reduce((t, x) => t + x.cajas, 0), lista.reduce((t, x) => t + x.hist, 0)])
+    },
+    nota:'Los 10 primeros están resaltados en el cuadro (y en naranja cualquier registro de VG - PIEMCA). El porcentaje es la parte de cada institución en el total del período.',
+    detail:d.regs.filter(en)
+  };
+}
+
+// Costo medio de esterilización por caja, según el monto total de cada institución
+function esPorInstitucion(d, p){
+  const mapa = {};
+  d.regs.filter(esEn(p)).forEach(r => { const x = mapa[r.inst] || (mapa[r.inst] = { n:r.inst, vg:esEsVG(r), c:0, m:0 }); x.c += r.cajas; x.m += r.monto; });
+  return Object.values(mapa).map(x => Object.assign(x, { pc:x.c ? x.m / x.c : null }));
+}
+function esVistaCostoCaja(d, s){
+  const p = s.periodo, lista = esPorInstitucion(d, p).filter(x => x.m > 0).sort((a, b) => b.c - a.c || b.m - a.m);
+  const conCaja = lista.filter(x => x.c > 0);
+  const C = lista.reduce((t, x) => t + x.c, 0), M = lista.reduce((t, x) => t + x.m, 0), media = C ? M / C : null;
+  const ord = conCaja.slice().sort((a, b) => b.pc - a.pc), top = ord.slice(0, 12);
+  const barato = ord.length ? ord[ord.length - 1] : null, caro = ord.length ? ord[0] : null;
+  const porM = d.metodos.map(m => { const r = d.regs.filter(esEn(p)).filter(x => x.metodo === m.key); const c = r.reduce((t, x) => t + x.cajas, 0); return { m, pc:c ? esSum(r) / c : null }; });
+  const c = esBarrasH(top.map(x => x.n), [{ label:'Costo por caja', data:top.map(x => Math.round(x.pc * 100) / 100), backgroundColor:top.map(x => x.vg ? '#E8A317' : ES_CAT[0]) }]);
+  c.data.datasets[0].datalabels = Object.assign({}, bvLabelEnd, { formatter:v => esUsd2(v) });
+  return {
+    id:'costocaja', file:'Esterilizacion_costo_por_caja_' + (p === 'todo' ? 'historico' : p),
+    title:'Costo medio de esterilización por caja · ' + esPer(p), sub:'Monto total de cada institución entre las cajas que esterilizó',
+    kpis:[
+      { l:'Costo medio por caja', v:media === null ? '—' : esUsd2(media) },
+      { l:'Cajas esterilizadas', v:rvFmt(C) },
+      { l:'Gasto total', v:esUsd(M) },
+      { l:'Más barata', v:barato ? barato.n + ' · ' + esUsd2(barato.pc) : '—' },
+      { l:'Más cara', v:caro ? caro.n + ' · ' + esUsd2(caro.pc) : '—' }
+    ],
+    charts:[{ h:esAltoH(Math.max(top.length, 4), 1), pdfH:Math.min(320, 40 + top.length * 24), cfg:c }],
+    table:{
+      head:['#', 'Institución', 'Cajas', 'Monto total $', 'Costo por caja', 'Vs media'], left:[1], money:[3, 4],
+      rows:lista.map((x, i) => [i + 1, x.n, x.c, x.m, x.pc === null ? '' : Math.round(x.pc * 100) / 100, x.pc === null || media === null ? '—' : bvPctTxt((x.pc - media) / media * 100)]),
+      foot:['', 'Total', C, M, media === null ? '' : Math.round(media * 100) / 100, '']
+    },
+    nota:'Costo por caja = monto en $ de la institución ÷ cajas esterilizadas. ' + porM.filter(x => x.pc !== null).map(x => x.m.label + ': ' + esUsd2(x.pc) + ' por caja').join(' · ') + '. Los registros de VG - PIEMCA salen en naranja.',
+    detail:d.regs.filter(esEn(p))
+  };
+}
+
+// Gasto por tipo de cirugía (columna TIPO DE CX)
+function esVistaTipoCx(d, s){
+  const p = s.periodo, regs = d.regs.filter(esEn(p)), mapa = {};
+  regs.forEach(r => { const k = r.tipoCx || 'Sin tipo'; const x = mapa[k] || (mapa[k] = { n:k, c:0, m:0, por:{} }); x.c += r.cajas; x.m += r.monto; x.por[r.metodo] = (x.por[r.metodo] || 0) + r.monto; });
+  const lista = Object.values(mapa).sort((a, b) => b.m - a.m), T = esSum(regs), C = regs.reduce((t, r) => t + r.cajas, 0), top = lista.slice(0, 10);
+  return {
+    id:'tipocx', file:'Esterilizacion_tipo_cirugia_' + (p === 'todo' ? 'historico' : p),
+    title:'Gasto por tipo de cirugía · ' + esPer(p), sub:'Cuánto se gasta en esterilizar las cajas de cada tipo de cirugía',
+    kpis:[
+      { l:'Gasto ' + (p === 'todo' ? 'histórico' : p), v:esUsd(T) },
+      { l:'Tipos de cirugía', v:rvFmt(lista.length) },
+      { l:'Tipo con más gasto', v:lista.length ? lista[0].n + ' · ' + bvShare(lista[0].m, T) : '—' },
+      { l:'Cajas', v:rvFmt(C) },
+      { l:'Costo medio por caja', v:C ? esUsd2(T / C) : '—' }
+    ],
+    charts:[{ h:esAltoH(Math.max(top.length, 4), 1), pdfH:Math.min(300, 40 + top.length * 26), cfg:esBarrasH(top.map(x => x.n), [{ label:'Gasto', data:top.map(x => x.m), backgroundColor:ES_CAT[0] }]) }],
+    table:{
+      head:['#', 'Tipo de cirugía'].concat(d.metodos.map(m => m.label), ['Gasto total', 'Cajas', 'Costo por caja', '% del gasto']), left:[1], hl:10, money:[2, 3, 4, 6],
+      rows:lista.map((x, i) => [i + 1, x.n].concat(d.metodos.map(m => x.por[m.key] || ''), [x.m, x.c, x.c ? Math.round(x.m / x.c * 100) / 100 : '', bvShare(x.m, T)])),
+      foot:['', 'Total'].concat(d.metodos.map(m => esSum(regs.filter(r => r.metodo === m.key)) || ''), [T, C, C ? Math.round(T / C * 100) / 100 : '', T ? '100%' : '—'])
+    },
+    detail:regs
+  };
+}
+
+const ES_SIN_VG = 'Todavía no hay esterilizaciones registradas en "VG - PIEMCA" en este período. Cuando empieces a registrarlas (con ese nombre en la columna INSTITUCIÓN) esta lámina calculará el ahorro sola.';
+// Ahorro de esterilizar en la oficina (VG - PIEMCA) frente al resto de las clínicas
+function esVistaVG(d, s){
+  const p = s.periodo, base = esPorInstitucion(d, p), vg = base.filter(x => x.vg), ext = base.filter(x => !x.vg && x.c > 0 && x.m > 0);
+  const cV = vg.reduce((t, x) => t + x.c, 0), mV = vg.reduce((t, x) => t + x.m, 0);
+  if(!cV) return { aviso:ES_SIN_VG };
+  const cE = ext.reduce((t, x) => t + x.c, 0), mE = ext.reduce((t, x) => t + x.m, 0);
+  if(!cE) return { aviso:'No hay esterilizaciones en otras clínicas para comparar con VG - PIEMCA en este período.' };
+  const pcV = mV / cV, pcE = mE / cE, ahorroCaja = pcE - pcV, ahorro = ahorroCaja * cV;
+  const lista = ext.concat([{ n:'VG - PIEMCA', vg:true, c:cV, m:mV, pc:pcV }]).sort((a, b) => a.pc - b.pc);
+  const c2 = esBarrasH(lista.map(x => x.n), [{ label:'Costo por caja', data:lista.map(x => Math.round(x.pc * 100) / 100), backgroundColor:lista.map(x => x.vg ? '#E8A317' : ES_CAT[0]) }]);
+  c2.data.datasets[0].datalabels = Object.assign({}, bvLabelEnd, { formatter:v => esUsd2(v) });
+  return {
+    id:'vg', file:'Esterilizacion_ahorro_VG_PIEMCA_' + (p === 'todo' ? 'historico' : p),
+    title:'Ahorro con VG - PIEMCA · ' + esPer(p), sub:'Esterilizar en la oficina contra el costo medio del resto de las clínicas',
+    kpis:[
+      { l:'Costo por caja VG - PIEMCA', v:esUsd2(pcV) },
+      { l:'Costo medio otras clínicas', v:esUsd2(pcE) },
+      { l:'Ahorro por caja', v:esUsd2(ahorroCaja), cls:ahorroCaja >= 0 ? 'dash-good' : 'dash-bad' },
+      { l:'Ahorro total', v:esUsd(ahorro), cls:ahorro >= 0 ? 'dash-good' : 'dash-bad' },
+      { l:'Ahorro %', v:bvPctTxt(pcE ? ahorroCaja / pcE * 100 : null), cls:ahorroCaja >= 0 ? 'dash-good' : 'dash-bad' }
+    ],
+    charts:[
+      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:['VG - PIEMCA', 'Otras clínicas (media)'], datasets:[{ label:'Costo por caja', data:[Math.round(pcV * 100) / 100, Math.round(pcE * 100) / 100], backgroundColor:['#E8A317', ES_CAT[0]],
+        borderRadius:4, borderSkipped:'bottom', maxBarThickness:70, datalabels:Object.assign({}, bvLabelEnd, { formatter:v => esUsd2(v) }) }] }, options:esOptsUsd({}) } },
+      { h:esAltoH(Math.max(lista.length, 4), 1), half:true, pdfH:Math.min(280, 40 + lista.length * 24), cfg:c2 }
+    ],
+    table:{
+      head:['Institución', 'Cajas', 'Monto total $', 'Costo por caja', 'Diferencia vs VG - PIEMCA', 'Ahorro si esas cajas se hicieran en VG'], money:[2, 3, 4, 5], hlRows:lista.map((x, i) => x.vg ? i : -1).filter(i => i >= 0),
+      rows:lista.map(x => [x.n, x.c, x.m, Math.round(x.pc * 100) / 100, x.vg ? '' : Math.round((x.pc - pcV) * 100) / 100, x.vg ? '' : Math.round((x.pc - pcV) * x.c * 100) / 100]),
+      foot:['Total', cV + cE, mV + mE, '', '', Math.round(ext.reduce((t, x) => t + (x.pc - pcV) * x.c, 0) * 100) / 100]
+    },
+    nota:'Ahorro total = (costo medio de otras clínicas − costo por caja de VG - PIEMCA) × cajas esterilizadas en VG - PIEMCA. La última columna muestra cuánto se habría ahorrado si las cajas de cada clínica se hubieran esterilizado en la oficina.',
+    detail:d.regs.filter(esEn(p))
+  };
+}
+
+// Cuánto subiría el gasto si NO se esterilizara en la oficina
+function esVistaSinOficina(d, s){
+  const p = s.periodo, base = esPorInstitucion(d, p), vg = base.filter(x => x.vg), ext = base.filter(x => !x.vg && x.c > 0 && x.m > 0);
+  const cV = vg.reduce((t, x) => t + x.c, 0), mV = vg.reduce((t, x) => t + x.m, 0);
+  if(!cV) return { aviso:ES_SIN_VG };
+  const cE = ext.reduce((t, x) => t + x.c, 0), mE = ext.reduce((t, x) => t + x.m, 0);
+  if(!cE) return { aviso:'No hay esterilizaciones en otras clínicas para estimar cuánto costaría esterilizar fuera de la oficina.' };
+  const pcE = mE / cE, esc = ext.map(x => ({ x, costo:x.pc * cV, inc:x.pc * cV - mV })).sort((a, b) => a.costo - b.costo);
+  const escMedia = pcE * cV, incMedia = escMedia - mV;
+  const c = esBarrasH(esc.map(e => e.x.n), [{ label:'Aumento del gasto', data:esc.map(e => Math.round(e.inc * 100) / 100), backgroundColor:ES_CAT[0] }]);
+  return {
+    id:'sinoficina', file:'Esterilizacion_si_no_se_esteriliza_en_oficina_' + (p === 'todo' ? 'historico' : p),
+    title:'Si no se esteriliza en la oficina · ' + esPer(p), sub:'Cuánto subiría el gasto si las cajas de VG - PIEMCA se esterilizaran en las clínicas',
+    kpis:[
+      { l:'Cajas esterilizadas en VG - PIEMCA', v:rvFmt(cV) },
+      { l:'Gasto actual en oficina', v:esUsd(mV) },
+      { l:'Gasto si fueran a clínicas (media)', v:esUsd(escMedia) },
+      { l:'Aumento estimado', v:esUsd(incMedia), cls:incMedia > 0 ? 'dash-bad' : 'dash-good' },
+      { l:'Rango de aumento', v:esUsd(esc[0].inc) + ' – ' + esUsd(esc[esc.length - 1].inc) }
+    ],
+    charts:[{ h:esAltoH(Math.max(esc.length, 4), 1), pdfH:Math.min(320, 40 + esc.length * 24), cfg:c }],
+    table:{
+      head:['Si se esterilizaran en…', 'Cajas que esteriliza hoy', 'Costo por caja', 'Costo de las ' + rvFmt(cV) + ' cajas de VG', 'Aumento del gasto', 'Aumento %'], money:[2, 3, 4],
+      rows:esc.map(e => [e.x.n, e.x.c, Math.round(e.x.pc * 100) / 100, Math.round(e.costo * 100) / 100, Math.round(e.inc * 100) / 100, mV ? bvPctTxt(e.inc / mV * 100) : '—']),
+      foot:['Media de las clínicas', cE, Math.round(pcE * 100) / 100, Math.round(escMedia * 100) / 100, Math.round(incMedia * 100) / 100, mV ? bvPctTxt(incMedia / mV * 100) : '—']
+    },
+    nota:'Estimación: cajas de VG - PIEMCA × costo individual por caja de cada clínica (y × la media ponderada de todas). No distingue de qué clínica es cada caja de la oficina.',
+    detail:d.regs.filter(esEn(p))
+  };
+}
+const ES_VISTAS = { cierre:esVistaCierre, mensual:esVistaMensual, tipo:esVistaTipo, anios:esVistaAnios, instituciones:esVistaInstituciones, costocaja:esVistaCostoCaja, tipocx:esVistaTipoCx, vg:esVistaVG, sinoficina:esVistaSinOficina };
+function esRender(id){ return (rows, el, linea) => vizRender(VIZ_ES, id, rows, el, linea); }
+const VIZ_ES = {
+  clave:'es', nombre:'ESTERILIZACIÓN', parse:esParse, vistas:ES_VISTAS, sel:esSel,
+  estado:() => rvState.es || (rvState.es = {}),
+  ctrl:{ cierre:['anio', 'mes'], mensual:['anio'], tipo:['anio'], anios:[], instituciones:['periodo'], costocaja:['periodo'], tipocx:['periodo'], vg:['periodo'], sinoficina:['periodo'] },
+  pdf:['cierre', 'mensual', 'tipo', 'anios', 'instituciones', 'costocaja', 'tipocx', 'vg', 'sinoficina'],
+  maxFilas:20,
+  pdfSel:s => Object.assign({}, s, { periodo:'todo' }),
+  cierreTxt:(d, s) => BV_MESES[s.mes] + ' ' + s.anio,
+  anioTxt:s => 'Año fiscal ' + s.anio,
+  vacio:'La pestaña Esterilización no tiene registros todavía.',
+  detalle:esDetalle
+};
 
 /* ============ LIPOGEMS VIZ ============ */
 function lgParse(rows, comprasRows){
