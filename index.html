@@ -1628,10 +1628,11 @@ function bvFecha(v){
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
 }
-function bvModelo(talla){
-  const raw = String(talla || '').trim();
-  const m = raw.replace(/\s+/g, '').toLowerCase().match(/^(rc)?(\d+)x(\d+)(mm)?$/);
-  if(!m) return { key: raw ? raw.toLowerCase() : 'sin talla', label: raw || 'Sin talla' };
+function bvModelo(texto){
+  // Acepta "5x250", "RC 23x25" o una descripción completa como "BioBrace 23x30 mm": el nombre sale de la medida que contenga
+  const raw = String(texto || '').trim();
+  const m = raw.toLowerCase().match(/(?:\b(rc)\s*)?(\d+)\s*x\s*(\d+)/);
+  if(!m) return { key: raw ? bvNorm(raw) : 'sin descripcion', label: raw || 'Sin descripción' };
   return { key: (m[1] || '') + m[2] + 'x' + m[3], label: (m[1] ? 'RC ' : '') + m[2] + ' x ' + m[3] + ' mm' };
 }
 const bvSum = a => a.reduce((s, r) => s + r.cant, 0);
@@ -1643,9 +1644,9 @@ function bvParse(rows, comprasRows){
   const head = (rows[0] || []).map(bvNorm);
   const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
   const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), tipo:col('tipo'),
-               genero:col('genero'), edad:col('edad'), talla:col('talla'), cant:col('cant') };
+               genero:col('genero'), edad:col('edad'), talla:col('descripcion', 'talla'), cant:col('cant') };   // el producto sale de la DESCRIPCIÓN (col. J); el código (col. I) no se usa
   const faltan = ['fecha', 'doctor', 'genero', 'talla', 'cant'].filter(k => ix[k] < 0);
-  if(faltan.length) return { error:'La pestaña Biobrace no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
+  if(faltan.length) return { error:'La pestaña Biobrace no tiene estas columnas: ' + faltan.map(k => k === 'talla' ? 'Descripción' : k).join(', ') + '. Revisa los títulos de la fila 1.' };
   const regs = [];
   rows.slice(1).forEach(r => {
     const doctor = String(r[ix.doctor] || '').trim();
