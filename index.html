@@ -3359,8 +3359,8 @@ const VIZ_ES = {
 function lgParse(rows, comprasRows){
   const head = (rows[0] || []).map(bvNorm);
   const col = (...names) => head.findIndex(h => names.some(n => h === n || h.startsWith(n)));
-  // La pestaña Lipogems trae solo las ventas: Ítem, Fecha, Doctor, Clínica, Paciente, Kit, Cant., N° Nota (todo lo de compras sale de "Compras #1")
-  const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), kit:col('kit'), cant:col('cant'), nota:col('n° nota', 'n nota', 'nota') };
+  // La pestaña Lipogems trae solo las ventas: Ítem, Fecha, Doctor, Clínica, Paciente, Código, Descripción (G), Cant. (H), N° Nota (todo lo de compras sale de "Compras #1")
+  const ix = { fecha:col('fecha'), doctor:col('doctor'), clinica:col('clinica'), kit:col('descripcion', 'kit'), cant:col('cant'), nota:col('n° nota', 'n nota', 'nota') };
   const nombres = { fecha:'Fecha', doctor:'Doctor', clinica:'Clínica', cant:'Cant.' };
   const faltan = Object.keys(nombres).filter(k => ix[k] < 0).map(k => nombres[k]);
   if(faltan.length) return { error:'La pestaña Lipogems no tiene estas columnas: ' + faltan.join(', ') + '. Revisa los títulos de la fila 1.' };
@@ -3708,12 +3708,19 @@ function lgVistaCostos(d){
   };
 }
 
+// Agrupa las compras por mes (un punto por mes, no por día de compra): costo = promedio ponderado (suma de $ ÷ suma de unidades)
+function lgPorMes(cs, campo){
+  const m = {};
+  cs.forEach(c => { const k = c.fecha.getFullYear() * 100 + c.fecha.getMonth(); const x = m[k] || (m[k] = { k, anio:c.fecha.getFullYear(), mes:c.fecha.getMonth(), u:0, t:0, n:0 }); x.u += c.unidades; x.t += c[campo]; x.n++; });
+  return Object.values(m).sort((a, b) => a.k - b.k).map(x => Object.assign(x, { pu:x.u ? x.t / x.u : 0, label:BV_MES3[x.mes] + ' ' + String(x.anio).slice(2) }));
+}
 function lgVistaCostoKit(d){
   const cs = d.compras.filter(c => c.unidades > 0 && c.total > 0);
   if(!d.tieneCostos || !cs.length) return { aviso:cmpAviso(d) };
-  const ck = cs.map(c => c.total / c.unidades);
+  const ms = lgPorMes(cs, 'total');
+  const ck = ms.map(x => x.pu);
   const vr = ck.map((x, i) => i ? bvVar(x, ck[i - 1]) : null);
-  const labels = cs.map(c => lgFechaCorta(c.fecha));
+  const labels = ms.map(x => x.label);
   const u = lgSuma(cs, 'unidades'), t = lgSuma(cs, 'total');
   const ult = ck.length - 1, ant = ult > 0 ? ck[ult - 1] : null;
   const cls = x => x === null ? '' : (x <= 0 ? 'dash-good' : 'dash-bad');
@@ -3723,12 +3730,12 @@ function lgVistaCostoKit(d){
   const vals = vr.map(x => x === null ? null : Math.round(x * 10) / 10);
   return {
     id:'costokit', file:'Lipogems_costo_por_kit', nota:lgNotaTotal(d),
-    title:'Costo individual de cada kit según la compra', sub:'Total USD de la compra entre las unidades compradas, y cuánto cambió frente a la anterior',
+    title:'Costo individual de cada kit por mes', sub:'Promedio de cada mes (total USD ÷ unidades compradas en el mes) y cuánto cambió frente al mes anterior',
     kpis:[
-      { l:'Compras registradas', v:rvFmt(cs.length) },
-      { l:'Último costo por kit', v:'$' + rvUsd2(ck[ult]) },
-      { l:'Variación vs compra anterior', v:bvPctTxt(vr[ult]), cls:cls(vr[ult]) },
-      { l:'Costo más bajo', v:'$' + rvUsd2(Math.min(...ck)) },
+      { l:'Meses con compras', v:rvFmt(ms.length) },
+      { l:'Último mes · costo por kit', v:'$' + rvUsd2(ck[ult]) },
+      { l:'Variación vs mes anterior', v:bvPctTxt(vr[ult]), cls:cls(vr[ult]) },
+      { l:'Mes más bajo', v:'$' + rvUsd2(Math.min(...ck)) },
       { l:'Costo promedio ponderado', v:'$' + rvUsd2(t / u) }
     ],
     charts:[
@@ -3738,11 +3745,11 @@ function lgVistaCostoKit(d){
           datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v === null ? '' : bvPctTxt(v) }) }] }, options:o2 } }
     ],
     table:{
-      head:['#', 'Fecha factura', 'Unidades', 'Total USD', 'Costo por kit (USD)', 'Variación'], left:[1], money:[3, 4],
-      rows:cs.map((c, i) => [i + 1, bvFechaTxt(c.fecha), c.unidades, c.total, Math.round(ck[i] * 100) / 100, i ? bvPctTxt(vr[i]) : '—']),
-      foot:['', 'Total', u, t, Math.round(t / u * 100) / 100, '']
+      head:['#', 'Mes', 'Compras', 'Unidades', 'Total USD', 'Costo por kit (USD)', 'Variación'], left:[1], money:[4, 5],
+      rows:ms.map((x, i) => [i + 1, BV_MESES[x.mes] + ' ' + x.anio, x.n, x.u, x.t, Math.round(ck[i] * 100) / 100, i ? bvPctTxt(vr[i]) : '—']),
+      foot:['', 'Total', cs.length, u, t, Math.round(t / u * 100) / 100, '']
     },
-    nota:ant === null ? 'Con una sola compra todavía no hay variación que comparar.' : lgNotaTotal(d),
+    nota:ant === null ? 'Con un solo mes todavía no hay variación que comparar.' : lgNotaTotal(d),
     detail:null, detalle:lgDetalleCompras(d)
   };
 }
@@ -3752,7 +3759,7 @@ function lgVistaImportacion(d){
   if(!d.tieneCostos || !cs.length) return { aviso:cmpAviso(d) };
   const u = lgSuma(cs, 'unidades'), imp = lgSuma(cs, 'imp'), neto = lgSuma(cs, 'neto'), ins = lgSuma(cs, 'otros'), tot = lgSuma(cs, 'total');
   const pu = cs.map(c => c.imp / c.unidades);
-  const labels = cs.map(c => lgFechaCorta(c.fecha));
+  const msI = lgPorMes(cs.map(c => Object.assign({}, c, { v:c.imp })), 'v'), labels = msI.map(x => x.label);
   const pctF = (a, b) => b ? bvShare(a, b) : '—';
   const po = bvOpts({ legend:true, top:4 });
   po.cutout = '68%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {};
@@ -3771,7 +3778,7 @@ function lgVistaImportacion(d){
       { l:'Unidades compradas', v:rvFmt(u) }
     ],
     charts:[
-      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Gasto de importación por kit', data:pu.map(x => Math.round(x * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
+      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Gasto de importación por kit (promedio del mes)', data:msI.map(x => Math.round(x.pu * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
           datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v ? '$' + rvUsd2(v) : '' }) }] }, options:lgOptsUsd({}) } },
       { h:320, half:true, pdfH:230, cfg:{ type:'doughnut', plugins:[bvCenterPlugin],
           data:{ labels:trozos.map(x => x[0] + ' · $' + rvUsd0(x[1]).replace('$', '')), datasets:[{ data:trozos.map(x => x[1]), backgroundColor:trozos.map(x => x[2]), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] },
