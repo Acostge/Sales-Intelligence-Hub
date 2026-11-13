@@ -3714,23 +3714,30 @@ function lgPorMes(cs, campo){
   cs.forEach(c => { const k = c.fecha.getFullYear() * 100 + c.fecha.getMonth(); const x = m[k] || (m[k] = { k, anio:c.fecha.getFullYear(), mes:c.fecha.getMonth(), u:0, t:0, n:0 }); x.u += c.unidades; x.t += c[campo]; x.n++; });
   return Object.values(m).sort((a, b) => a.k - b.k).map(x => Object.assign(x, { pu:x.u ? x.t / x.u : 0, label:BV_MES3[x.mes] + ' ' + String(x.anio).slice(2) }));
 }
+// Igual que lgPorMes pero un punto por año (para las gráficas: el precio en el extranjero casi no cambia de un año a otro)
+function lgPorAnio(cs, campo){
+  const m = {};
+  cs.forEach(c => { const k = c.fecha.getFullYear(); const x = m[k] || (m[k] = { anio:k, u:0, t:0, n:0 }); x.u += c.unidades; x.t += c[campo]; x.n++; });
+  return Object.values(m).sort((a, b) => a.anio - b.anio).map(x => Object.assign(x, { pu:x.u ? x.t / x.u : 0, label:String(x.anio) }));
+}
 function lgVistaCostoKit(d){
   const cs = d.compras.filter(c => c.unidades > 0 && c.total > 0);
   if(!d.tieneCostos || !cs.length) return { aviso:cmpAviso(d) };
   const ms = lgPorMes(cs, 'total');
   const ck = ms.map(x => x.pu);
   const vr = ck.map((x, i) => i ? bvVar(x, ck[i - 1]) : null);
-  const labels = ms.map(x => x.label);
+  const an = lgPorAnio(cs, 'total'), ca = an.map(x => x.pu), va = ca.map((x, i) => i ? Math.round(bvVar(x, ca[i - 1]) * 10) / 10 : null);
+  const labels = an.map(x => x.label);
   const u = lgSuma(cs, 'unidades'), t = lgSuma(cs, 'total');
   const ult = ck.length - 1, ant = ult > 0 ? ck[ult - 1] : null;
   const cls = x => x === null ? '' : (x <= 0 ? 'dash-good' : 'dash-bad');
   const o2 = bvOpts({});
   o2.scales.y.ticks = Object.assign({}, o2.scales.y.ticks, { callback:v => v + '%' });
   o2.plugins.tooltip.callbacks = { label:c => ' ' + c.dataset.label + ': ' + bvPctTxt(c.parsed.y) };
-  const vals = vr.map(x => x === null ? null : Math.round(x * 10) / 10);
+  const vals = va;
   return {
     id:'costokit', file:'Lipogems_costo_por_kit', nota:lgNotaTotal(d),
-    title:'Costo individual de cada kit por mes', sub:'Promedio de cada mes (total USD ÷ unidades compradas en el mes) y cuánto cambió frente al mes anterior',
+    title:'Costo individual de cada kit por año', sub:'Promedio anual (total USD ÷ unidades compradas en el año) y cuánto cambió frente al año anterior; el cuadro de abajo lo detalla mes a mes',
     kpis:[
       { l:'Meses con compras', v:rvFmt(ms.length) },
       { l:'Último mes · costo por kit', v:'$' + rvUsd2(ck[ult]) },
@@ -3739,9 +3746,9 @@ function lgVistaCostoKit(d){
       { l:'Costo promedio ponderado', v:'$' + rvUsd2(t / u) }
     ],
     charts:[
-      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Costo por kit', data:ck.map(x => Math.round(x * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
+      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Costo por kit (promedio anual)', data:ca.map(x => Math.round(x * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
           datalabels:Object.assign({}, bvLabelEnd, { formatter:v => '$' + rvUsd2(v) }) }] }, options:lgOptsUsd({}) } },
-      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Variación', data:vals, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:false, maxBarThickness:40,
+      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Variación vs año anterior', data:vals, backgroundColor:BV.cat[0], borderRadius:4, borderSkipped:false, maxBarThickness:40,
           datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v === null ? '' : bvPctTxt(v) }) }] }, options:o2 } }
     ],
     table:{
@@ -3759,7 +3766,7 @@ function lgVistaImportacion(d){
   if(!d.tieneCostos || !cs.length) return { aviso:cmpAviso(d) };
   const u = lgSuma(cs, 'unidades'), imp = lgSuma(cs, 'imp'), neto = lgSuma(cs, 'neto'), ins = lgSuma(cs, 'otros'), tot = lgSuma(cs, 'total');
   const pu = cs.map(c => c.imp / c.unidades);
-  const msI = lgPorMes(cs.map(c => Object.assign({}, c, { v:c.imp })), 'v'), labels = msI.map(x => x.label);
+  const msI = lgPorAnio(cs.map(c => Object.assign({}, c, { v:c.imp })), 'v'), labels = msI.map(x => x.label);
   const pctF = (a, b) => b ? bvShare(a, b) : '—';
   const po = bvOpts({ legend:true, top:4 });
   po.cutout = '68%'; po.interaction = { mode:'nearest', intersect:true }; po.scales = {};
@@ -3778,7 +3785,7 @@ function lgVistaImportacion(d){
       { l:'Unidades compradas', v:rvFmt(u) }
     ],
     charts:[
-      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Gasto de importación por kit (promedio del mes)', data:msI.map(x => Math.round(x.pu * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
+      { h:320, half:true, pdfH:230, cfg:{ type:'bar', data:{ labels, datasets:[{ label:'Gasto de importación por kit (promedio anual)', data:msI.map(x => Math.round(x.pu * 100) / 100), backgroundColor:BV.cat[1], borderRadius:4, borderSkipped:'bottom', maxBarThickness:40,
           datalabels:Object.assign({}, bvLabelEnd, { formatter:v => v ? '$' + rvUsd2(v) : '' }) }] }, options:lgOptsUsd({}) } },
       { h:320, half:true, pdfH:230, cfg:{ type:'doughnut', plugins:[bvCenterPlugin],
           data:{ labels:trozos.map(x => x[0] + ' · $' + rvUsd0(x[1]).replace('$', '')), datasets:[{ data:trozos.map(x => x[1]), backgroundColor:trozos.map(x => x[2]), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] },
