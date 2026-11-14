@@ -476,6 +476,65 @@
     body.rv-printing{background:#fff !important;margin:0 !important;padding:0 !important;}
   }
   
+  /* ===== GESTIÓN CONTABLE (libro de inventario Art. 177) ===== */
+  #viewContable{padding:14px 18px 40px;}
+  .gc-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:#fff;border:1px solid #e0e6ec;border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+  .gc-field{display:flex;flex-direction:column;gap:3px;min-width:92px;}
+  .gc-field.gc-grow{flex:1 1 200px;}
+  .gc-field label{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#5B6B78;}
+  .gc-field input,.gc-field select{height:32px;border:1px solid #cfd8df;border-radius:6px;padding:0 8px;font-size:13px;background:#fff;}
+  .gc-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+  .gc-aviso{font-size:12px;color:#7a5a00;background:#fff7dd;border:1px solid #f0dca0;border-radius:8px;padding:7px 12px;margin-bottom:10px;}
+  .gc-aviso:empty{display:none;}
+  .gc-scroll{overflow-x:auto;background:#fff;border:1px solid #e0e6ec;border-radius:10px;padding:16px;}
+  .gc-sheet{min-width:1500px;color:#1E2A32;font-family:Arial,Helvetica,sans-serif;}
+  .gc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:8px;}
+  .gc-top img{height:54px;}
+  .gc-top h2{margin:0;font-size:19px;text-align:right;letter-spacing:.3px;}
+  .gc-meta{display:flex;justify-content:space-between;gap:24px;font-size:10px;margin-bottom:8px;}
+  .gc-meta table{border-collapse:collapse;}
+  .gc-meta td{padding:2px 8px 2px 0;vertical-align:top;}
+  .gc-meta td.k{color:#3b4954;}
+  .gc-meta .gc-fecha{font-weight:700;font-size:12px;}
+  .gc-tbl{width:100%;border-collapse:collapse;font-size:10.5px;}
+  .gc-tbl th,.gc-tbl td{border:1px solid #9aa7b1;padding:3px 5px;}
+  .gc-tbl thead th{background:#dde9f3;color:#1E2A32;text-align:center;font-weight:700;text-transform:none;letter-spacing:0;position:static;}
+  .gc-actions .btn{background:#fff;color:#0b3b5c;border:1px solid #9fb3c4;padding:7px 12px;height:32px;}
+  .gc-actions .btn:hover{background:#eaf3fa;}
+  .gc-actions .btn-accent{height:32px;}
+  .gc-tbl .gc-metodo{background:#dde9f3;color:#1E2A32;text-align:left;font-weight:700;}
+  .gc-tbl td.n{text-align:right;white-space:nowrap;}
+  .gc-tbl td.c{text-align:center;}
+  .gc-tbl td:nth-child(2){min-width:140px;}
+  .gc-tbl td:nth-child(5){min-width:200px;}
+  @media print{.gc-tbl td:nth-child(2),.gc-tbl td:nth-child(5){min-width:0;}}
+  .gc-tbl td input{width:100%;border:none;background:transparent;font-size:10.5px;padding:1px 0;text-align:right;}
+  .gc-tbl td input.t{text-align:left;}
+  .gc-tbl td input:focus{outline:1px solid #2a78d6;background:#fff;}
+  .gc-tbl td.calc{background:#f3f7fa;}
+  .gc-tbl tbody tr:hover td{background:#f6fbff;}
+  .gc-tbl tfoot td{background:#dde9f3;font-weight:700;}
+  .gc-tbl td.x{border:none;padding:0 0 0 4px;width:18px;}
+  .gc-rm{border:none;background:none;color:#b33;cursor:pointer;font-size:13px;}
+  .gc-firmas{display:flex;gap:40px;margin-top:34px;font-size:10px;}
+  .gc-firmas div{flex:1;border-top:1px solid #333;padding-top:4px;text-align:center;}
+  @page gc{size:letter landscape;margin:8mm;}
+  @media print{
+    body.gc-printing > *:not(#gcReport){display:none !important;}
+    body.gc-printing #gcReport{display:block !important;page:gc;}
+    body.gc-printing #gcReport, body.gc-printing #gcReport *{visibility:visible !important;}
+    body.gc-printing{background:#fff !important;margin:0 !important;padding:0 !important;}
+    #gcReport .gc-sheet{min-width:0;font-size:7px;}
+    #gcReport .gc-tbl{font-size:7.4px;}
+    #gcReport .gc-tbl tfoot{display:table-row-group;}
+    #gcReport .gc-tbl td{height:13px;}
+    #gcReport .gc-tbl th,#gcReport .gc-tbl td{padding:1.6px 3px;}
+    #gcReport .gc-top img{height:40px;}
+    #gcReport .gc-top h2{font-size:15px;}
+    #gcReport .gc-tbl thead{display:table-header-group;}
+    #gcReport .gc-tbl tr{page-break-inside:avoid;}
+  }
+
   .rv-overlay, #rvReport{--rv-font:"Arial Rounded MT Bold","Varela Round","Nunito",Arial,sans-serif;}
   .rv-overlay *, #rvReport *{font-family:var(--rv-font) !important;font-weight:400 !important;}
   .rv-overlay code{font-family:Consolas,monospace !important;}
@@ -905,6 +964,7 @@
   <div class="tabs">
     <div class="tab active" data-view="TABLA" data-mod="ventas">Tabla</div>
     <div class="tab" data-view="kpi" data-mod="ventas">DASHBOARD</div>
+    <div class="tab" data-view="contable" data-mod="ventas">GESTIÓN CONTABLE</div>
     <div class="tab" data-view="despachos" data-mod="operaciones">DESPACHOS</div>
     <div class="tab" data-view="acta" data-mod="operaciones">ACTA DE ENTREGA</div>
     <div class="tab" data-view="inventario" data-mod="operaciones">INVENTARIO</div>
@@ -1073,6 +1133,25 @@
         <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
       </div>
     </div>
+  </div>
+
+  <!-- VISTA GESTIÓN CONTABLE (libro de inventario, Art. 177 RLISLR) -->
+  <div id="viewContable" class="hidden">
+    <div class="gc-bar">
+      <div class="gc-field"><label>Mes</label><select id="gcMes"></select></div>
+      <div class="gc-field"><label>Año</label><select id="gcAnio"></select></div>
+      <div class="gc-field gc-grow"><label>Razón social</label><input type="text" id="gcEmpresa"></div>
+      <div class="gc-field"><label>R.I.F.</label><input type="text" id="gcRif"></div>
+      <div class="gc-field gc-grow"><label>Responsable de la toma física</label><input type="text" id="gcResp"></div>
+      <div class="gc-actions">
+        <button type="button" class="btn" id="gcAddFila">+ Fila</button>
+        <button type="button" class="btn" id="gcCerrar" title="Las existencias de este mes pasan a ser el inventario inicial del mes siguiente">Cerrar mes</button>
+        <button type="button" class="btn" id="gcExcel">⬇ Excel (ERP)</button>
+        <button type="button" class="btn-accent" id="gcPdf">⬇ PDF (respaldo)</button>
+      </div>
+    </div>
+    <div class="gc-aviso" id="gcAviso"></div>
+    <div class="gc-scroll"><div id="gcSheet" class="gc-sheet"></div></div>
   </div>
 
   <!-- VISTA INVENTARIO -->
@@ -5305,6 +5384,202 @@ window.addEventListener('orientationchange', () => setTimeout(checkDeviceBlock, 
 
 /* ============ INICIO ============ */
 checkDeviceBlock();
+
+
+/* ============ GESTIÓN CONTABLE · LIBRO DE INVENTARIO (Art. 177 RLISLR) ============
+   Índice rápido:
+   - gcState: mes/año, datos de la empresa y filas del mes (se guardan en el navegador por mes)
+   - Cada fila: proveedor, factura, código, descripción, moneda, precio + 4 bloques numéricos:
+       ini (inventario inicial) · ent (entradas) · sal (salidas por ventas) · ret (retiros / autoconsumo)
+       Existencias (inventario final) = ini + ent − sal − ret  (se calcula sola)
+   - Cerrar mes: las existencias pasan a ser el inventario inicial del mes siguiente
+   - Exportación: PDF (respaldo, carta horizontal) y Excel (estructura del Art. 177 para el ERP)
+   Más adelante: gcFuentes() es el único lugar que cambiará cuando conectemos las pestañas de Google Sheets. */
+const GC_KEY = 'piemca_gestion_contable';
+const GC_BLOQUES = [['ini', 'INVENTARIO INICIAL'], ['ent', 'ENTRADAS'], ['sal', 'SALIDAS POR VENTAS'], ['ret', 'RETIROS / AUTOCONSUMO']];
+const GC_FIJAS = ['Ítem', 'Proveedor', 'Factura', 'Código', 'Descripción', 'Moneda', 'Precio'];
+const gcCero = () => ({ c:0, u:0 });
+const gcFilaVacia = () => ({ prov:'', fact:'', cod:'', desc:'', mon:'USD', precio:0, ini:gcCero(), ent:gcCero(), sal:gcCero(), ret:gcCero() });
+const gcState = { anio:new Date().getFullYear(), mes:new Date().getMonth(), empresa:'ARTROGEN INVERSIONES, C.A.', rif:'J-50010476-6',
+  resp:'GERMÁN ACOSTA, COORDINADOR QUIRÚRGICO.', meses:{}, demo:true };
+const gcNum = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : 0; };
+const gcR2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const gcFmt = n => (n || n === 0) ? Number(n).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2, useGrouping:'always' }) : '';
+const gcKey = () => gcState.anio + '-' + bvPad(gcState.mes + 1);
+const gcKeyPrev = () => { const p = bvPrev(gcState.anio, gcState.mes); return p.anio + '-' + bvPad(p.mes + 1); };
+const gcKeySig = () => { const a = gcState.mes === 11 ? gcState.anio + 1 : gcState.anio, m = gcState.mes === 11 ? 0 : gcState.mes + 1; return a + '-' + bvPad(m + 1); };
+const gcT = x => gcR2(x.c * x.u);
+function gcExist(f){
+  const c = gcR2(f.ini.c + f.ent.c - f.sal.c - f.ret.c), t = gcR2(gcT(f.ini) + gcT(f.ent) - gcT(f.sal) - gcT(f.ret));
+  return { c, t, u:c ? gcR2(t / c) : 0 };
+}
+function gcDemo(){
+  const f = (prov, fact, cod, desc, mon, precio, ini, ent, sal, ret) => Object.assign(gcFilaVacia(), { prov, fact, cod, desc, mon, precio, ini, ent, sal, ret });
+  return [
+    f('Lipogems International', 'F-0001', 'LGOK60', 'Lipogems - Ortho Kit 60', 'USD', 400, { c:12, u:395.5 }, { c:10, u:402.3 }, { c:9, u:395.5 }, gcCero()),
+    f('Lipogems International', 'F-0001', 'LGOK240', 'Lipogems - Ortho Kit 240', 'USD', 520, { c:4, u:510 }, { c:0, u:0 }, { c:2, u:510 }, { c:1, u:510 }),
+    f('Biobrace Medical', 'F-0210', 'BB5x250', 'BioBrace 5x250 mm', 'USD', 1150, { c:6, u:1000 }, { c:5, u:1050 }, { c:4, u:1000 }, gcCero()),
+    f('Hemaclear', 'F-0087', 'HC-01', 'Hemaclear Estándar', 'USD', 45, { c:30, u:42 }, { c:20, u:45 }, { c:18, u:42 }, { c:2, u:42 })
+  ];
+}
+function gcGuardar(){
+  try{ localStorage.setItem(GC_KEY, JSON.stringify({ empresa:gcState.empresa, rif:gcState.rif, resp:gcState.resp, meses:gcState.meses, demo:gcState.demo })); }catch(e){}
+}
+function gcCargar(){
+  try{
+    const s = JSON.parse(localStorage.getItem(GC_KEY) || 'null');
+    if(s){ ['empresa', 'rif', 'resp'].forEach(k => { if(s[k] !== undefined) gcState[k] = s[k]; }); gcState.meses = s.meses || {}; gcState.demo = !!s.demo; }
+  }catch(e){}
+}
+// Punto único de entrada de datos: hoy los del propio libro (lo guardado o el ejemplo); luego se conectará a las pestañas de Google Sheets
+function gcFilas(){
+  const k = gcKey();
+  if(!gcState.meses[k]){
+    const prev = gcState.meses[gcKeyPrev()];
+    if(prev) gcState.meses[k] = prev.map(f => { const e = gcExist(f), n = gcFilaVacia(); Object.assign(n, { prov:f.prov, fact:f.fact, cod:f.cod, desc:f.desc, mon:f.mon, precio:f.precio, ini:{ c:e.c, u:e.u } }); return n; });
+    else gcState.meses[k] = (gcState.demo && Object.keys(gcState.meses).length === 0) ? gcDemo() : [gcFilaVacia()];
+  }
+  return gcState.meses[k];
+}
+function gcSumas(filas){
+  const s = { ini:{ c:0, t:0 }, ent:{ c:0, t:0 }, sal:{ c:0, t:0 }, ret:{ c:0, t:0 }, ex:{ c:0, t:0 } };
+  filas.forEach(f => {
+    ['ini', 'ent', 'sal', 'ret'].forEach(b => { s[b].c += f[b].c; s[b].t += gcT(f[b]); });
+    const e = gcExist(f); s.ex.c += e.c; s.ex.t += e.t;
+  });
+  Object.keys(s).forEach(k => { s[k].c = gcR2(s[k].c); s[k].t = gcR2(s[k].t); });
+  return s;
+}
+function gcPeriodo(){
+  const fin = new Date(gcState.anio, gcState.mes + 1, 0).getDate();
+  return { ini:'01/' + bvPad(gcState.mes + 1) + '/' + gcState.anio, fin:bvPad(fin) + '/' + bvPad(gcState.mes + 1) + '/' + gcState.anio };
+}
+function gcHoy(){ const h = new Date(); return bvPad(h.getDate()) + '/' + bvPad(h.getMonth() + 1) + '/' + h.getFullYear(); }
+
+function gcHtml(edit){
+  const filas = gcFilas(), per = gcPeriodo(), S = gcSumas(filas);
+  const inp = (i, ruta, v, cls) => edit ? `<input class="${cls || ''}" data-i="${i}" data-r="${ruta}" value="${rvEsc(v)}">` : rvEsc(cls === 't' ? v : (typeof v === 'number' ? gcFmt(v) : v));
+  const nums = (i, b, f) => `<td class="n">${edit ? `<input data-i="${i}" data-r="${b}.c" value="${f[b].c || ''}">` : (f[b].c ? gcFmt(f[b].c) : '')}</td>` +
+    `<td class="n">${edit ? `<input data-i="${i}" data-r="${b}.u" value="${f[b].u || ''}">` : (f[b].u ? gcFmt(f[b].u) : '')}</td>` +
+    `<td class="n calc">${gcT(f[b]) ? gcFmt(gcT(f[b])) : ''}</td>`;
+  const relleno = edit ? '' : Array.from({ length:Math.max(0, 22 - filas.length) }, () => '<tr class="gc-blank">' + '<td></td>'.repeat(22) + '</tr>').join('');
+  const cuerpo = filas.map((f, i) => {
+    const e = gcExist(f);
+    return `<tr><td class="c">${i + 1}</td><td>${inp(i, 'prov', f.prov, 't')}</td><td>${inp(i, 'fact', f.fact, 't')}</td><td>${inp(i, 'cod', f.cod, 't')}</td><td>${inp(i, 'desc', f.desc, 't')}</td>` +
+      `<td class="c">${inp(i, 'mon', f.mon, 't')}</td><td class="n">${edit ? `<input data-i="${i}" data-r="precio" value="${f.precio || ''}">` : (f.precio ? gcFmt(f.precio) : '')}</td>` +
+      GC_BLOQUES.map(b => nums(i, b[0], f)).join('') +
+      `<td class="n calc">${gcFmt(e.c)}</td><td class="n calc">${e.c ? gcFmt(e.u) : ''}</td><td class="n calc">${gcFmt(e.t)}</td>` +
+      (edit ? `<td class="x"><button type="button" class="gc-rm" data-del="${i}" title="Quitar fila">✕</button></td>` : '') + '</tr>';
+  }).join('');
+  const tot = b => `<td class="n">${gcFmt(S[b].c)}</td><td></td><td class="n">${gcFmt(S[b].t)}</td>`;
+  const hdr3 = ['Cant.', 'C.Unit.', 'C. Total'];
+  return `<div class="gc-top"><img src="logo-artrogen.png" alt="ARTROGEN"><h2>REGISTRO DE CONTROL DE INVENTARIOS</h2></div>
+  <div class="gc-meta"><table>
+    <tr><td class="k">NOMBRE, RAZÓN SOCIAL:</td><td>${rvEsc(gcState.empresa)}</td></tr>
+    <tr><td class="k">RIF:</td><td>${rvEsc(gcState.rif)}</td></tr>
+    <tr><td class="k">RESPONSABLE DE LA TOMA FÍSICA DEL INVENTARIO:</td><td>${rvEsc(gcState.resp)}</td></tr></table>
+    <table><tr><td class="k">FECHA:</td><td class="gc-fecha">${gcHoy()}</td></tr>
+    <tr><td class="k">PERÍODO INICIAL:</td><td>${per.ini}</td></tr><tr><td class="k">PERÍODO FINAL:</td><td>${per.fin}</td></tr></table></div>
+  <table class="gc-tbl"><thead>
+    <tr><th class="gc-metodo" colspan="7">MÉTODO DE VALUACIÓN: FEFO (FIRST EXPIRED, FIRST OUT - PRIMERO EN CADUCAR, PRIMERO EN SALIR)</th>
+      ${GC_BLOQUES.map(b => `<th colspan="3">${b[1]}</th>`).join('')}<th colspan="3">EXISTENCIAS (INV. FINAL)</th></tr>
+    <tr>${GC_FIJAS.map(h => `<th>${h}</th>`).join('')}${Array(5).fill(hdr3).flat().map(h => `<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${cuerpo}${relleno}</tbody>
+  <tfoot><tr><td colspan="7" style="text-align:right;">TOTALES DEL PERÍODO</td>${tot('ini')}${tot('ent')}${tot('sal')}${tot('ret')}${tot('ex')}</tr></tfoot></table>
+  ${edit ? '' : '<div class="gc-firmas"><div>Elaborado por</div><div>Responsable de la toma física</div><div>Revisado por (Contabilidad)</div></div>'}`;
+}
+function gcRender(){
+  const el = document.getElementById('gcSheet');
+  el.innerHTML = gcHtml(true);
+  el.querySelectorAll('input[data-r]').forEach(inp => inp.addEventListener('change', () => {
+    const f = gcFilas()[+inp.dataset.i], r = inp.dataset.r.split('.');
+    const texto = ['prov', 'fact', 'cod', 'desc', 'mon'].includes(r[0]);
+    const v = texto ? inp.value.trim() : gcNum(inp.value);
+    if(r.length === 1) f[r[0]] = v; else f[r[0]][r[1]] = v;
+    gcState.demo = false; gcGuardar(); gcRender();
+  }));
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const fs = gcFilas(); fs.splice(+b.dataset.del, 1); if(!fs.length) fs.push(gcFilaVacia()); gcGuardar(); gcRender(); });
+  const hayDemo = gcState.demo;
+  document.getElementById('gcAviso').textContent = hayDemo ? 'Datos de ejemplo: así se verá el libro. Cuando conectemos las pestañas de Google Sheets se llenará solo; mientras tanto puedes escribir sobre las celdas.' : '';
+}
+function gcInit(){
+  gcCargar();
+  const sm = document.getElementById('gcMes'), sa = document.getElementById('gcAnio');
+  sm.innerHTML = BV_MESES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+  const y = new Date().getFullYear(); sa.innerHTML = [y - 3, y - 2, y - 1, y, y + 1].map(a => `<option>${a}</option>`).join('');
+  sm.value = gcState.mes; sa.value = gcState.anio;
+  [['gcEmpresa', 'empresa'], ['gcRif', 'rif'], ['gcResp', 'resp']].forEach(([id, k]) => { const e = document.getElementById(id); e.value = gcState[k]; e.addEventListener('input', () => { gcState[k] = e.value; gcGuardar(); gcRender(); }); });
+  sm.onchange = () => { gcState.mes = +sm.value; gcRender(); };
+  sa.onchange = () => { gcState.anio = +sa.value; gcRender(); };
+  document.getElementById('gcAddFila').onclick = () => { gcFilas().push(gcFilaVacia()); gcGuardar(); gcRender(); };
+  document.getElementById('gcCerrar').onclick = () => {
+    const sig = gcKeySig();
+    if(gcState.meses[sig] && !confirm('El mes siguiente ya tiene datos. ¿Reemplazar su inventario inicial con las existencias de este cierre?')) return;
+    const act = gcFilas();
+    gcState.meses[sig] = act.map(f => { const e = gcExist(f), n = gcFilaVacia(); Object.assign(n, { prov:f.prov, fact:f.fact, cod:f.cod, desc:f.desc, mon:f.mon, precio:f.precio, ini:{ c:e.c, u:e.u } }); return n; });
+    gcState.demo = false; gcGuardar();
+    const [a, m] = sig.split('-').map(Number); gcState.anio = a; gcState.mes = m - 1;
+    document.getElementById('gcMes').value = gcState.mes; document.getElementById('gcAnio').value = gcState.anio; gcRender();
+  };
+  document.getElementById('gcPdf').onclick = gcPdf;
+  document.getElementById('gcExcel').onclick = gcExcel;
+}
+function gcPdf(){
+  const viejo = document.getElementById('gcReport'); if(viejo) viejo.remove();
+  const r = document.createElement('div'); r.id = 'gcReport'; r.style.display = 'none';
+  r.innerHTML = '<div class="gc-sheet">' + gcHtml(false) + '</div>';
+  document.body.appendChild(r);
+  document.body.classList.add('gc-printing');
+  const orig = document.title; document.title = 'Libro_Inventario_' + gcKey();
+  const limpiar = () => { document.body.classList.remove('gc-printing'); const x = document.getElementById('gcReport'); if(x) x.remove(); document.title = orig; window.removeEventListener('afterprint', limpiar); };
+  window.addEventListener('afterprint', limpiar);
+  window.print();
+}
+function gcExcel(){
+  const filas = gcFilas(), per = gcPeriodo();
+  const A = [];
+  A.push(['REGISTRO DE CONTROL DE INVENTARIOS (ARTÍCULO 177 RLISLR)']);
+  A.push(['Nombre / Razón Social:', gcState.empresa]);
+  A.push(['R.I.F.:', gcState.rif]);
+  A.push(['Período (Mes/Año):', BV_MESES[gcState.mes] + ' ' + gcState.anio, '', 'Del', per.ini, 'Al', per.fin]);
+  A.push(['Responsable de la toma física:', gcState.resp]);
+  A.push(['Método de valuación:', 'FEFO (First Expired, First Out - Primero en caducar, primero en salir)']);
+  A.push([]);
+  const H = 8;   // fila de grupos (1-based)
+  const g = ['DATOS DEL ARTÍCULO', '', '', '', '', '', ''];
+  GC_BLOQUES.forEach(b => g.push(b[1], '', '')); g.push('EXISTENCIAS (INVENTARIO FINAL)', '', '');
+  A.push(g);
+  const sub = GC_FIJAS.slice(); for(let i = 0; i < 5; i++) sub.push('Cant.', 'Costo Unit.', 'Total');
+  A.push(sub);
+  const I0 = H + 2;   // primera fila de datos (1-based)
+  const L = n => { let s = ''; n++; while(n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  filas.forEach((f, i) => {
+    const r = I0 + i, row = [i + 1, f.prov, f.fact, f.cod, f.desc, f.mon, f.precio || 0];
+    GC_BLOQUES.forEach((b, k) => { const c0 = 7 + k * 3; row.push(f[b[0]].c, f[b[0]].u, { f:L(c0) + r + '*' + L(c0 + 1) + r, v:gcT(f[b[0]]) }); });
+    const e = gcExist(f), c = L(7), t = L(9), d = L(10), tt = L(12), s = L(13), st = L(15), rr = L(16), rt = L(18);
+    row.push({ f:c + r + '+' + d + r + '-' + s + r + '-' + rr + r, v:e.c });
+    row.push({ f:'IF(' + L(19) + r + '=0,0,ROUND(' + L(21) + r + '/' + L(19) + r + ',2))', v:e.u });
+    row.push({ f:t + r + '+' + tt + r + '-' + st + r + '-' + rt + r, v:e.t });
+    A.push(row);
+  });
+  const ult = I0 + filas.length - 1, S = gcSumas(filas), rowT = ['', '', '', '', 'TOTALES DEL PERÍODO', '', ''];
+  const cel = (col, v) => ({ f:'SUM(' + L(col) + I0 + ':' + L(col) + ult + ')', v });
+  [['ini', 7], ['ent', 10], ['sal', 13], ['ret', 16], ['ex', 19]].forEach(([b, c0]) => { rowT.push(cel(c0, S[b].c), '', cel(c0 + 2, S[b].t)); });
+  A.push(rowT);
+  const ws = XLSX.utils.aoa_to_sheet(A.map(r => r.map(x => (x && typeof x === 'object') ? { t:'n', f:x.f, v:x.v } : x)));
+  ws['!merges'] = [{ s:{ r:0, c:0 }, e:{ r:0, c:21 } }, { s:{ r:H - 1, c:0 }, e:{ r:H - 1, c:6 } }].concat([7, 10, 13, 16, 19].map(c => ({ s:{ r:H - 1, c }, e:{ r:H - 1, c:c + 2 } })));
+  ws['!cols'] = [6, 22, 12, 12, 34, 8, 10].map(w => ({ wch:w })).concat(Array(15).fill({ wch:11 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Art. 177 RLISLR');
+  XLSX.writeFile(wb, 'Libro_Inventario_' + gcKey() + '.xlsx');
+}
+gcInit();
+
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+  const v = tab.dataset.view.toLowerCase();
+  document.getElementById('viewContable').classList.toggle('hidden', v !== 'contable');
+  if(v === 'contable') gcRender();
+}));
 
 /* ============ PORTAL ============ */
 const MODULOS = { ventas:'Gestión de Ventas', operaciones:'Operaciones' };
