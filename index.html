@@ -5594,8 +5594,64 @@ function mostrarPortal(){
   delete document.body.dataset.mod;
   document.title = 'PIEMCA · Portal de Gestión';
 }
+/* ============ CONTRASEÑA DE ACCESO POR MÓDULO ============
+   Hoy solo Operaciones la pide, y la recuerda 12 horas en ese navegador. Para proteger otro módulo, agrégalo a CLAVES_MODULO
+   con el SHA-256 de su contraseña. OJO: es un candado en la página (frena a curiosos, no es seguridad real del servidor). */
+const CLAVES_MODULO = { operaciones:'1e6746449a0342da04a5faa3a1008286cd4bc633e77185d12825ddb0cc9e2483' };
+const CLAVE_HORAS = 12;
+function sha256(msg){
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b = Array.from(new TextEncoder().encode(msg)), l = b.length * 8;
+  b.push(0x80); while(b.length % 64 !== 56) b.push(0);
+  for(let i = 7; i >= 0; i--) b.push(i > 3 ? 0 : (l >>> (i * 8)) & 255);
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const R = (x, n) => (x >>> n) | (x << (32 - n));
+  for(let o = 0; o < b.length; o += 64){
+    const w = [];
+    for(let i = 0; i < 16; i++) w[i] = (b[o+i*4] << 24) | (b[o+i*4+1] << 16) | (b[o+i*4+2] << 8) | b[o+i*4+3];
+    for(let i = 16; i < 64; i++){ const s0 = R(w[i-15],7) ^ R(w[i-15],18) ^ (w[i-15] >>> 3), s1 = R(w[i-2],17) ^ R(w[i-2],19) ^ (w[i-2] >>> 10); w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0; }
+    let [a,b2,c,d,e,f,g,hh] = H;
+    for(let i = 0; i < 64; i++){
+      const t1 = (hh + (R(e,6) ^ R(e,11) ^ R(e,25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0, t2 = ((R(a,2) ^ R(a,13) ^ R(a,22)) + ((a & b2) ^ (a & c) ^ (b2 & c))) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b2; b2 = a; a = (t1 + t2) | 0;
+    }
+    H = [H[0]+a|0, H[1]+b2|0, H[2]+c|0, H[3]+d|0, H[4]+e|0, H[5]+f|0, H[6]+g|0, H[7]+hh|0];
+  }
+  return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+const claveKey = mod => 'piemca_acceso_' + mod;
+function accesoVigente(mod){
+  try{ const t = +localStorage.getItem(claveKey(mod)); return !!t && (Date.now() - t) < CLAVE_HORAS * 3600 * 1000; }catch(e){ return false; }
+}
+function pedirClave(mod, alOk, alCancelar){
+  const f = document.createElement('div');
+  f.style.cssText = 'position:fixed;inset:0;background:rgba(11,59,92,.72);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:inherit;';
+  f.innerHTML = '<form style="background:#fff;border-radius:14px;padding:26px 28px;width:min(360px,92vw);box-shadow:0 20px 50px rgba(0,0,0,.35);">' +
+    '<h3 style="margin:0 0 4px;color:#0b3b5c;font-size:18px;">Acceso a ' + MODULOS[mod] + '</h3>' +
+    '<p style="margin:0 0 14px;color:#5B6B78;font-size:13px;">Área solo para operarios. Escribe la contraseña (se recuerda ' + CLAVE_HORAS + ' horas).</p>' +
+    '<input type="password" autocomplete="current-password" placeholder="Contraseña" style="width:100%;box-sizing:border-box;height:38px;border:1px solid #cfd8df;border-radius:8px;padding:0 10px;font-size:14px;">' +
+    '<div class="err" style="color:#c0392b;font-size:12px;min-height:18px;margin-top:6px;"></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;"><button type="button" class="no" style="border:1px solid #9fb3c4;background:#fff;color:#0b3b5c;border-radius:8px;padding:8px 14px;cursor:pointer;">Cancelar</button>' +
+    '<button type="submit" style="border:none;background:#0b3b5c;color:#fff;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;">Entrar</button></div></form>';
+  document.body.appendChild(f);
+  const inp = f.querySelector('input'), err = f.querySelector('.err');
+  setTimeout(() => inp.focus(), 30);
+  const cerrar = () => f.remove();
+  f.querySelector('.no').onclick = () => { cerrar(); alCancelar(); };
+  f.querySelector('form').onsubmit = ev => {
+    ev.preventDefault();
+    if(sha256(inp.value) === CLAVES_MODULO[mod]){
+      try{ localStorage.setItem(claveKey(mod), String(Date.now())); }catch(e){}
+      cerrar(); alOk();
+    } else { err.textContent = 'Contraseña incorrecta.'; inp.value = ''; inp.focus(); }
+  };
+}
 function abrirModulo(mod){
   if(!MODULOS[mod]) return mostrarPortal();
+  if(CLAVES_MODULO[mod] && !accesoVigente(mod)){
+    mostrarPortal();
+    return pedirClave(mod, () => abrirModulo(mod), () => { if(location.hash) history.replaceState(null, '', location.pathname + location.search); });
+  }
   document.getElementById('portal').classList.add('hidden');
   document.body.classList.remove('en-portal');
   document.body.dataset.mod = mod;
