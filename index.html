@@ -487,7 +487,7 @@
   .gc-aviso{font-size:12px;color:#7a5a00;background:#fff7dd;border:1px solid #f0dca0;border-radius:8px;padding:7px 12px;margin-bottom:10px;}
   .gc-aviso:empty{display:none;}
   .gc-scroll{overflow-x:auto;background:#fff;border:1px solid #e0e6ec;border-radius:10px;padding:16px;}
-  .gc-sheet{min-width:1580px;color:#1E2A32;font-family:Arial,Helvetica,sans-serif;}
+  .gc-sheet{min-width:1180px;color:#1E2A32;font-family:Arial,Helvetica,sans-serif;}
   .gc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:8px;}
   .gc-top img{height:54px;}
   .gc-top h2{margin:0;font-size:19px;text-align:right;letter-spacing:.3px;}
@@ -502,6 +502,10 @@
   .gc-tbl tr.gc-grp th{height:34px;font-size:11.5px;letter-spacing:.3px;vertical-align:middle;}
   .gc-tbl tr.gc-sub th{padding:2px 3px;}
   .gc-tbl td{overflow:hidden;}
+  .gc-tbl col.w-x{width:24px;}
+  .gc-tbl td.gc-desc{white-space:normal;word-break:break-word;}
+  .gc-tbl td textarea{width:100%;border:none;background:transparent;font:inherit;font-size:10.5px;padding:1px 0;resize:none;overflow:hidden;display:block;line-height:1.25;}
+  .gc-tbl td textarea:focus{outline:1px solid #2a78d6;background:#fff;}
   .gc-tbl th,.gc-tbl td{border:1px solid #9aa7b1;padding:3px 5px;}
   .gc-tbl thead th{background:#dde9f3;color:#1E2A32;text-align:center;font-weight:700;text-transform:none;letter-spacing:0;position:static;}
   .gc-actions .btn{background:#fff;color:#0b3b5c;border:1px solid #9fb3c4;padding:7px 12px;height:32px;}
@@ -969,7 +973,7 @@
   <div class="tabs">
     <div class="tab active" data-view="TABLA" data-mod="ventas">Tabla</div>
     <div class="tab" data-view="kpi" data-mod="ventas">DASHBOARD</div>
-    <div class="tab" data-view="contable" data-mod="ventas">GESTIÓN CONTABLE</div>
+    <div class="tab" data-view="contable" data-mod="ventas">LIBRO DE INVENTARIO</div>
     <div class="tab" data-view="despachos" data-mod="operaciones">DESPACHOS</div>
     <div class="tab" data-view="acta" data-mod="operaciones">ACTA DE ENTREGA</div>
     <div class="tab" data-view="inventario" data-mod="operaciones">INVENTARIO</div>
@@ -5471,7 +5475,7 @@ function gcHtml(edit){
   const relleno = edit ? '' : Array.from({ length:Math.max(0, 22 - filas.length) }, () => '<tr class="gc-blank">' + '<td></td>'.repeat(22) + '</tr>').join('');
   const cuerpo = filas.map((f, i) => {
     const e = gcExist(f);
-    return `<tr><td class="c">${i + 1}</td><td>${inp(i, 'prov', f.prov, 't')}</td><td>${inp(i, 'fact', f.fact, 't')}</td><td class="c">${inp(i, 'mon', f.mon, 't')}</td><td>${inp(i, 'cod', f.cod, 't')}</td><td>${inp(i, 'desc', f.desc, 't')}</td>` +
+    return `<tr><td class="c">${i + 1}</td><td>${inp(i, 'prov', f.prov, 't')}</td><td>${inp(i, 'fact', f.fact, 't')}</td><td class="c">${inp(i, 'mon', f.mon, 't')}</td><td>${inp(i, 'cod', f.cod, 't')}</td><td class="gc-desc">${edit ? `<textarea class="t" rows="1" data-i="${i}" data-r="desc">${rvEsc(f.desc)}</textarea>` : rvEsc(f.desc)}</td>` +
       `<td class="c">${inp(i, 'um', f.um, 't')}</td>` +
       GC_BLOQUES.map(b => nums(i, b[0], f)).join('') +
       `<td class="n calc q">${gcFmt0(e.c)}</td><td class="n calc u">${e.c ? gcFmt(e.u) : ''}</td><td class="n calc tt">${gcFmt(e.t)}</td>` +
@@ -5479,14 +5483,14 @@ function gcHtml(edit){
   }).join('');
   const tot = b => `<td class="n q">${gcFmt0(S[b].c)}</td><td></td><td class="n tt">${gcFmt(S[b].t)}</td>`;
   const hdr3 = ['Cant.', 'C.Unit.', 'C. Total'];
-  return `<div class="gc-top"><img src="logo-artrogen.png" alt="ARTROGEN"><h2>REGISTRO DE CONTROL DE INVENTARIOS</h2></div>
+  return `<div class="gc-top"><img src="logo-artrogen.png" alt="ARTROGEN"><h2>REGISTRO EN EL LIBRO DE INVENTARIOS</h2></div>
   <div class="gc-meta"><table>
     <tr><td class="k">NOMBRE, RAZÓN SOCIAL:</td><td>${rvEsc(gcState.empresa)}</td></tr>
     <tr><td class="k">RIF:</td><td>${rvEsc(gcState.rif)}</td></tr>
     <tr><td class="k">RESPONSABLE DE LA TOMA FÍSICA DEL INVENTARIO:</td><td>${rvEsc(gcState.resp)}</td></tr></table>
     <table><tr><td class="k">FECHA:</td><td class="gc-fecha">${gcHoy()}</td></tr>
     <tr><td class="k">PERÍODO INICIAL:</td><td>${per.ini}</td></tr><tr><td class="k">PERÍODO FINAL:</td><td>${per.fin}</td></tr></table></div>
-  <table class="gc-tbl"><colgroup><col class="w-i"><col class="w-p"><col class="w-f"><col class="w-m"><col class="w-c"><col><col class="w-um">${Array(5).fill('<col class="w-q"><col class="w-u"><col class="w-t">').join('')}</colgroup><thead>
+  <table class="gc-tbl"><colgroup><col class="w-i"><col class="w-p"><col class="w-f"><col class="w-m"><col class="w-c"><col><col class="w-um">${Array(5).fill('<col class="w-q"><col class="w-u"><col class="w-t">').join('')}${edit ? '<col class="w-x">' : ''}</colgroup><thead>
     <tr class="gc-grp"><th class="gc-metodo" colspan="7">MÉTODO DE VALUACIÓN: FEFO (FIRST EXPIRED, FIRST OUT - PRIMERO EN CADUCAR, PRIMERO EN SALIR)</th>
       ${GC_BLOQUES.map(b => `<th colspan="3">${b[1]}</th>`).join('')}<th colspan="3">EXISTENCIAS (INV. FINAL)</th></tr>
     <tr class="gc-sub">${GC_FIJAS.map(h => `<th>${h}</th>`).join('')}${Array(5).fill(hdr3).flat().map(h => `<th>${h}</th>`).join('')}</tr></thead>
@@ -5497,7 +5501,9 @@ function gcHtml(edit){
 function gcRender(){
   const el = document.getElementById('gcSheet');
   el.innerHTML = gcHtml(true);
-  el.querySelectorAll('input[data-r]').forEach(inp => inp.addEventListener('change', () => {
+  const ajusta = t => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+  el.querySelectorAll('textarea').forEach(t => { ajusta(t); t.addEventListener('input', () => ajusta(t)); });
+  el.querySelectorAll('input[data-r],textarea[data-r]').forEach(inp => inp.addEventListener('change', () => {
     const f = gcFilas()[+inp.dataset.i], r = inp.dataset.r.split('.');
     const texto = ['prov', 'fact', 'cod', 'desc', 'mon', 'um'].includes(r[0]);
     const v = texto ? inp.value.trim() : (r[1] === 'c' ? Math.round(gcNum(inp.value)) : gcNum(inp.value));
@@ -5542,41 +5548,32 @@ function gcPdf(){
   window.print();
 }
 function gcExcel(){
+  // Excel resumido para el ERP: solo Código, Descripción, Unidad y los cinco bloques (sin proveedor, factura, moneda ni encabezados del portal)
   const filas = gcFilas(), per = gcPeriodo();
-  const A = [];
-  A.push(['REGISTRO DE CONTROL DE INVENTARIOS (ARTÍCULO 177 RLISLR)']);
-  A.push(['Nombre / Razón Social:', gcState.empresa]);
-  A.push(['R.I.F.:', gcState.rif]);
-  A.push(['Período (Mes/Año):', BV_MESES[gcState.mes] + ' ' + gcState.anio, '', 'Del', per.ini, 'Al', per.fin]);
-  A.push(['Responsable de la toma física:', gcState.resp]);
-  A.push(['Método de valuación:', 'FEFO (First Expired, First Out - Primero en caducar, primero en salir)']);
-  A.push([]);
-  const H = 8;   // fila de grupos (1-based)
-  const g = ['DATOS DEL ARTÍCULO', '', '', '', '', '', ''];
-  GC_BLOQUES.forEach(b => g.push(b[1], '', '')); g.push('EXISTENCIAS (INVENTARIO FINAL)', '', '');
-  A.push(g);
-  const sub = GC_FIJAS.slice(); for(let i = 0; i < 5; i++) sub.push('Cant.', 'Costo Unit.', 'Total');
-  A.push(sub);
-  const I0 = H + 2;   // primera fila de datos (1-based)
   const L = n => { let s = ''; n++; while(n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const A = [[], ['Nombre / Razón Social:', gcState.empresa], ['R.I.F.:', gcState.rif], ['Período (Mes/Año):', BV_MESES[gcState.mes] + ' ' + gcState.anio + '  (del ' + per.ini + ' al ' + per.fin + ')'], []];
+  A.push(['DATOS DEL ARTÍCULO', '', '', 'INVENTARIO INICIAL', '', '', 'ENTRADAS DEL PERÍODO', '', '', 'SALIDAS POR VENTAS', '', 'RETIROS / AUTOCONSUMO', '', 'INVENTARIO FINAL', '', '']);
+  A.push(['Código', 'Descripción', 'Unidad', 'Cant.', 'Costo Unit.', 'Total', 'Cant.', 'Costo Unit.', 'Total', 'Cant.', 'Total', 'Cant.', 'Total', 'Cant.', 'Costo Unit.', 'Total']);
+  const I0 = 8;   // primera fila de datos (1-based)
   filas.forEach((f, i) => {
-    const r = I0 + i, row = [i + 1, f.prov, f.fact, f.mon, f.cod, f.desc, f.um || ''];
-    GC_BLOQUES.forEach((b, k) => { const c0 = 7 + k * 3; row.push(f[b[0]].c, f[b[0]].u, { f:L(c0) + r + '*' + L(c0 + 1) + r, v:gcT(f[b[0]]) }); });
-    const e = gcExist(f), c = L(7), t = L(9), d = L(10), tt = L(12), s = L(13), st = L(15), rr = L(16), rt = L(18);
-    row.push({ f:c + r + '+' + d + r + '-' + s + r + '-' + rr + r, v:e.c });
-    row.push({ f:'IF(' + L(19) + r + '=0,0,ROUND(' + L(21) + r + '/' + L(19) + r + ',2))', v:e.u });
-    row.push({ f:t + r + '+' + tt + r + '-' + st + r + '-' + rt + r, v:e.t });
-    A.push(row);
+    const r = I0 + i, e = gcExist(f);
+    A.push([f.cod, f.desc, f.um || '',
+      f.ini.c, f.ini.u, { f:'D' + r + '*E' + r, v:gcT(f.ini) },
+      f.ent.c, f.ent.u, { f:'G' + r + '*H' + r, v:gcT(f.ent) },
+      f.sal.c, gcT(f.sal),
+      f.ret.c, gcT(f.ret),
+      { f:'D' + r + '+G' + r + '-J' + r + '-L' + r, v:e.c },
+      { f:'IF(N' + r + '=0,0,ROUND(P' + r + '/N' + r + ',2))', v:e.u },
+      { f:'F' + r + '+I' + r + '-K' + r + '-M' + r, v:e.t }]);
   });
-  const ult = I0 + filas.length - 1, S = gcSumas(filas), rowT = ['', '', '', '', 'TOTALES DEL PERÍODO', '', ''];
-  const cel = (col, v) => ({ f:'SUM(' + L(col) + I0 + ':' + L(col) + ult + ')', v });
-  [['ini', 7], ['ent', 10], ['sal', 13], ['ret', 16], ['ex', 19]].forEach(([b, c0]) => { rowT.push(cel(c0, S[b].c), '', cel(c0 + 2, S[b].t)); });
-  A.push(rowT);
+  const ult = I0 + filas.length - 1, S = gcSumas(filas);
+  const tot = (col, v) => ({ f:'SUM(' + col + I0 + ':' + col + ult + ')', v });
+  A.push(['', 'TOTALES', '', '', '', tot('F', S.ini.t), '', '', tot('I', S.ent.t), '', tot('K', S.sal.t), '', tot('M', S.ret.t), '', '', tot('P', S.ex.t)]);
   const ws = XLSX.utils.aoa_to_sheet(A.map(r => r.map(x => (x && typeof x === 'object') ? { t:'n', f:x.f, v:x.v } : x)));
-  ws['!merges'] = [{ s:{ r:0, c:0 }, e:{ r:0, c:21 } }, { s:{ r:H - 1, c:0 }, e:{ r:H - 1, c:6 } }].concat([7, 10, 13, 16, 19].map(c => ({ s:{ r:H - 1, c }, e:{ r:H - 1, c:c + 2 } })));
-  ws['!cols'] = [6, 22, 12, 8, 12, 34, 7].map(w => ({ wch:w })).concat(Array(5).fill([6, 11, 14]).flat().map(w => ({ wch:w })));
+  ws['!merges'] = [[0, 2], [3, 5], [6, 8], [9, 10], [11, 12], [13, 15]].map(([a, b]) => ({ s:{ r:5, c:a }, e:{ r:5, c:b } }));
+  ws['!cols'] = [14, 34, 9].concat([7, 11, 13, 7, 11, 13, 7, 13, 7, 13, 7, 11, 13]).map(w => ({ wch:w }));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Art. 177 RLISLR');
+  XLSX.utils.book_append_sheet(wb, ws, 'Libro de Inventario');
   XLSX.writeFile(wb, 'Libro_Inventario_' + gcKey() + '.xlsx');
 }
 gcInit();
