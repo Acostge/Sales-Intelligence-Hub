@@ -5548,30 +5548,45 @@ function gcPdf(){
   window.print();
 }
 function gcExcel(){
-  // Excel resumido para el ERP: solo Código, Descripción, Unidad y los cinco bloques (sin proveedor, factura, moneda ni encabezados del portal)
-  const filas = gcFilas(), per = gcPeriodo();
-  const L = n => { let s = ''; n++; while(n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
-  const A = [[], ['Nombre / Razón Social:', gcState.empresa], ['R.I.F.:', gcState.rif], ['Período (Mes/Año):', BV_MESES[gcState.mes] + ' ' + gcState.anio + '  (del ' + per.ini + ' al ' + per.fin + ')'], []];
-  A.push(['DATOS DEL ARTÍCULO', '', '', 'INVENTARIO INICIAL', '', '', 'ENTRADAS DEL PERÍODO', '', '', 'SALIDAS POR VENTAS', '', 'RETIROS / AUTOCONSUMO', '', 'INVENTARIO FINAL', '', '']);
-  A.push(['Código', 'Descripción', 'Unidad', 'Cant.', 'Costo Unit.', 'Total', 'Cant.', 'Costo Unit.', 'Total', 'Cant.', 'Total', 'Cant.', 'Total', 'Cant.', 'Costo Unit.', 'Total']);
-  const I0 = 8;   // primera fila de datos (1-based)
+  // Excel completo: lleva lo mismo que el PDF (encabezado, método FEFO, todas las columnas, cinco bloques y totales)
+  const filas = gcFilas(), per = gcPeriodo(), S = gcSumas(filas);
+  const A = [
+    ['REGISTRO EN EL LIBRO DE INVENTARIOS'], [],
+    ['NOMBRE, RAZÓN SOCIAL:', '', gcState.empresa, '', '', '', '', 'FECHA:', '', gcHoy()],
+    ['RIF:', '', gcState.rif, '', '', '', '', 'PERÍODO INICIAL:', '', per.ini],
+    ['RESPONSABLE DE LA TOMA FÍSICA DEL INVENTARIO:', '', gcState.resp, '', '', '', '', 'PERÍODO FINAL:', '', per.fin], []
+  ];
+  const G = A.length + 1;   // fila (1-based) de los títulos de bloque
+  const grp = ['MÉTODO DE VALUACIÓN: FEFO (FIRST EXPIRED, FIRST OUT - PRIMERO EN CADUCAR, PRIMERO EN SALIR)', '', '', '', '', '', ''];
+  GC_BLOQUES.forEach(b => grp.push(b[1], '', ''));
+  grp.push('EXISTENCIAS (INV. FINAL)', '', '');
+  A.push(grp);
+  const sub = GC_FIJAS.slice(); for(let i = 0; i < 5; i++) sub.push('Cant.', 'Costo Unit.', 'Total');
+  A.push(sub);
+  const I0 = G + 2;   // primera fila de datos (1-based)
+  // columnas (letras): H-J inicial, K-M entradas, N-P salidas, Q-S retiros, T-V existencias
   filas.forEach((f, i) => {
     const r = I0 + i, e = gcExist(f);
-    A.push([f.cod, f.desc, f.um || '',
-      f.ini.c, f.ini.u, { f:'D' + r + '*E' + r, v:gcT(f.ini) },
-      f.ent.c, f.ent.u, { f:'G' + r + '*H' + r, v:gcT(f.ent) },
-      f.sal.c, gcT(f.sal),
-      f.ret.c, gcT(f.ret),
-      { f:'D' + r + '+G' + r + '-J' + r + '-L' + r, v:e.c },
-      { f:'IF(N' + r + '=0,0,ROUND(P' + r + '/N' + r + ',2))', v:e.u },
-      { f:'F' + r + '+I' + r + '-K' + r + '-M' + r, v:e.t }]);
+    A.push([i + 1, f.prov, f.fact, f.mon, f.cod, f.desc, f.um || '',
+      f.ini.c, f.ini.u, { f:'H' + r + '*I' + r, v:gcT(f.ini) },
+      f.ent.c, f.ent.u, { f:'K' + r + '*L' + r, v:gcT(f.ent) },
+      f.sal.c, f.sal.u, { f:'N' + r + '*O' + r, v:gcT(f.sal) },
+      f.ret.c, f.ret.u, { f:'Q' + r + '*R' + r, v:gcT(f.ret) },
+      { f:'H' + r + '+K' + r + '-N' + r + '-Q' + r, v:e.c },
+      { f:'IF(T' + r + '=0,0,ROUND(V' + r + '/T' + r + ',2))', v:e.u },
+      { f:'J' + r + '+M' + r + '-P' + r + '-S' + r, v:e.t }]);
   });
-  const ult = I0 + filas.length - 1, S = gcSumas(filas);
+  const ult = I0 + filas.length - 1;
   const tot = (col, v) => ({ f:'SUM(' + col + I0 + ':' + col + ult + ')', v });
-  A.push(['', 'TOTALES', '', '', '', tot('F', S.ini.t), '', '', tot('I', S.ent.t), '', tot('K', S.sal.t), '', tot('M', S.ret.t), '', '', tot('P', S.ex.t)]);
+  A.push(['', '', '', '', '', 'TOTALES DEL PERÍODO', '',
+    tot('H', S.ini.c), '', tot('J', S.ini.t), tot('K', S.ent.c), '', tot('M', S.ent.t), tot('N', S.sal.c), '', tot('P', S.sal.t),
+    tot('Q', S.ret.c), '', tot('S', S.ret.t), tot('T', S.ex.c), '', tot('V', S.ex.t)]);
   const ws = XLSX.utils.aoa_to_sheet(A.map(r => r.map(x => (x && typeof x === 'object') ? { t:'n', f:x.f, v:x.v } : x)));
-  ws['!merges'] = [[0, 2], [3, 5], [6, 8], [9, 10], [11, 12], [13, 15]].map(([a, b]) => ({ s:{ r:5, c:a }, e:{ r:5, c:b } }));
-  ws['!cols'] = [14, 34, 9].concat([7, 11, 13, 7, 11, 13, 7, 13, 7, 13, 7, 11, 13]).map(w => ({ wch:w }));
+  const m = [{ s:{ r:0, c:0 }, e:{ r:0, c:21 } }, { s:{ r:G - 1, c:0 }, e:{ r:G - 1, c:6 } }];
+  for(let k = 0; k < 5; k++) m.push({ s:{ r:G - 1, c:7 + k * 3 }, e:{ r:G - 1, c:9 + k * 3 } });
+  for(let r = 2; r <= 4; r++){ m.push({ s:{ r, c:0 }, e:{ r, c:1 } }, { s:{ r, c:2 }, e:{ r, c:6 } }, { s:{ r, c:7 }, e:{ r, c:8 } }); }
+  ws['!merges'] = m;
+  ws['!cols'] = [6, 22, 12, 8, 12, 36, 7].concat(Array(5).fill([7, 11, 13]).flat()).map(w => ({ wch:w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Libro de Inventario');
   XLSX.writeFile(wb, 'Libro_Inventario_' + gcKey() + '.xlsx');
