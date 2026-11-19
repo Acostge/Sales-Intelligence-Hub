@@ -3175,11 +3175,11 @@ function esVistaCierre(d, s){
       { l:'Cajas del mes', v:rvFmt(cajas) }
     ],
     charts:[
+      { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:d.metodos.map((m, i) => m.label + ' · ' + esUsd(mC[i]) + ' (' + bvShare(mC[i], tC) + ')'),
+        datasets:[{ data:mC, backgroundColor:d.metodos.map(m => m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } },
       { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:d.metodos.map(m => m.label), datasets:[
         { label:BV_MES3[prev.mes] + ' ' + prev.anio, data:mP, backgroundColor:BV.muted, borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:esLblUsd },
-        { label:BV_MES3[s.mes] + ' ' + s.anio, data:mC, backgroundColor:d.metodos.map(m => m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:esLblUsd }] }, options:esOptsUsd({ legend:true }) } },
-      { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:d.metodos.map((m, i) => m.label + ' · ' + esUsd(mC[i]) + ' (' + bvShare(mC[i], tC) + ')'),
-        datasets:[{ data:mC, backgroundColor:d.metodos.map(m => m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } }
+        { label:BV_MES3[s.mes] + ' ' + s.anio, data:mC, backgroundColor:d.metodos.map(m => m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:60, datalabels:esLblUsd }] }, options:esOptsUsd({ legend:true }) } }
     ],
     table:{ head:['Institución', cols[0].label, cols[1].label, 'Variación', cols[2].label], rows, grp:t.grp, money:[1, 2, 4], foot:['Total', tP || '', tC || '', bvPctTxt(v), tA || ''] },
     detail:d.regs.filter(fC)
