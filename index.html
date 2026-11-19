@@ -449,8 +449,12 @@
   .rv-table tr.rv-ggh td{background:var(--gc) !important;color:#fff;font-weight:800;padding-top:12px;padding-bottom:12px;border-top:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .rv-table tr.rv-ggh td:first-child{letter-spacing:.6px;text-transform:uppercase;}
   .rv-table tr.rv-ggi td{background:color-mix(in srgb, var(--gc) 7%, #fff) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .rv-table tr.rv-ggi td:first-child{padding-left:26px;box-shadow:inset 5px 0 0 var(--gc);}
-  .rv-table tr.rv-ggs td{height:18px;padding:0 !important;background:var(--bg) !important;border:none;}
+  .rv-table tr.rv-ggi td:first-child{padding-left:28px;}
+  .rv-table tr.rv-ggi td{padding-top:12px;padding-bottom:12px;}
+  .rv-table.rv-agrupada{border-collapse:separate;border-spacing:0;}
+  .rv-table.rv-agrupada tr.rv-ggh td:first-child{border-radius:8px 0 0 8px;}
+  .rv-table.rv-agrupada tr.rv-ggh td:last-child{border-radius:0 8px 8px 0;}
+  .rv-table tr.rv-ggs td{height:26px;padding:0 !important;background:var(--bg) !important;border:none;}
   #rvReport{display:none;}
   #rvReport{font-family:"Segoe UI",Roboto,Arial,sans-serif;color:#1E2A32;}
   .rvp-head{background:#0B3B5C;color:#fff;padding:14px 18px;border-radius:10px;display:flex;align-items:center;gap:16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -2092,13 +2096,13 @@ function bvTablaHtml(t){
   const left = t.left || [0];
   const money = t.money || [];
   const cell = (c, i, tag) => `<${tag}${left.includes(i) ? ' class="rv-l"' : ''}>${typeof c === 'number' ? (money.includes(i) ? (c === 0 && tag === 'td' ? '–' : rvUsd2(c)) : rvFmt(c)) : rvEsc(c)}</${tag}>`;
-  return `<table class="rv-table"><thead><tr>${t.head.map((h, i) => cell(h, i, 'th')).join('')}</tr></thead>` +
+  return `<table class="rv-table${t.grp ? ' rv-agrupada' : ''}"><thead><tr>${t.head.map((h, i) => cell(h, i, 'th')).join('')}</tr></thead>` +
     `<tbody>${t.rows.map((r, k) => { const g = t.grp && t.grp[k]; const cl = g ? ` class="rv-g${g.t}" style="--gc:${g.c}"` : ((t.hl && k < t.hl) || (t.hlRows && t.hlRows.includes(k)) ? ' class="rv-hl"' : ''); return `<tr${cl}>` + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>'; }).join('')}</tbody>` +
-    (t.foot ? `<tfoot><tr>${t.foot.map((c, i) => cell(c, i, 'td')).join('')}</tr></tfoot>` : '') + '</table>';
+    (t.foot && !t.grp ? `<tfoot><tr>${t.foot.map((c, i) => cell(c, i, 'td')).join('')}</tr></tfoot>` : '') + '</table>';
 }
 function bvKpiHtml(kpis){
   return '<div class="dash-ribbon1">' + kpis.map(k =>
-    `<div class="dash-kpi"${k.bg ? ` style="background:${k.bg};border-radius:8px;"` : ''}><div class="dash-kpi-label">${rvEsc(k.l)}</div><div class="dash-kpi-value ${k.cls || ''}">${rvEsc(k.v)}</div></div>`).join('') + '</div>';
+    `<div class="dash-kpi"${k.bg ? ` style="background:${k.bg};"` : ''}><div class="dash-kpi-label">${rvEsc(k.l)}</div><div class="dash-kpi-value ${k.cls || ''}">${rvEsc(k.v)}</div></div>`).join('') + '</div>';
 }
 function rvDestruirGraficos(){
   if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
