@@ -3230,9 +3230,9 @@ function esVistaTipo(d, s){
       { l:'Vs ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v <= 0 ? 'dash-good' : 'dash-bad') }
     ],
     charts:[
-      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:g.map(x => x.m.label), datasets:[{ label:'Gasto ' + s.anio, data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:80, datalabels:esLblUsd }] }, options:esOptsUsd({}) } },
       { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:g.map(x => x.m.label + ' · ' + esUsd(x.v) + ' (' + bvShare(x.v, T) + ')'),
-        datasets:[{ data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } }
+        datasets:[{ data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } },
+      { h:320, half:true, pdfH:250, cfg:{ type:'bar', data:{ labels:g.map(x => x.m.label), datasets:[{ label:'Gasto ' + s.anio, data:g.map(x => x.v), backgroundColor:g.map(x => x.m.color), borderRadius:4, borderSkipped:'bottom', maxBarThickness:80, datalabels:esLblUsd }] }, options:esOptsUsd({}) } }
     ],
     table:{
       head:['Método', 'Gasto ' + s.anio, 'Cajas', 'Costo por caja', '% del gasto', String(s.anio - 1), 'Variación'], money:[1, 3, 5],
