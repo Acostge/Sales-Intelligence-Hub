@@ -364,7 +364,7 @@
     position:fixed;inset:0;background:rgba(8,43,68,.6);z-index:200;
     display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;
   }
-  .rv-window{background:var(--bg);border-radius:14px;width:100%;max-width:1180px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;}
+  .rv-window{background:var(--bg);border-radius:14px;width:100%;max-width:1480px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;}
   .rv-head{
     background:linear-gradient(120deg,var(--navy-deep),var(--navy) 70%);color:var(--white);
     padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -432,7 +432,14 @@
   .rv-btn.solid:hover,.rv-btn.solid:focus-visible{background:var(--sky);border-color:var(--sky);}
   .rv-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:18px;}
   .rv-chart-box{position:relative;min-width:0;}
-  .rv-scroll{max-height:440px;overflow:auto;}
+  .rv-scroll{max-height:560px;overflow:auto;}
+  /* Cuadros de datos más aireados (solo en pantalla; el PDF conserva su propio espaciado) */
+  @media screen{
+    .rv-overlay .rv-table{font-size:13px;}
+    .rv-overlay .rv-table th{padding:11px 14px;}
+    .rv-overlay .rv-table td{padding:10px 14px;}
+    .rv-overlay .rv-table th:first-child,.rv-overlay .rv-table td:first-child{padding-left:16px;min-width:150px;}
+  }
   .rv-table th{position:sticky;top:0;z-index:1;}
   .rv-table tfoot td{font-weight:800;color:var(--navy);border-top:2px solid var(--navy);background:var(--sky-soft) !important;}
   .rv-table td.rv-l,.rv-table th.rv-l{text-align:left;}
