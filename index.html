@@ -445,6 +445,12 @@
   .rv-table td.rv-l,.rv-table th.rv-l{text-align:left;}
   .rv-table tr.rv-hl td{background:#FFF3EA !important;}
   .rv-table tr.rv-hl td:first-child{box-shadow:inset 3px 0 0 #eb6834;}
+  /* Grupos por método (Vapor / Sterrad): barra de título de color, instituciones con sangría y filete del mismo color */
+  .rv-table tr.rv-ggh td{background:var(--gc) !important;color:#fff;font-weight:800;padding-top:12px;padding-bottom:12px;border-top:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rv-table tr.rv-ggh td:first-child{letter-spacing:.6px;text-transform:uppercase;}
+  .rv-table tr.rv-ggi td{background:color-mix(in srgb, var(--gc) 7%, #fff) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rv-table tr.rv-ggi td:first-child{padding-left:26px;box-shadow:inset 5px 0 0 var(--gc);}
+  .rv-table tr.rv-ggs td{height:18px;padding:0 !important;background:var(--bg) !important;border:none;}
   #rvReport{display:none;}
   #rvReport{font-family:"Segoe UI",Roboto,Arial,sans-serif;color:#1E2A32;}
   .rvp-head{background:#0B3B5C;color:#fff;padding:14px 18px;border-radius:10px;display:flex;align-items:center;gap:16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -2087,12 +2093,12 @@ function bvTablaHtml(t){
   const money = t.money || [];
   const cell = (c, i, tag) => `<${tag}${left.includes(i) ? ' class="rv-l"' : ''}>${typeof c === 'number' ? (money.includes(i) ? (c === 0 && tag === 'td' ? '–' : rvUsd2(c)) : rvFmt(c)) : rvEsc(c)}</${tag}>`;
   return `<table class="rv-table"><thead><tr>${t.head.map((h, i) => cell(h, i, 'th')).join('')}</tr></thead>` +
-    `<tbody>${t.rows.map((r, k) => `<tr${(t.hl && k < t.hl) || (t.hlRows && t.hlRows.includes(k)) ? ' class="rv-hl"' : ''}>` + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>').join('')}</tbody>` +
+    `<tbody>${t.rows.map((r, k) => { const g = t.grp && t.grp[k]; const cl = g ? ` class="rv-g${g.t}" style="--gc:${g.c}"` : ((t.hl && k < t.hl) || (t.hlRows && t.hlRows.includes(k)) ? ' class="rv-hl"' : ''); return `<tr${cl}>` + r.map((c, i) => cell(c, i, 'td')).join('') + '</tr>'; }).join('')}</tbody>` +
     (t.foot ? `<tfoot><tr>${t.foot.map((c, i) => cell(c, i, 'td')).join('')}</tr></tfoot>` : '') + '</table>';
 }
 function bvKpiHtml(kpis){
   return '<div class="dash-ribbon1">' + kpis.map(k =>
-    `<div class="dash-kpi"><div class="dash-kpi-label">${rvEsc(k.l)}</div><div class="dash-kpi-value ${k.cls || ''}">${rvEsc(k.v)}</div></div>`).join('') + '</div>';
+    `<div class="dash-kpi"${k.bg ? ` style="background:${k.bg};border-radius:8px;"` : ''}><div class="dash-kpi-label">${rvEsc(k.l)}</div><div class="dash-kpi-value ${k.cls || ''}">${rvEsc(k.v)}</div></div>`).join('') + '</div>';
 }
 function rvDestruirGraficos(){
   if(rvState.chart){ rvState.chart.destroy(); rvState.chart = null; }
@@ -3113,7 +3119,7 @@ const esAltoH = (n, k) => 50 + n * (k > 1 ? 44 : 32);
 // Cuadro agrupado por método (Vapor / Sterrad): una fila de subtotal resaltada y debajo sus instituciones, con una línea en blanco entre grupos
 function esTablaGrupos(d, regs, cols, o){
   o = o || {};
-  const rows = [], hl = [], sumC = cols.map(() => 0);
+  const rows = [], hl = [], grp = {}, sumC = cols.map(() => 0);
   let T = 0;
   const grupos = d.metodos.map(m => {
     const rs = regs.filter(r => r.metodo === m.key);
@@ -3126,17 +3132,17 @@ function esTablaGrupos(d, regs, cols, o){
   });
   T = grupos.reduce((a, g) => a + g.t, 0);
   grupos.forEach((g, gi) => {
-    if(gi) rows.push([''].concat(cols.map(() => ''), ['', '']));
-    hl.push(rows.length);
+    if(gi){ grp[rows.length] = { t:'gs', c:'#fff' }; rows.push([''].concat(cols.map(() => ''), ['', ''])); }
+    hl.push(rows.length); grp[rows.length] = { t:'gh', c:g.m.color };
     rows.push([g.m.label.toUpperCase()].concat(g.v.map(x => x || ''), [g.t || '', bvShare(g.t, T)]));
     g.v.forEach((x, i) => { sumC[i] += x; });
-    g.lista.forEach(x => rows.push([x.nombre].concat(x.v.map(y => y || ''), [x.t || '', bvShare(x.t, g.t)])));
+    g.lista.forEach(x => { grp[rows.length] = { t:'gi', c:g.m.color }; rows.push([x.nombre].concat(x.v.map(y => y || ''), [x.t || '', bvShare(x.t, g.t)])); });
   });
   const n = cols.length + 2;
-  return { head:['Institución'].concat(cols.map(c => c.label), ['Total', '% del grupo / total']), rows, hlRows:hl, money:Array.from({ length:cols.length + 1 }, (_, i) => i + 1),
+  return { head:['Institución'].concat(cols.map(c => c.label), ['Total', '% del grupo / total']), rows, hlRows:hl, grp, money:Array.from({ length:cols.length + 1 }, (_, i) => i + 1),
     foot:['Total'].concat(sumC.map(x => x || ''), [T || '', T ? '100%' : '—']), total:T, nCols:n };
 }
-const esKpiMetodos = regs => ({ l:'Vapor · Sterrad', v:esUsd(esSum(regs.filter(r => r.metodo === 'vapor'))) + ' · ' + esUsd(esSum(regs.filter(r => r.metodo === 'sterrad'))) });
+const esKpisMetodos = (d, regs) => { const T = esSum(regs); return d.metodos.slice(0, 2).map(m => { const v = esSum(regs.filter(r => r.metodo === m.key)); return { l:m.label, v:esUsd(v) + ' · ' + bvShare(v, T), bg:m.color }; }); };
 const esDetalle = regs => ({ head:['Fecha', 'Institución', 'Tipo de Cx', 'Método', 'Cajas', 'Monto $'],
   rows:regs.map(r => [bvFechaTxt(r.fecha), r.inst, r.tipoCx, r.metodo === 'vapor' ? 'Vapor' : (r.metodo === 'sterrad' ? 'Sterrad' : r.metodo), r.cajas, r.monto]) });
 
@@ -3171,7 +3177,7 @@ function esVistaCierre(d, s){
       { h:320, half:true, pdfH:250, cfg:{ type:'doughnut', plugins:[bvCenterPlugin], data:{ labels:d.metodos.map((m, i) => m.label + ' · ' + esUsd(mC[i]) + ' (' + bvShare(mC[i], tC) + ')'),
         datasets:[{ data:mC, backgroundColor:d.metodos.map(m => m.color), borderColor:BV.surface, borderWidth:3, hoverOffset:6 }] }, options:po } }
     ],
-    table:{ head:['Institución', cols[0].label, cols[1].label, 'Variación', cols[2].label], rows, hlRows:t.hlRows, money:[1, 2, 4], foot:['Total', tP || '', tC || '', bvPctTxt(v), tA || ''] },
+    table:{ head:['Institución', cols[0].label, cols[1].label, 'Variación', cols[2].label], rows, grp:t.grp, money:[1, 2, 4], foot:['Total', tP || '', tC || '', bvPctTxt(v), tA || ''] },
     detail:d.regs.filter(fC)
   };
 }
@@ -3193,7 +3199,7 @@ function esVistaMensual(d, s){
       { l:'Gasto ' + s.anio, v:esUsd(total) },
       { l:'Mes de mayor gasto', v:total ? BV_MESES[mejor] + ' · ' + esUsd(totM[mejor]) : '—' },
       { l:'Promedio mensual', v:esUsd(Math.round(total / activos)) },
-      esKpiMetodos(regs),
+      ...esKpisMetodos(d, regs),
       { l:'Cajas', v:rvFmt(regs.reduce((a, r) => a + r.cajas, 0)) }
     ],
     charts:[{ h:340, pdfH:270, cfg }],
@@ -3215,7 +3221,7 @@ function esVistaTipo(d, s){
     title:'Gasto general anual por tipo · ' + s.anio, sub:'Cuánto se gastó en esterilización por Vapor y por Sterrad, enero a diciembre',
     kpis:[
       { l:'Gasto ' + s.anio, v:esUsd(T) },
-      ...g.slice(0, 2).map(x => ({ l:x.m.label, v:esUsd(x.v) + ' · ' + bvShare(x.v, T) })),
+      ...g.slice(0, 2).map(x => ({ l:x.m.label, v:esUsd(x.v) + ' · ' + bvShare(x.v, T), bg:x.m.color })),
       { l:'Cajas', v:rvFmt(cajasT) },
       { l:'Vs ' + (s.anio - 1), v:bvPctTxt(v), cls:v === null ? '' : (v <= 0 ? 'dash-good' : 'dash-bad') }
     ],
